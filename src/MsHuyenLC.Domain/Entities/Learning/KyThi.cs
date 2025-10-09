@@ -1,0 +1,16 @@
+using MsHuyenLC.Domain.Entities.Courses;
+
+namespace MsHuyenLC.Domain.Entities.Learning;
+
+public class KyThi
+{
+    public Guid Id { get; set; }
+    public string TenKyThi { get; set; } = null!;
+    public DateTime NgayThi { get; set; }
+    public int ThoiLuong { get; set; }
+    public HinhThucKyThi HinhThuc { get; set; } = HinhThucKyThi.tructuyen;
+    public TrangThaiKyThi TrangThai { get; set; } = TrangThaiKyThi.sapdienra;
+
+    public LopHoc LopHoc { get; set; } = null!;
+    public ICollection<DeThi> DeThis { get; set; } = new List<DeThi>();
+}
