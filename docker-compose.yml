@@ -1,0 +1,57 @@
+# Docker Compose - Sử dụng Database bên ngoài (External Database)
+# API kết nối tới PostgreSQL và Redis đang chạy trên host machine hoặc cloud
+
+version: '3.8'
+
+services:
+  # ============================================
+  # MsHuyenLC API Only
+  # ============================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mshuyenlc-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      
+      # External PostgreSQL Database
+      ConnectionStrings__DefaultConnection: ${DB_CONNECTION_STRING}
+      
+      # External Redis Cache
+      Redis__ConnectionString: ${REDIS_CONNECTION_STRING}
+      Redis__InstanceName: "MsHuyenLC:"
+      
+      # JWT Settings
+      Jwt__SecretKey: ${JWT_SECRET_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      Jwt__ExpirationMinutes: ${JWT_EXPIRATION_MINUTES}
+
+      # Token Settings
+      TokenSettings__PasswordResetExpirationMinutes: ${PASSWORD_RESET_EXPIRATION_MINUTES}
+      TokenSettings__EmailConfirmationExpirationHours: ${EMAIL_CONFIRMATION_EXPIRATION_HOURS}
+
+      # Logging
+      Logging__LogLevel__Default: Information
+      Logging__LogLevel__Microsoft.AspNetCore: Warning
+
+      # Email Service Settings
+      Smtp__Host: ${SMTP_HOST}
+      Smtp__Port: ${SMTP_PORT}
+      Smtp__Username: ${SMTP_USERNAME}
+      Smtp__Password: ${SMTP_PASSWORD}
+      Smtp__From: ${SMTP_FROM_EMAIL}
+      Smtp__FromName: ${SMTP_FROM_NAME}
+    ports:
+      - "5000:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
