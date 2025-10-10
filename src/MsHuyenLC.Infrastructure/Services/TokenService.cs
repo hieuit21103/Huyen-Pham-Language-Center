@@ -1,15 +1,13 @@
 using System.Security.Cryptography;
-using System.Text.Json;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
 using MsHuyenLC.Application.Interfaces.Auth;
+using StackExchange.Redis;
 
 namespace MsHuyenLC.Infrastructure.Services;
 
 public class TokenService : ITokenService
 {
-    private readonly IDistributedCache _cache;
-    public TokenService(IDistributedCache cache)
+    private readonly IConnectionMultiplexer _cache;
+    public TokenService(IConnectionMultiplexer cache)
     {
         _cache = cache;
     }
@@ -20,11 +18,8 @@ public class TokenService : ITokenService
         
         var cacheKey = $"reset_token:{userId}";
         var expirationMinutes = int.Parse("15");
-        
-        _cache.SetString(cacheKey, token, new DistributedCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(expirationMinutes)
-        });
+
+        _cache.GetDatabase().StringSet(cacheKey, token, TimeSpan.FromMinutes(expirationMinutes));
 
         return token;
     }
@@ -32,11 +27,11 @@ public class TokenService : ITokenService
     public bool ValidatePasswordResetToken(string userId, string token)
     {
         var cacheKey = $"reset_token:{userId}";
-        var storedToken = _cache.GetString(cacheKey);
+        var storedToken = _cache.GetDatabase().StringGet(cacheKey);
 
         if (storedToken == token)
         {
-            _cache.Remove(cacheKey);
+            _cache.GetDatabase().KeyDelete(cacheKey);
             return true;
         }
 
@@ -49,11 +44,8 @@ public class TokenService : ITokenService
         
         var cacheKey = $"email_token:{userId}";
         var expirationHours = 24;
-        
-        _cache.SetString(cacheKey, token, new DistributedCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(expirationHours)
-        });
+
+        _cache.GetDatabase().StringSet(cacheKey, token, TimeSpan.FromHours(expirationHours));
 
         return token;
     }
@@ -61,11 +53,11 @@ public class TokenService : ITokenService
     public bool ValidateEmailConfirmationToken(string userId, string token)
     {
         var cacheKey = $"email_token:{userId}";
-        var storedToken = _cache.GetString(cacheKey);
+        var storedToken = _cache.GetDatabase().StringGet(cacheKey);
 
         if (storedToken == token)
         {
-            _cache.Remove(cacheKey);
+            _cache.GetDatabase().KeyDelete(cacheKey);
             return true;
         }
 
