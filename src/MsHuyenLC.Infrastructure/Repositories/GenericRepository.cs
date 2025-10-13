@@ -5,7 +5,7 @@ using MsHuyenLC.Infrastructure.Persistence;
 
 namespace MsHuyenLC.Infrastructure.Repositories;
 
-class GenericRepository<T> : IGenericRepository<T> where T : class
+public class GenericRepository<T> : IGenericRepository<T> where T : class
 {
     private readonly ApplicationDbContext _context;
     private readonly DbSet<T> _dbSet;

@@ -34,6 +34,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<GiaoVien> GiaoViens { get; set; } = null!;
     public DbSet<GiaoVu> GiaoVus { get; set; } = null!;
 
+    // System
+    public DbSet<NhatKyHeThong> NhatKyHeThongs { get; set; } = null!;
+    public DbSet<SaoLuuDuLieu> SaoLuuDuLieus { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<NganHangDe>().ToTable("NganHangDe");
@@ -59,6 +63,9 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<HocVien>().ToTable("HocVien");
         modelBuilder.Entity<GiaoVien>().ToTable("GiaoVien");
         modelBuilder.Entity<GiaoVu>().ToTable("GiaoVu");
+
+        modelBuilder.Entity<NhatKyHeThong>().ToTable("NhatKyHeThong");
+        modelBuilder.Entity<SaoLuuDuLieu>().ToTable("SaoLuuDuLieu");
 
         modelBuilder.Entity<TaiKhoan>()
             .HasIndex(tk => tk.TenDangNhap)

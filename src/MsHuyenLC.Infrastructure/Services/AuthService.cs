@@ -22,10 +22,10 @@ public class AuthService : IAuthService
         var user = await _userRepository.GetByUsernameAsync(username);
         if (user == null || !_passwordHasher.VerifyPassword(user.MatKhau, password))
         {
-            throw new UnauthorizedAccessException("Invalid username or password.");
+            return "";
         }
 
-        return _jwtService.GenerateToken(user.Id.ToString(), user.Email, new[] { user.VaiTro.ToString() });
+        return _jwtService.GenerateToken(user.Id.ToString(), user.Email ?? "Không có email", new[] { user.VaiTro.ToString() });
     }
 
     public async Task Logout(string userId)
@@ -39,14 +39,12 @@ public class AuthService : IAuthService
         return user != null;
     }
 
-    public async Task<bool> ResetPassword(string token, string newPassword)
+    public async Task<bool> ResetPassword(string email, string token, string newPassword)
     {
-        var user = await _userRepository.GetByIdAsync(token);
-        if (user == null)
-        {
-            return false;
-        }
-
+        var user = await _userRepository.GetByEmailAsync(email);
+        if (user == null) return false;
+        var validToken = _tokenService.ValidatePasswordResetToken(token, user.Id.ToString());
+        if (!validToken) return false;
         user.MatKhau = _passwordHasher.HashPassword(newPassword);
         await _userRepository.UpdateAsync(user);
         await _userRepository.SaveChangesAsync();

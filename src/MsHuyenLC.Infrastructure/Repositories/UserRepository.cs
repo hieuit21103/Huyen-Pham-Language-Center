@@ -24,7 +24,7 @@ public class UserRepository : IUserRepository
 
     public async Task<TaiKhoan?> GetByIdAsync(string userId)
     {
-        return await _context.TaiKhoans.FindAsync(userId);
+        return await _context.TaiKhoans.FindAsync(Guid.Parse(userId));
     }
 
     public async Task<TaiKhoan> CreateAsync(TaiKhoan user)

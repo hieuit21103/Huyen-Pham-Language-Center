@@ -51,7 +51,7 @@ public enum TrangThaiKyThi
 
 public enum TrangThaiThanhToan
 {
-    choduyet,
+    chuathanhtoan,
     dathanhtoan,
     thatbai
 }

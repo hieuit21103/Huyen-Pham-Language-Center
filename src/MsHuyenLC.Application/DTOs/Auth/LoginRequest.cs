@@ -1,4 +1,4 @@
-namespace MsHuyenLC.Application.DTOs;
+namespace MsHuyenLC.Application.DTOs.Auth;
 
 public class LoginRequest
 {

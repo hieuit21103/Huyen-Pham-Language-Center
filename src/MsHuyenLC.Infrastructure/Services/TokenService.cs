@@ -37,30 +37,4 @@ public class TokenService : ITokenService
 
         return false;
     }
-
-    public string GenerateEmailConfirmationToken(string userId)
-    {
-        var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-        
-        var cacheKey = $"email_token:{userId}";
-        var expirationHours = 24;
-
-        _cache.GetDatabase().StringSet(cacheKey, token, TimeSpan.FromHours(expirationHours));
-
-        return token;
-    }
-
-    public bool ValidateEmailConfirmationToken(string userId, string token)
-    {
-        var cacheKey = $"email_token:{userId}";
-        var storedToken = _cache.GetDatabase().StringGet(cacheKey);
-
-        if (storedToken == token)
-        {
-            _cache.GetDatabase().KeyDelete(cacheKey);
-            return true;
-        }
-
-        return false;
-    }
 }

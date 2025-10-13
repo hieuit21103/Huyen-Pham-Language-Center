@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MsHuyenLC.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251009213050_InitialCreate")]
+    [Migration("20251012153615_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -154,7 +154,13 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.Property<Guid>("KhoaHocId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("NgayThanhToan")
+                    b.Property<DateTime>("NgayHetHan")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("NgayLap")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("NgayThanhToan")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("PhuongThuc")
@@ -510,6 +516,62 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.HasIndex("NguoiGuiTaiKhoanId");
 
                     b.ToTable("ThongBao", (string)null);
+                });
+
+            modelBuilder.Entity("MsHuyenLC.Domain.Entities.System.NhatKyHeThong", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ChiTiet")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DuLieuCu")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("DuLieuMoi")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("HanhDong")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("IP")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TaiKhoanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ThoiGian")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaiKhoanId");
+
+                    b.ToTable("NhatKyHeThong", (string)null);
+                });
+
+            modelBuilder.Entity("MsHuyenLC.Domain.Entities.System.SaoLuuDuLieu", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DuongDan")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("NgaySaoLuu")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SaoLuuDuLieu", (string)null);
                 });
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Users.GiaoVien", b =>
@@ -873,6 +935,17 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.Navigation("LopHoc");
 
                     b.Navigation("NguoiGuiTaiKhoan");
+                });
+
+            modelBuilder.Entity("MsHuyenLC.Domain.Entities.System.NhatKyHeThong", b =>
+                {
+                    b.HasOne("MsHuyenLC.Domain.Entities.Users.TaiKhoan", "TaiKhoan")
+                        .WithMany()
+                        .HasForeignKey("TaiKhoanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TaiKhoan");
                 });
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Users.GiaoVien", b =>

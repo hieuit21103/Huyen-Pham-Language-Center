@@ -7,7 +7,7 @@ public class DangKyKhach
     public string Email { get; set; } = null!;
     public string SoDienThoai { get; set; } = null!;
     public string? NoiDung { get; set; }
-    public DateTime NgayDangKy { get; set; } = DateTime.Now;
+    public DateTime NgayDangKy { get; set; } = DateTime.UtcNow;
     public TrangThaiDangKy TrangThai { get; set; } = TrangThaiDangKy.choduyet;
     public KetQuaDangKy KetQua { get; set; } = KetQuaDangKy.chuaxuly;
     public DateTime? NgayXuLy { get; set; }

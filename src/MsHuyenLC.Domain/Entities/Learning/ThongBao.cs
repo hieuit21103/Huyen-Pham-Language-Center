@@ -10,7 +10,7 @@ public class ThongBao
     public DoiTuongNhan DoiTuongNhan { get; set; } = DoiTuongNhan.lophoc;
     public string TieuDe { get; set; } = null!;
     public string NoiDung { get; set; } = null!;
-    public DateTime NgayGui { get; set; } = DateTime.Now;
+    public DateTime NgayGui { get; set; } = DateTime.UtcNow;
 
     public TaiKhoan NguoiGuiTaiKhoan { get; set; } = null!;
     public LopHoc? LopHoc { get; set; }

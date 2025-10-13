@@ -45,6 +45,19 @@ namespace MsHuyenLC.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SaoLuuDuLieu",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    NgaySaoLuu = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DuongDan = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SaoLuuDuLieu", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "TaiKhoan",
                 columns: table => new
                 {
@@ -180,6 +193,30 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     table.PrimaryKey("PK_HocVien", x => x.Id);
                     table.ForeignKey(
                         name: "FK_HocVien_TaiKhoan_TaiKhoanId",
+                        column: x => x.TaiKhoanId,
+                        principalTable: "TaiKhoan",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "NhatKyHeThong",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ThoiGian = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    HanhDong = table.Column<string>(type: "text", nullable: false),
+                    ChiTiet = table.Column<string>(type: "text", nullable: true),
+                    DuLieuCu = table.Column<string>(type: "text", nullable: false),
+                    DuLieuMoi = table.Column<string>(type: "text", nullable: false),
+                    IP = table.Column<string>(type: "text", nullable: false),
+                    TaiKhoanId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NhatKyHeThong", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_NhatKyHeThong_TaiKhoan_TaiKhoanId",
                         column: x => x.TaiKhoanId,
                         principalTable: "TaiKhoan",
                         principalColumn: "Id",
@@ -349,7 +386,9 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     SoTien = table.Column<decimal>(type: "numeric", nullable: false),
                     PhuongThuc = table.Column<int>(type: "integer", nullable: false),
                     TrangThai = table.Column<int>(type: "integer", nullable: false),
-                    NgayThanhToan = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    NgayLap = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    NgayHetHan = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    NgayThanhToan = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     HocVienId = table.Column<Guid>(type: "uuid", nullable: false),
                     KhoaHocId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -596,6 +635,11 @@ namespace MsHuyenLC.Infrastructure.Migrations
                 column: "KhoaHocId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_NhatKyHeThong_TaiKhoanId",
+                table: "NhatKyHeThong",
+                column: "TaiKhoanId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_PhanCong_GiaoVienId",
                 table: "PhanCong",
                 column: "GiaoVienId");
@@ -664,10 +708,16 @@ namespace MsHuyenLC.Infrastructure.Migrations
                 name: "LichHoc");
 
             migrationBuilder.DropTable(
+                name: "NhatKyHeThong");
+
+            migrationBuilder.DropTable(
                 name: "PhanCong");
 
             migrationBuilder.DropTable(
                 name: "PhanHoi");
+
+            migrationBuilder.DropTable(
+                name: "SaoLuuDuLieu");
 
             migrationBuilder.DropTable(
                 name: "ThanhToan");

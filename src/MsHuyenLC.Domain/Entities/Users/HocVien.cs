@@ -7,7 +7,7 @@ public class HocVien
     public DateTime? NgaySinh { get; set; }
     public GioiTinh? GioiTinh { get; set; }
     public string? DiaChi { get; set; }
-    public DateTime NgayDangKy { get; set; } = DateTime.Now;
+    public DateTime NgayDangKy { get; set; } = DateTime.UtcNow;
     public TrangThaiHocVien TrangThai { get; set; } = TrangThaiHocVien.danghoc;
 
     public TaiKhoan TaiKhoan { get; set; } = null!;

@@ -12,7 +12,7 @@ public class TaiKhoan
     public string? DatLaiMatKhauToken { get; set; }
     public string? ThoiHanToken { get; set; }
     public string? Avatar { get; set; }
-    public DateTime NgayTao { get; set; } = DateTime.Now;
+    public DateTime NgayTao { get; set; } = DateTime.UtcNow;
 }
 
 
