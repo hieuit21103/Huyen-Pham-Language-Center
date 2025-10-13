@@ -14,7 +14,8 @@ public class DefaultUserSeeder(MsHuyenLC.Application.Interfaces.Auth.IPasswordHa
             context.TaiKhoans.Add(new TaiKhoan
             {
                 TenDangNhap = "admin",
-                MatKhau = _passwordHasher.HashPassword("Admin@123")
+                MatKhau = _passwordHasher.HashPassword("Admin@123"),
+                VaiTro = 0
             });
         }
 
