@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Microsoft.Extensions.Logging;
 using MsHuyenLC.Application.Interfaces.Auth;
 using StackExchange.Redis;
 
@@ -28,7 +29,6 @@ public class TokenService : ITokenService
     {
         var cacheKey = $"reset_token:{userId}";
         var storedToken = _cache.GetDatabase().StringGet(cacheKey);
-
         if (storedToken == token)
         {
             _cache.GetDatabase().KeyDelete(cacheKey);

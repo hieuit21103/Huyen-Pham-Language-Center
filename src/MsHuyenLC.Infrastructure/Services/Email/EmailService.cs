@@ -13,20 +13,14 @@ public class EmailService : IEmailService
     private readonly string _fromEmail;
     private readonly bool _enableSsl;
 
-    public EmailService(
-        string smtpHost = "smtp.gmail.com",
-        int smtpPort = 587,
-        string smtpUsername = "your-email@gmail.com",
-        string smtpPassword = "your-app-password",
-        string fromEmail = "noreply@mshuyenlc.com",
-        bool enableSsl = true)
+    public EmailService()
     {
-        _smtpHost = smtpHost;
-        _smtpPort = smtpPort;
-        _smtpUsername = smtpUsername;
-        _smtpPassword = smtpPassword;
-        _fromEmail = fromEmail;
-        _enableSsl = enableSsl;
+        _smtpHost = Environment.GetEnvironmentVariable("Smtp__Host") ?? "smtp.gmail.com";
+        _smtpPort = int.Parse(Environment.GetEnvironmentVariable("Smtp__Port") ?? "587");
+        _smtpUsername = Environment.GetEnvironmentVariable("Smtp__Username") ?? "your-email@gmail.com";
+        _smtpPassword = Environment.GetEnvironmentVariable("Smtp__Password") ?? "your-app-password";
+        _fromEmail = Environment.GetEnvironmentVariable("Smtp__From") ?? "noreply@mshuyenlc.com";
+        _enableSsl = bool.Parse(Environment.GetEnvironmentVariable("Smtp__EnableSsl") ?? "true");
     }
 
     public async Task SendEmailAsync(string to, string subject, string body)
@@ -40,7 +34,7 @@ public class EmailService : IEmailService
 
         var mailMessage = new MailMessage(_fromEmail, to, subject, body)
         {
-            IsBodyHtml = true // Quan trọng: Cho phép HTML content
+            IsBodyHtml = true
         };
 
         await client.SendMailAsync(mailMessage);

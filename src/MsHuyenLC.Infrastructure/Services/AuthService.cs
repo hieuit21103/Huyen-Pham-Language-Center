@@ -43,7 +43,7 @@ public class AuthService : IAuthService
     {
         var user = await _userRepository.GetByEmailAsync(email);
         if (user == null) return false;
-        var validToken = _tokenService.ValidatePasswordResetToken(token, user.Id.ToString());
+        var validToken = _tokenService.ValidatePasswordResetToken(user.Id.ToString(), token);
         if (!validToken) return false;
         user.MatKhau = _passwordHasher.HashPassword(newPassword);
         await _userRepository.UpdateAsync(user);
