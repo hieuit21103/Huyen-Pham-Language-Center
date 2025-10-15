@@ -10,6 +10,7 @@ public enum TrangThaiTaiKhoan
 
 public enum TrangThaiLopHoc
 {
+    choxepgiaovien,
     danghoc,
     ketthuc,
     huy

@@ -82,13 +82,13 @@ public class AuthController : ControllerBase
 
         return Ok(new { message = "Gửi email đặt lại mật khẩu thành công" });
     }
-    
+
     [HttpPost("reset-password/confirm")]
     public async Task<IActionResult> ConfirmResetPassword([FromBody] ConfirmResetPasswordRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var result = await _authService.ResetPassword(request.Email,request.Token, request.MatKhauMoi);
+        var result = await _authService.ResetPassword(request.Email, request.Token, request.MatKhauMoi);
         if (!result)
             return BadRequest(new { message = "Đặt lại mật khẩu thất bại. Token không hợp lệ hoặc đã hết hạn." });
 

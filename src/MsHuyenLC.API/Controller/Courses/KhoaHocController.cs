@@ -35,7 +35,7 @@ public class KhoaHocController : BaseController<KhoaHoc>
 
     [Authorize(Roles = "admin,giaovu")]
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] KhoaHocCreateRequest createDto)
+    public async Task<IActionResult> Create([FromBody] CourseCreateRequest createDto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -45,7 +45,7 @@ public class KhoaHocController : BaseController<KhoaHoc>
             MoTa = createDto.MoTa,
             HocPhi = createDto.HocPhi,
             ThoiLuong = createDto.ThoiLuong,
-            NgayKhaiGiang = createDto.NgayKhaiGiang.ToUniversalTime(),
+            NgayKhaiGiang = createDto.NgayKhaiGiang,
             TrangThai = createDto.TrangThai
         };
 
@@ -57,7 +57,7 @@ public class KhoaHocController : BaseController<KhoaHoc>
 
     [Authorize(Roles = "admin,giaovu")]
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] KhoaHocUpdateRequest updateDto)
+    public async Task<IActionResult> Update(string id, [FromBody] CourseUpdateRequest updateDto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -78,7 +78,7 @@ public class KhoaHocController : BaseController<KhoaHoc>
 
     [Authorize(Roles = "admin,giaovu")]
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(string id)
     {
         var entity = await _service.GetByIdAsync(id);
         if (entity == null) return NotFound();

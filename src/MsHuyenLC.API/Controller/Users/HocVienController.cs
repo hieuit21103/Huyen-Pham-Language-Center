@@ -1,0 +1,111 @@
+using Microsoft.AspNetCore.Mvc;
+using MsHuyenLC.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using MsHuyenLC.Application.DTOs.Courses;
+using System.Linq.Expressions;
+using MsHuyenLC.Application.DTOs.Students;
+
+namespace MsHuyenLC.API.Controller.Users;
+
+[Route("api/[controller]")]
+[ApiController]
+public class HocVienController : BaseController<HocVien>
+{
+
+    public HocVienController(IGenericService<HocVien> service) : base(service)
+    {
+    }
+
+    protected override Func<IQueryable<HocVien>, IOrderedQueryable<HocVien>>? BuildOrderBy(string sortBy, string? sortOrder)
+    {
+        return sortBy?.ToLower() switch
+        {
+            "hoten" => sortOrder?.ToLower() == "desc"
+                ? (q => q.OrderByDescending(k => k.HoTen))
+                : (q => q.OrderBy(k => k.HoTen)),
+            "ngaysinh" => sortOrder?.ToLower() == "desc"
+                ? (q => q.OrderByDescending(k => k.NgaySinh))
+                : (q => q.OrderBy(k => k.NgaySinh)),
+            "gioitinh" => sortOrder?.ToLower() == "desc"
+                ? (q => q.OrderByDescending(k => k.GioiTinh))
+                : (q => q.OrderBy(k => k.GioiTinh)),
+            "diachi" => sortOrder?.ToLower() == "desc"
+                ? (q => q.OrderByDescending(k => k.DiaChi))
+                : (q => q.OrderBy(k => k.DiaChi)),
+            "ngaydangky" => sortOrder?.ToLower() == "desc"
+                ? (q => q.OrderByDescending(k => k.NgayDangKy))
+                : (q => q.OrderBy(k => k.NgayDangKy)),
+            "trangthai" => sortOrder?.ToLower() == "desc"
+                ? (q => q.OrderByDescending(k => k.TrangThai))
+                : (q => q.OrderBy(k => k.TrangThai)),
+            _ => sortOrder?.ToLower() == "desc"
+                ? (q => q.OrderByDescending(k => k.Id))
+                : (q => q.OrderBy(k => k.Id)),
+        };
+    }
+
+    [Authorize(Roles = "admin,giaovu,giaovien")]
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(string id, [FromBody] StudentUpdateRequest request)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        var existingStudent = await _service.GetByIdAsync(id);
+        if (existingStudent == null) return NotFound();
+
+        existingStudent.HoTen = request.HoTen ?? existingStudent.HoTen;
+        existingStudent.NgaySinh = request.NgaySinh ?? existingStudent.NgaySinh;
+        existingStudent.GioiTinh = request.GioiTinh ?? existingStudent.GioiTinh;
+        existingStudent.DiaChi = request.DiaChi ?? existingStudent.DiaChi;
+        existingStudent.TrangThai = request.TrangThai ?? existingStudent.TrangThai;
+
+        await _service.UpdateAsync(existingStudent);
+
+        return Ok();
+    }
+
+    [Authorize(Roles = "admin,giaovu")]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(string id)
+    {
+        var entity = await _service.GetByIdAsync(id);
+        if (entity == null) return NotFound();
+        await _service.DeleteAsync(entity);
+
+        return Ok();
+    }
+
+    [Authorize]
+    [HttpGet("{id}/profile")]
+    public async Task<IActionResult> GetStudentProfile(string id)
+    {
+        var hocVien = await _service.GetByIdAsync(id);
+
+        if (hocVien == null)
+            return NotFound(new { message = "Không tìm thấy học viên" });
+
+        return Ok(hocVien);
+    }
+
+    [Authorize]
+    [HttpPost("{id}/profile")]
+    public async Task<IActionResult> UpdateStudentProfile(string id, [FromBody] StudentProfileUpdateRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var hocVien = await _service.GetByIdAsync(id);
+
+        if (hocVien == null)
+            return NotFound(new { message = "Không tìm thấy học viên" });
+
+        hocVien.HoTen = request.HoTen ?? hocVien.HoTen;
+        hocVien.NgaySinh = request.NgaySinh ?? hocVien.NgaySinh;
+        hocVien.GioiTinh = request.GioiTinh ?? hocVien.GioiTinh;
+        hocVien.DiaChi = request.DiaChi ?? hocVien.DiaChi;
+
+        await _service.UpdateAsync(hocVien);
+
+        return Ok(new { message = "Cập nhật thông tin học viên thành công" });
+    }
+}

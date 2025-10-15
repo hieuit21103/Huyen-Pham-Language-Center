@@ -1,5 +1,6 @@
 using MsHuyenLC.Infrastructure.Persistence;
 using MsHuyenLC.Application.Interfaces.Auth;
+using System.Linq.Expressions;
 
 namespace MsHuyenLC.Infrastructure.Repositories;
 
@@ -10,6 +11,33 @@ public class UserRepository : IUserRepository
     public UserRepository(ApplicationDbContext context)
     {
         _context = context;
+    }
+
+    public async Task<IEnumerable<TaiKhoan>> GetAllAsync(
+        int PageNumber = 1,
+        int PageSize = 10,
+        Expression<Func<TaiKhoan, bool>>? Filter = null,
+        Func<IQueryable<TaiKhoan>, IOrderedQueryable<TaiKhoan>>? OrderBy = null,
+        params Expression<Func<TaiKhoan, object>>[] Includes)
+    {
+        IQueryable<TaiKhoan> query = _context.TaiKhoans;
+
+        if (Filter != null)
+        {
+            query = query.Where(Filter);
+        }
+
+        foreach (var include in Includes)
+        {
+            query = query.Include(include);
+        }
+
+        if (OrderBy != null)
+        {
+            query = OrderBy(query);
+        }
+
+        return await query.Skip((PageNumber - 1) * PageSize).Take(PageSize).ToListAsync();
     }
 
     public async Task<TaiKhoan?> GetByUsernameAsync(string username)

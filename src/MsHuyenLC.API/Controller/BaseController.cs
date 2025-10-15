@@ -46,7 +46,7 @@ public abstract class BaseController<TEntity> : ControllerBase where TEntity : c
     }
 
     [HttpGet("{id}")]
-    public virtual async Task<IActionResult> GetById(int id)
+    public virtual async Task<IActionResult> GetById(string id)
     {
         var entity = await _service.GetByIdAsync(id);
         if (entity == null) return NotFound();
