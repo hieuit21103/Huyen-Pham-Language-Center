@@ -105,9 +105,9 @@ Dự án áp dụng **Clean Architecture** (Onion Architecture) với 4 layer ch
 - **Docker Compose** - Multi-container orchestration
 
 ### Libraries & Packages
-- **AutoMapper** (nếu có) - Object mapping
-- **FluentValidation** (nếu có) - Input validation
-- **Serilog/NLog** (nếu có) - Logging
+- **StackExchange.Redis** - Redis client for .NET
+- **Npgsql.EntityFrameworkCore.PostgreSQL** - PostgreSQL provider for EF Core
+- **Microsoft.AspNetCore.Authentication.JwtBearer** - JWT authentication
 
 ## 📁 Cấu trúc dự án
 
@@ -248,7 +248,7 @@ Các controller đã được định nghĩa nhưng chưa triển khai đầy đ
 ### Phát triển (Development)
 
 - **.NET SDK 9.0** hoặc cao hơn
-- **PostgreSQL 14+** 
+- **PostgreSQL 14+**
 - **Redis 7+**
 - **Docker Desktop** (optional, cho môi trường container)
 - **Visual Studio 2022** / **VS Code** / **Rider**
@@ -352,7 +352,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
-SMTP_FROM_EMAIL=noreply@mshuyenlc.com
+SMTP_FROM_EMAIL=noreply@your-domain.com
 SMTP_FROM_NAME=MsHuyenLC
 
 # Application
@@ -598,9 +598,8 @@ Dự án này thuộc về MsHuyenLC Team.
 
 ## 📧 Liên hệ
 
-- **Email**: support@mshuyenlc.com
-- **Website**: [Coming soon]
 - **GitHub**: https://github.com/hieuit21103/MsHuyenLC
+- **Issues**: https://github.com/hieuit21103/MsHuyenLC/issues
 
 ---
 
