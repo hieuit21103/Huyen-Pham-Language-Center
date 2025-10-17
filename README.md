@@ -1,4 +1,4 @@
-# 🎓 MsHuyenLC - Hệ Thống Quản Lý Trung Tâm Đào Tạo
+# 🎓 MsHuyenLC - Hệ Thống Quản Lý Đào Tạo Và Thi Trực Tuyến
 
 [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-336791?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
@@ -594,7 +594,7 @@ Mọi đóng góp đều được chào đón! Vui lòng:
 
 ## 📝 License
 
-Dự án này thuộc về MsHuyenLC Team.
+Dự án này thuộc về Lê Minh Hiếu.
 
 ## 📧 Liên hệ
 
@@ -603,5 +603,5 @@ Dự án này thuộc về MsHuyenLC Team.
 
 ---
 
-**Được phát triển với ❤️ bởi MsHuyenLC Team**
+**Được phát triển bởi Lê Minh Hiếu**
 
