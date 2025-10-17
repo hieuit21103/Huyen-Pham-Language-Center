@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MsHuyenLC.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using MsHuyenLC.Application.DTOs.Classes;
-using System.Linq.Expressions;
+using MsHuyenLC.Application.DTOs.Courses.LopHoc;
 using MsHuyenLC.Application.Services;
 
 namespace MsHuyenLC.API.Controller.Courses;
@@ -43,43 +42,49 @@ public class LopHocController : BaseController<LopHoc>
 
     [Authorize(Roles = "admin,giaovu")]
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] ClassCreateRequest request)
+    public async Task<IActionResult> Create([FromBody] LopHocRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var khoaHoc = await _courseService.GetByIdAsync(request.KhoaHocId);
+        var khoaHoc = await _courseService.GetByIdAsync(request.KhoaHocId.ToString());
         if (khoaHoc == null) return BadRequest("Khóa học không tồn tại");
 
         var lopHoc = new LopHoc
         {
             TenLop = request.TenLop,
             SiSoToiDa = request.SiSoToiDa,
-            TrangThai = request.TrangThai,
-            KhoaHoc = khoaHoc
+            KhoaHocId = request.KhoaHocId
         };
 
         var result = await _service.AddAsync(lopHoc);
         if (result == null) return BadRequest();
 
-        return Ok(request);
+        var response = new LopHocResponse
+        {
+            Id = result.Id,
+            TenLop = result.TenLop,
+            SiSoToiDa = result.SiSoToiDa,
+            SiSoHienTai = result.SiSoHienTai,
+            TrangThai = result.TrangThai,
+            KhoaHocId = result.KhoaHocId,
+            TenKhoaHoc = khoaHoc.TenKhoaHoc
+        };
+
+        return Ok(response);
     }
 
     [Authorize(Roles = "admin,giaovu")]
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, [FromBody] ClassUpdateRequest request)
+    public async Task<IActionResult> Update(string id, [FromBody] LopHocUpdateRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var existingLopHoc = await _service.GetByIdAsync(id);
         if (existingLopHoc == null) return NotFound();
 
-        var khoaHoc = await _courseService.GetByIdAsync(request.KhoaHocId ?? existingLopHoc.KhoaHoc.Id.ToString());
-        if (khoaHoc == null) return BadRequest("Khóa học không tồn tại");
-
-        existingLopHoc.TenLop = request.TenLop ?? existingLopHoc.TenLop;
-        existingLopHoc.SiSoToiDa = request.SiSoToiDa ?? existingLopHoc.SiSoToiDa;
-        existingLopHoc.TrangThai = request.TrangThai ?? existingLopHoc.TrangThai;
-        existingLopHoc.KhoaHoc = khoaHoc ?? existingLopHoc.KhoaHoc;
+        existingLopHoc.TenLop = request.TenLop;
+        existingLopHoc.SiSoToiDa = request.SiSoToiDa;
+        existingLopHoc.TrangThai = request.TrangThai;
 
         await _service.UpdateAsync(existingLopHoc);
 
@@ -104,16 +109,19 @@ public class LopHocController : BaseController<LopHoc>
         var lopHoc = await _service.GetByIdAsync(id);
         if (lopHoc == null)
             return NotFound(new { message = "Không tìm thấy lớp học" });
+        
         var assignment = (await _assignmentService.GetAllAsync(
             1,
             int.MaxValue,
-            Filter: pc => pc.LopHoc.Id.ToString() == id
+            Filter: pc => pc.LopHocId.ToString() == id
         )).ToList();
+        
         if (!assignment.Any())
             return BadRequest(new { message = "Lớp học chưa được phân công giáo viên" });
 
-        if (!assignment.First().GiaoVien.PhanCongs.Any(pc => pc.LopHoc.Id.ToString() == id && pc.GiaoVien.Id.ToString() == User.FindFirst("id")?.Value) &&
-            !User.IsInRole("admin") && !User.IsInRole("giaovu"))
+        var currentUserId = User.FindFirst("id")?.Value;
+        if (!User.IsInRole("admin") && !User.IsInRole("giaovu") && 
+            assignment.First().GiaoVienId.ToString() != currentUserId)
         {
             return Forbid();
         }
@@ -121,7 +129,7 @@ public class LopHocController : BaseController<LopHoc>
         var hocViens = await _registrationService.GetAllAsync(
             1,
             int.MaxValue,
-            Filter: dk => dk.LopHoc.Id.ToString() == id,
+            Filter: dk => dk.LopHocId.ToString() == id,
             Includes: dk => dk.HocVien
         );
 

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MsHuyenLC.Application.DTOs.Accounts;
+using MsHuyenLC.Application.DTOs.Users.TaiKhoan;
 using MsHuyenLC.Application.Interfaces.Auth;
 using System.Security.Claims;
 
@@ -34,7 +34,7 @@ public class ProfileController : ControllerBase
     }
 
     [HttpPut]
-    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+    public async Task<IActionResult> UpdateProfile([FromBody] TaiKhoanUpdateRequest request)
     {
         if (request == null)
         {

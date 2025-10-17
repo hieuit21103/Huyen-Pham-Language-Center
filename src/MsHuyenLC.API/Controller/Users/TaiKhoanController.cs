@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.Interfaces.Auth;
 using System.Security.Claims;
-using MsHuyenLC.Application.DTOs.Accounts;
+using MsHuyenLC.Application.DTOs.Users.TaiKhoan;
 
 namespace MsHuyenLC.API.Controllers.Users;
 
@@ -93,7 +93,7 @@ public class TaiKhoanController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
+    public async Task<IActionResult> CreateUser([FromBody] TaiKhoanRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -123,7 +123,7 @@ public class TaiKhoanController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserRequest request)
+    public async Task<IActionResult> UpdateUser(string id, [FromBody] TaiKhoanUpdateRequest request)
     {
         if (string.IsNullOrEmpty(id) || request == null)
             return BadRequest(new { message = "Dữ liệu không hợp lệ." });

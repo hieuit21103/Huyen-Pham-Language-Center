@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MsHuyenLC.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using MsHuyenLC.Application.DTOs.Courses;
-using System.Linq.Expressions;
+using MsHuyenLC.Application.DTOs.Courses.KhoaHoc;
 
 namespace MsHuyenLC.API.Controller.Courses;
 
@@ -35,41 +34,51 @@ public class KhoaHocController : BaseController<KhoaHoc>
 
     [Authorize(Roles = "admin,giaovu")]
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CourseCreateRequest createDto)
+    public async Task<IActionResult> Create([FromBody] KhoaHocRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var khoaHoc = new KhoaHoc
         {
-            TenKhoaHoc = createDto.TenKhoaHoc,
-            MoTa = createDto.MoTa,
-            HocPhi = createDto.HocPhi,
-            ThoiLuong = createDto.ThoiLuong,
-            NgayKhaiGiang = createDto.NgayKhaiGiang,
-            TrangThai = createDto.TrangThai
+            TenKhoaHoc = request.TenKhoaHoc,
+            MoTa = request.MoTa,
+            HocPhi = request.HocPhi,
+            ThoiLuong = request.ThoiLuong,
+            NgayKhaiGiang = request.NgayKhaiGiang
         };
 
         var result = await _service.AddAsync(khoaHoc);
         if (result == null) return BadRequest();
 
-        return Ok(createDto);
+        var response = new KhoaHocResponse
+        {
+            Id = result.Id,
+            TenKhoaHoc = result.TenKhoaHoc,
+            MoTa = result.MoTa,
+            HocPhi = result.HocPhi,
+            ThoiLuong = result.ThoiLuong,
+            NgayKhaiGiang = result.NgayKhaiGiang,
+            TrangThai = result.TrangThai
+        };
+
+        return Ok(response);
     }
 
     [Authorize(Roles = "admin,giaovu")]
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, [FromBody] CourseUpdateRequest updateDto)
+    public async Task<IActionResult> Update(string id, [FromBody] KhoaHocUpdateRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var existingKhoaHoc = await _service.GetByIdAsync(id);
         if (existingKhoaHoc == null) return NotFound();
 
-        existingKhoaHoc.TenKhoaHoc = updateDto.TenKhoaHoc;
-        existingKhoaHoc.MoTa = updateDto.MoTa;
-        existingKhoaHoc.HocPhi = updateDto.HocPhi;
-        existingKhoaHoc.ThoiLuong = updateDto.ThoiLuong;
-        existingKhoaHoc.NgayKhaiGiang = updateDto.NgayKhaiGiang.ToUniversalTime();
-        existingKhoaHoc.TrangThai = updateDto.TrangThai;
+        existingKhoaHoc.TenKhoaHoc = request.TenKhoaHoc;
+        existingKhoaHoc.MoTa = request.MoTa;
+        existingKhoaHoc.HocPhi = request.HocPhi;
+        existingKhoaHoc.ThoiLuong = request.ThoiLuong;
+        existingKhoaHoc.NgayKhaiGiang = request.NgayKhaiGiang;
+        existingKhoaHoc.TrangThai = request.TrangThai;
 
         await _service.UpdateAsync(existingKhoaHoc);
 

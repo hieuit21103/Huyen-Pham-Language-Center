@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.DTOs.Teachers;
+using MsHuyenLC.Application.DTOs.Courses.PhanCong;
 using MsHuyenLC.Application.Services.Courses;
 
 namespace MsHuyenLC.API.Controller.Courses;
@@ -24,17 +24,17 @@ public class PhanCongController : BaseController<PhanCong>
     }
 
     [HttpPost]
-    public async Task<IActionResult> AssignTeacher([FromBody] AssignTeacherRequest request)
+    public async Task<IActionResult> AssignTeacher([FromBody] PhanCongRequest request)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var giaoVien = await _teacherService.GetByIdAsync(request.GiaoVienId);
+        var giaoVien = await _teacherService.GetByIdAsync(request.GiaoVienId.ToString());
 
         if (giaoVien == null)
             return NotFound(new { message = "Không tìm thấy giáo viên" });
 
-        var lopHoc = await _classService.GetByIdAsync(request.LopHocId);
+        var lopHoc = await _classService.GetByIdAsync(request.LopHocId.ToString());
 
         if (lopHoc == null)
             return NotFound(new { message = "Không tìm thấy lớp học" });
@@ -42,7 +42,7 @@ public class PhanCongController : BaseController<PhanCong>
         var existingAssignment = await _service.GetAllAsync(
             PageNumber: 1,
             PageSize: int.MaxValue,
-            Filter: p => p.LopHoc.Id.ToString() == request.LopHocId
+            Filter: p => p.LopHocId == request.LopHocId
         );
         
         if (existingAssignment.Any())
@@ -50,20 +50,22 @@ public class PhanCongController : BaseController<PhanCong>
 
         var phanCong = new PhanCong
         {
-            GiaoVien = giaoVien,
-            LopHoc = lopHoc,
+            GiaoVienId = request.GiaoVienId,
+            LopHocId = request.LopHocId
         };
 
-        await _service.AddAsync(phanCong);
+        var result = await _service.AddAsync(phanCong);
+        if (result == null)
+            return BadRequest(new { message = "Phân công thất bại" });
         
-        var response = new
+        var response = new PhanCongResponse
         {
-            id = phanCong.Id,
-            giaoVienId = giaoVien.Id,
-            tenGiaoVien = giaoVien.HoTen,
-            lopHocId = lopHoc.Id,
-            tenLop = lopHoc.TenLop,
-            ngayPhanCong = phanCong.NgayPhanCong
+            Id = result.Id,
+            GiaoVienId = result.GiaoVienId,
+            TenGiaoVien = giaoVien.HoTen,
+            LopHocId = result.LopHocId,
+            TenLop = lopHoc.TenLop,
+            NgayPhanCong = result.NgayPhanCong
         };
         
         return Ok(response);
@@ -80,11 +82,26 @@ public class PhanCongController : BaseController<PhanCong>
         var assignments = await _service.GetAllAsync(
             PageNumber: 1,
             PageSize: int.MaxValue,
-            Filter: p => p.GiaoVien.Id.ToString() == id,
+            Filter: p => p.GiaoVienId.ToString() == id,
             OrderBy: q => q.OrderByDescending(p => p.NgayPhanCong)
-            );
+        );
 
-        return Ok(assignments);
+        var responses = new List<PhanCongResponse>();
+        foreach (var assignment in assignments)
+        {
+            var lopHoc = await _classService.GetByIdAsync(assignment.LopHocId.ToString());
+            responses.Add(new PhanCongResponse
+            {
+                Id = assignment.Id,
+                GiaoVienId = assignment.GiaoVienId,
+                TenGiaoVien = giaoVien.HoTen,
+                LopHocId = assignment.LopHocId,
+                TenLop = lopHoc?.TenLop ?? "",
+                NgayPhanCong = assignment.NgayPhanCong
+            });
+        }
+
+        return Ok(responses);
     }
 
     [HttpDelete("{id}")]

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using MsHuyenLC.Application.DTOs.Courses;
+using MsHuyenLC.Application.DTOs.Courses.LichHoc;
 using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.Services.Courses;
 
@@ -39,7 +39,7 @@ public class LichHocController : BaseController<LichHoc>
     [HttpGet("class/{classId}")]
     [Authorize(Roles="admin,giaovu")]
     public async Task<IActionResult> GetClassSchedule(
-        string classId,
+            string classId, 
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10
         )
@@ -47,7 +47,7 @@ public class LichHocController : BaseController<LichHoc>
         var schedule = await _service.GetAllAsync(
             PageNumber: pageNumber,
             PageSize: pageSize,
-            Filter: s => s.LopHoc.Id.ToString() == classId,
+                Filter: s => s.LopHocId.ToString() == classId,
             OrderBy: q => q.OrderBy(s => s.Thu)
         );
 
@@ -57,7 +57,7 @@ public class LichHocController : BaseController<LichHoc>
     [HttpGet("teacher/{teacherId}")]
     [Authorize(Roles="admin,giaovu,giaovien")]
     public async Task<IActionResult> GetTeacherSchedule(
-        string teacherId,
+            string teacherId, 
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10
     )
@@ -65,7 +65,7 @@ public class LichHocController : BaseController<LichHoc>
         var schedule = await _service.GetAllAsync(
             PageNumber: pageNumber,
             PageSize: pageSize,
-            Filter: s => s.LopHoc.PhanCongs.Any(pc => pc.GiaoVien.Id.ToString() == teacherId),
+                Filter: s => s.LopHocId != null && s.LopHocId.ToString() == teacherId,
             OrderBy: q => q.OrderBy(s => s.Thu)
         );
 
@@ -75,7 +75,7 @@ public class LichHocController : BaseController<LichHoc>
     [HttpGet("student/{studentId}")]
     [Authorize(Roles = "admin,giaovu,giaovien,hocvien")]
     public async Task<IActionResult> GetStudentSchedule(
-        string studentId,
+            string studentId, 
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10
     )
@@ -83,7 +83,7 @@ public class LichHocController : BaseController<LichHoc>
         var schedule = await _service.GetAllAsync(
             PageNumber: pageNumber,
             PageSize: pageSize,
-            Filter: s => s.LopHoc.DangKys.Any(hv => hv.Id.ToString() == studentId),
+                Filter: s => s.LopHocId != null && s.LopHocId.ToString() == studentId,
             OrderBy: q => q.OrderBy(s => s.Thu)
         );
 
@@ -92,14 +92,14 @@ public class LichHocController : BaseController<LichHoc>
 
     [HttpPost]
     [Authorize(Roles = "admin,giaovu")]
-    public async Task<IActionResult> Create([FromBody] ScheduleCreateRequest request)
+    public async Task<IActionResult> Create([FromBody] LichHocRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var lichHoc = new LichHoc
+            var lichHoc = new LichHoc 
         {
-            LopHoc = new LopHoc { Id = Guid.Parse(request.LopHocId) },
-            PhongHoc = new PhongHoc { Id = Guid.Parse(request.PhongHocId) },
+                LopHocId = request.LopHocId,
+                PhongHocId = request.PhongHocId,
             Thu = request.Thu,
             TuNgay = request.TuNgay,
             DenNgay = request.DenNgay,
@@ -119,27 +119,26 @@ public class LichHocController : BaseController<LichHoc>
 
     [HttpPut("{id}")]
     [Authorize(Roles = "admin,giaovu")]
-    public async Task<IActionResult> Update(string id, [FromBody] ScheduleUpdateRequest request)
+    public async Task<IActionResult> Update(string id, [FromBody] LichHocUpdateRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var existingLichHoc = await _service.GetByIdAsync(id);
+            var existingLichHoc = await _service.GetByIdAsync(id); 
         if (existingLichHoc == null) return NotFound();
 
-        var phongHoc = await _phongHocService.GetByIdAsync(request.PhongHocId ?? existingLichHoc.PhongHoc.Id.ToString());
-        if (phongHoc == null) return BadRequest("Phòng học không tồn tại.");
+            // Validate new PhongHocId
+            var phongHoc = await _phongHocService.GetByIdAsync(request.PhongHocId.ToString());
+            if (phongHoc == null) return BadRequest("Phòng học không tồn tại.");
 
-        var lopHoc = await _lopHocService.GetByIdAsync(request.LopHocId ?? existingLichHoc.LopHoc.Id.ToString());
-        if (lopHoc == null) return BadRequest("Lớp học không tồn tại.");
+            // LopHocId is not provided in update DTO; keep existing
 
-        existingLichHoc.LopHoc = lopHoc;
-        existingLichHoc.PhongHoc = phongHoc;
-        existingLichHoc.Thu = request.Thu ?? existingLichHoc.Thu;
-        existingLichHoc.TuNgay = request.TuNgay ?? existingLichHoc.TuNgay;
-        existingLichHoc.DenNgay = request.DenNgay ?? existingLichHoc.DenNgay;
-        existingLichHoc.GioBatDau = request.GioBatDau ?? existingLichHoc.GioBatDau;
-        existingLichHoc.GioKetThuc = request.GioKetThuc ?? existingLichHoc.GioKetThuc;
-        existingLichHoc.CoHieuLuc = request.CoHieuLuc ?? existingLichHoc.CoHieuLuc;
+            existingLichHoc.PhongHocId = request.PhongHocId;
+            existingLichHoc.Thu = request.Thu;
+            existingLichHoc.TuNgay = request.TuNgay;
+            existingLichHoc.DenNgay = request.DenNgay;
+            existingLichHoc.GioBatDau = request.GioBatDau;
+            existingLichHoc.GioKetThuc = request.GioKetThuc;
+            existingLichHoc.CoHieuLuc = request.CoHieuLuc;
 
         await _service.UpdateAsync(existingLichHoc);
         return Ok();

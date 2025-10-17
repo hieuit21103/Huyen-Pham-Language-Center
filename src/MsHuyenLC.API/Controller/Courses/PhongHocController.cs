@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MsHuyenLC.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using MsHuyenLC.Application.DTOs.Classes;
+using MsHuyenLC.Application.DTOs.Courses.PhongHoc;
 
 namespace MsHuyenLC.API.Controller.Courses;
 
@@ -32,14 +32,14 @@ public class PhongHocController : BaseController<PhongHoc>
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] RoomCreateRequest request)
+    public async Task<IActionResult> Create([FromBody] PhongHocRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var phongHoc = new PhongHoc
         {
             TenPhong = request.TenPhong,
-            SoGhe = request.SoGhe
+            SoGhe = request.SucChua
         };
 
         var result = await _service.AddAsync(phongHoc);
@@ -49,7 +49,7 @@ public class PhongHocController : BaseController<PhongHoc>
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, [FromBody] RoomCreateRequest request)
+    public async Task<IActionResult> Update(string id, [FromBody] PhongHocRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -57,7 +57,7 @@ public class PhongHocController : BaseController<PhongHoc>
         if (existingRoom == null) return NotFound();
 
         existingRoom.TenPhong = request.TenPhong ?? existingRoom.TenPhong;
-        existingRoom.SoGhe = request.SoGhe != 0 ? request.SoGhe : existingRoom.SoGhe;
+    existingRoom.SoGhe = request.SucChua != 0 ? request.SucChua : existingRoom.SoGhe;
 
         await _service.UpdateAsync(existingRoom);
 

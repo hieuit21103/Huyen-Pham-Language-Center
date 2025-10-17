@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using MsHuyenLC.Application.DTOs.Teachers;
+using MsHuyenLC.Application.DTOs.Users.GiaoVien;
 using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.Interfaces.Auth;
 
@@ -46,59 +46,49 @@ public class GiaoVienController : BaseController<GiaoVien>
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] TeacherCreateRequest request)
+    public async Task<IActionResult> Create([FromBody] GiaoVienRequest request)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var existingAccount = await _userRepository.GetByEmailAsync(request.Email);
+        var taiKhoan = await _userRepository.GetByIdAsync(request.TaiKhoanId.ToString());
         
-        if (existingAccount != null)
-            return BadRequest(new { message = "Email đã được sử dụng" });
+        if (taiKhoan == null)
+            return BadRequest(new { message = "Tài khoản không tồn tại" });
 
-        var taiKhoan = new TaiKhoan
-        {
-            Id = Guid.NewGuid(),
-            TenDangNhap = request.Email,
-            Email = request.Email,
-            Sdt = request.SoDienThoai,
-            MatKhau = _passwordHasher.HashPassword(request.SoDienThoai),
-            VaiTro = VaiTro.giaovien,
-        };
-
-        if (await _userRepository.CreateAsync(taiKhoan) == null)
-            return BadRequest(new { message = "Tạo tài khoản thất bại" });
+        if (taiKhoan.VaiTro != VaiTro.giaovien)
+            return BadRequest(new { message = "Tài khoản không có vai trò giáo viên" });
 
         var giaoVien = new GiaoVien
         {
-            Id = taiKhoan.Id,
             HoTen = request.HoTen,
             ChuyenMon = request.ChuyenMon,
             TrinhDo = request.TrinhDo,
             KinhNghiem = request.KinhNghiem,
-            TaiKhoan = taiKhoan
+            TaiKhoanId = request.TaiKhoanId
         };
 
-        if (await _service.AddAsync(giaoVien) == null)
+        var result = await _service.AddAsync(giaoVien);
+        if (result == null)
             return BadRequest(new { message = "Tạo giáo viên thất bại" });
 
-        var response = new TeacherResponse
+        var response = new GiaoVienResponse
         {
             Id = giaoVien.Id,
             HoTen = giaoVien.HoTen,
             ChuyenMon = giaoVien.ChuyenMon,
             TrinhDo = giaoVien.TrinhDo,
             KinhNghiem = giaoVien.KinhNghiem,
-            Email = taiKhoan.Email ?? "",
-            SoDienThoai = taiKhoan.Sdt ?? "",
-            SoLopDangDay = 0
+            TaiKhoanId = giaoVien.TaiKhoanId,
+            Email = taiKhoan.Email,
+            Sdt = taiKhoan.Sdt
         };
 
         return Ok(response);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, [FromBody] TeacherUpdateRequest request)
+    public async Task<IActionResult> Update(string id, [FromBody] GiaoVienUpdateRequest request)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -126,11 +116,12 @@ public class GiaoVienController : BaseController<GiaoVien>
         if (giaoVien == null)
             return NotFound(new { message = "Không tìm thấy giáo viên" });
 
-        if (giaoVien.PhanCongs.Any())
-            return BadRequest(new { message = "Không thể xóa giáo viên đang được phân công dạy lớp" });
-
-        giaoVien.TaiKhoan.TrangThai = TrangThaiTaiKhoan.bikhoa;
-        await _userRepository.UpdateAsync(giaoVien.TaiKhoan);
+        var taiKhoan = await _userRepository.GetByIdAsync(giaoVien.TaiKhoanId.ToString());
+        if (taiKhoan != null)
+        {
+            taiKhoan.TrangThai = TrangThaiTaiKhoan.bikhoa;
+            await _userRepository.UpdateAsync(taiKhoan);
+        }
 
         return Ok(new { message = "Đã vô hiệu hóa giáo viên" });
     }

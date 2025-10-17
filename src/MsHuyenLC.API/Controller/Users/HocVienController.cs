@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MsHuyenLC.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using MsHuyenLC.Application.DTOs.Courses;
-using System.Linq.Expressions;
-using MsHuyenLC.Application.DTOs.Students;
+using MsHuyenLC.Application.DTOs.Users.HocVien;
 
 namespace MsHuyenLC.API.Controller.Users;
 
@@ -46,18 +44,18 @@ public class HocVienController : BaseController<HocVien>
 
     [Authorize(Roles = "admin,giaovu,giaovien")]
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, [FromBody] StudentUpdateRequest request)
+    public async Task<IActionResult> Update(string id, [FromBody] HocVienUpdateRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var existingStudent = await _service.GetByIdAsync(id);
         if (existingStudent == null) return NotFound();
 
-        existingStudent.HoTen = request.HoTen ?? existingStudent.HoTen;
-        existingStudent.NgaySinh = request.NgaySinh ?? existingStudent.NgaySinh;
-        existingStudent.GioiTinh = request.GioiTinh ?? existingStudent.GioiTinh;
-        existingStudent.DiaChi = request.DiaChi ?? existingStudent.DiaChi;
-        existingStudent.TrangThai = request.TrangThai ?? existingStudent.TrangThai;
+        existingStudent.HoTen = request.HoTen;
+        existingStudent.NgaySinh = request.NgaySinh;
+        existingStudent.GioiTinh = request.GioiTinh;
+        existingStudent.DiaChi = request.DiaChi;
+        existingStudent.TrangThai = request.TrangThai;
 
         await _service.UpdateAsync(existingStudent);
 
