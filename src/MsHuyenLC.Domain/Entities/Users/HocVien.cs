@@ -9,10 +9,6 @@ public class HocVien
     public string? DiaChi { get; set; }
     public DateTime NgayDangKy { get; set; } = DateTime.UtcNow;
     public TrangThaiHocVien TrangThai { get; set; } = TrangThaiHocVien.danghoc;
-
+    public Guid TaiKhoanId { get; set; }
     public TaiKhoan TaiKhoan { get; set; } = null!;
-    public ICollection<DangKy> DangKys { get; set; } = new List<DangKy>();
-    public ICollection<BaiThi> BaiThis { get; set; } = new List<BaiThi>();
-    public ICollection<PhanHoi> PhanHois { get; set; } = new List<PhanHoi>();
-    public ICollection<ThanhToan> ThanhToans { get; set; } = new List<ThanhToan>();
 }

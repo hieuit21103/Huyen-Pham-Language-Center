@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MsHuyenLC.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class v1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -45,6 +45,20 @@ namespace MsHuyenLC.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PhongHoc",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    TenPhong = table.Column<string>(type: "text", nullable: false),
+                    SoGhe = table.Column<int>(type: "integer", nullable: false),
+                    NgayTao = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PhongHoc", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SaoLuuDuLieu",
                 columns: table => new
                 {
@@ -68,8 +82,6 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     Email = table.Column<string>(type: "text", nullable: true),
                     Sdt = table.Column<string>(type: "text", nullable: true),
                     TrangThai = table.Column<int>(type: "integer", nullable: false),
-                    DatLaiMatKhauToken = table.Column<string>(type: "text", nullable: true),
-                    ThoiHanToken = table.Column<string>(type: "text", nullable: true),
                     Avatar = table.Column<string>(type: "text", nullable: true),
                     NgayTao = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -84,11 +96,11 @@ namespace MsHuyenLC.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     TenLop = table.Column<string>(type: "text", nullable: false),
-                    PhongHoc = table.Column<string>(type: "text", nullable: true),
                     SiSoHienTai = table.Column<int>(type: "integer", nullable: false),
                     SiSoToiDa = table.Column<int>(type: "integer", nullable: false),
                     TrangThai = table.Column<int>(type: "integer", nullable: false),
-                    KhoaHocId = table.Column<Guid>(type: "uuid", nullable: false)
+                    KhoaHocId = table.Column<Guid>(type: "uuid", nullable: false),
+                    PhongHocId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -97,6 +109,12 @@ namespace MsHuyenLC.Infrastructure.Migrations
                         name: "FK_LopHoc_KhoaHoc_KhoaHocId",
                         column: x => x.KhoaHocId,
                         principalTable: "KhoaHoc",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_LopHoc_PhongHoc_PhongHocId",
+                        column: x => x.PhongHocId,
+                        principalTable: "PhongHoc",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -251,11 +269,12 @@ namespace MsHuyenLC.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    IdLopHoc = table.Column<Guid>(type: "uuid", nullable: false),
-                    NgayHoc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Thu = table.Column<int>(type: "integer", nullable: false),
                     GioBatDau = table.Column<TimeSpan>(type: "interval", nullable: false),
                     GioKetThuc = table.Column<TimeSpan>(type: "interval", nullable: false),
-                    PhongHoc = table.Column<string>(type: "text", nullable: true),
+                    TuNgay = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DenNgay = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CoHieuLuc = table.Column<bool>(type: "boolean", nullable: false),
                     LopHocId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -332,7 +351,9 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     NgayDangKy = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     TrangThai = table.Column<int>(type: "integer", nullable: false),
                     HocVienId = table.Column<Guid>(type: "uuid", nullable: false),
-                    LopHocId = table.Column<Guid>(type: "uuid", nullable: false)
+                    KhoaHocId = table.Column<Guid>(type: "uuid", nullable: false),
+                    LopHocId = table.Column<Guid>(type: "uuid", nullable: true),
+                    NgayXepLop = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -344,11 +365,16 @@ namespace MsHuyenLC.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
+                        name: "FK_DangKy_KhoaHoc_KhoaHocId",
+                        column: x => x.KhoaHocId,
+                        principalTable: "KhoaHoc",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_DangKy_LopHoc_LopHocId",
                         column: x => x.LopHocId,
                         principalTable: "LopHoc",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -565,6 +591,11 @@ namespace MsHuyenLC.Infrastructure.Migrations
                 column: "HocVienId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_DangKy_KhoaHocId",
+                table: "DangKy",
+                column: "KhoaHocId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_DangKy_LopHocId",
                 table: "DangKy",
                 column: "LopHocId");
@@ -633,6 +664,11 @@ namespace MsHuyenLC.Infrastructure.Migrations
                 name: "IX_LopHoc_KhoaHocId",
                 table: "LopHoc",
                 column: "KhoaHocId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LopHoc_PhongHocId",
+                table: "LopHoc",
+                column: "PhongHocId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_NhatKyHeThong_TaiKhoanId",
@@ -754,6 +790,9 @@ namespace MsHuyenLC.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "KhoaHoc");
+
+            migrationBuilder.DropTable(
+                name: "PhongHoc");
         }
     }
 }

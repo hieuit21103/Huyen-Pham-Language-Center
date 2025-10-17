@@ -9,6 +9,7 @@ using MsHuyenLC.Infrastructure.Repositories;
 using MsHuyenLC.Infrastructure.Services;
 using MsHuyenLC.Infrastructure.Services.Email;
 using MsHuyenLC.Infrastructure.Persistence.Seed;
+using MsHuyenLC.Application.Services.Courses;
 using Microsoft.OpenApi.Models;
 using MsHuyenLC.Application.Interfaces.Email;
 
@@ -123,6 +124,8 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IGenericService<PhanCong>, AssignmentService>();
+builder.Services.AddScoped<IGenericService<LichHoc>, ScheduleService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped(typeof(IGenericService<>), typeof(GenericService<>));
 

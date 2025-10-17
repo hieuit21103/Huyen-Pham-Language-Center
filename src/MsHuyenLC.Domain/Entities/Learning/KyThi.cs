@@ -10,7 +10,6 @@ public class KyThi
     public int ThoiLuong { get; set; }
     public HinhThucKyThi HinhThuc { get; set; } = HinhThucKyThi.tructuyen;
     public TrangThaiKyThi TrangThai { get; set; } = TrangThaiKyThi.sapdienra;
-
+    public Guid LopHocId { get; set; }
     public LopHoc LopHoc { get; set; } = null!;
-    public ICollection<DeThi> DeThis { get; set; } = new List<DeThi>();
 }

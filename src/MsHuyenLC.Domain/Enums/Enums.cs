@@ -33,13 +33,12 @@ public enum TrangThaiKhoaHoc
 
 public enum TrangThaiDangKy
 {
-    choduyet,
-    daduyet,
-    choxeplop,
-    chuathanhtoan,
-    dathanhtoan,
-    datuchoi,
-    huy
+    choduyet,    
+    daduyet,       
+    daxeplop,      
+    danghoc,      
+    hoantat,        
+    huy             
 }
 
 public enum TrangThaiKyThi

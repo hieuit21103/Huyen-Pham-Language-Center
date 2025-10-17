@@ -9,7 +9,5 @@ public class KhoaHoc
     public int ThoiLuong { get; set; }
     public DateTime NgayKhaiGiang { get; set; }
     public TrangThaiKhoaHoc TrangThai { get; set; } = TrangThaiKhoaHoc.dangmo;
-    public ICollection<LopHoc> LopHocs { get; set; } = new List<LopHoc>();
-    public ICollection<ThanhToan> ThanhToans { get; set; } = new List<ThanhToan>();
 }
 

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.DTOs.Teachers;
+using MsHuyenLC.Application.Services.Courses;
 
 namespace MsHuyenLC.API.Controller.Courses;
 
@@ -12,17 +13,14 @@ public class PhanCongController : BaseController<PhanCong>
 {
     private readonly IGenericService<GiaoVien> _teacherService;
     private readonly IGenericService<LopHoc> _classService;
-    private readonly IGenericService<PhanCong> _assignmentService;
 
     public PhanCongController(
         IGenericService<PhanCong> service,
         IGenericService<GiaoVien> teacherService,
-        IGenericService<LopHoc> classService,
-        IGenericService<PhanCong> assignmentService) : base(service)
+        IGenericService<LopHoc> classService) : base(service)
     {
         _teacherService = teacherService;
         _classService = classService;
-        _assignmentService = assignmentService;
     }
 
     [HttpPost]
@@ -41,34 +39,37 @@ public class PhanCongController : BaseController<PhanCong>
         if (lopHoc == null)
             return NotFound(new { message = "Không tìm thấy lớp học" });
 
-        if (lopHoc.PhanCongs.Any())
+        var existingAssignment = await _service.GetAllAsync(
+            PageNumber: 1,
+            PageSize: int.MaxValue,
+            Filter: p => p.LopHoc.Id.ToString() == request.LopHocId
+        );
+        
+        if (existingAssignment.Any())
             return BadRequest(new { message = "Lớp học đã được phân công giáo viên" });
 
         var phanCong = new PhanCong
         {
-            Id = Guid.NewGuid(),
             GiaoVien = giaoVien,
             LopHoc = lopHoc,
-            NgayPhanCong = request.NgayPhanCong ?? DateTime.UtcNow
         };
 
         await _service.AddAsync(phanCong);
-
-        var response = new TeacherAssignmentResponse
+        
+        var response = new
         {
-            Id = phanCong.Id,
-            GiaoVienId = giaoVien.Id,
-            TenGiaoVien = giaoVien.HoTen,
-            LopHocId = lopHoc.Id,
-            TenLop = lopHoc.TenLop,
-            TenKhoaHoc = lopHoc.KhoaHoc.TenKhoaHoc,
-            NgayPhanCong = phanCong.NgayPhanCong
+            id = phanCong.Id,
+            giaoVienId = giaoVien.Id,
+            tenGiaoVien = giaoVien.HoTen,
+            lopHocId = lopHoc.Id,
+            tenLop = lopHoc.TenLop,
+            ngayPhanCong = phanCong.NgayPhanCong
         };
-
+        
         return Ok(response);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("giaovien/{id}")]
     public async Task<IActionResult> GetTeacherClasses(string id)
     {
         var giaoVien = await _teacherService.GetByIdAsync(id);

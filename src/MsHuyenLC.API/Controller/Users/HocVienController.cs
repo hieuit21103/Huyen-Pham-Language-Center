@@ -74,38 +74,4 @@ public class HocVienController : BaseController<HocVien>
 
         return Ok();
     }
-
-    [Authorize]
-    [HttpGet("{id}/profile")]
-    public async Task<IActionResult> GetStudentProfile(string id)
-    {
-        var hocVien = await _service.GetByIdAsync(id);
-
-        if (hocVien == null)
-            return NotFound(new { message = "Không tìm thấy học viên" });
-
-        return Ok(hocVien);
-    }
-
-    [Authorize]
-    [HttpPost("{id}/profile")]
-    public async Task<IActionResult> UpdateStudentProfile(string id, [FromBody] StudentProfileUpdateRequest request)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-
-        var hocVien = await _service.GetByIdAsync(id);
-
-        if (hocVien == null)
-            return NotFound(new { message = "Không tìm thấy học viên" });
-
-        hocVien.HoTen = request.HoTen ?? hocVien.HoTen;
-        hocVien.NgaySinh = request.NgaySinh ?? hocVien.NgaySinh;
-        hocVien.GioiTinh = request.GioiTinh ?? hocVien.GioiTinh;
-        hocVien.DiaChi = request.DiaChi ?? hocVien.DiaChi;
-
-        await _service.UpdateAsync(hocVien);
-
-        return Ok(new { message = "Cập nhật thông tin học viên thành công" });
-    }
 }

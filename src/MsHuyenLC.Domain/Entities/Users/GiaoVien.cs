@@ -7,8 +7,6 @@ public class GiaoVien
     public string? ChuyenMon { get; set; }
     public string? TrinhDo { get; set; }
     public string? KinhNghiem { get; set; }
-
+    public Guid TaiKhoanId { get; set; }
     public TaiKhoan TaiKhoan { get; set; } = null!;
-    public ICollection<PhanCong> PhanCongs { get; set; } = new List<PhanCong>();
-    public ICollection<PhanHoi> PhanHois { get; set; } = new List<PhanHoi>();
 }

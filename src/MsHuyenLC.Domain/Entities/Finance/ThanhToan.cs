@@ -9,6 +9,8 @@ public class ThanhToan
     public DateTime NgayLap { get; set; } = DateTime.UtcNow;
     public DateTime NgayHetHan { get; set; } = DateTime.UtcNow.AddDays(14);
     public DateTime? NgayThanhToan { get; set; }
+    public Guid HocVienId { get; set; }
+    public Guid KhoaHocId { get; set; }
     public HocVien HocVien { get; set; } = null!;
     public KhoaHoc KhoaHoc { get; set; } = null!;
 }

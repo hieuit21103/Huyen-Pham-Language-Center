@@ -9,6 +9,6 @@ public class NhatKyHeThong
     public string DuLieuCu { get; set; } = null!;
     public string DuLieuMoi { get; set; } = null!;
     public string IP { get; set; } = null!;
+    public Guid TaiKhoanId { get; set; }
     public TaiKhoan TaiKhoan { get; set; } = null!;
-
 }

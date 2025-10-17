@@ -12,6 +12,4 @@ public class AssignTeacherRequest
 
     [Required(ErrorMessage = "Mã lớp học là bắt buộc")]
     public string LopHocId { get; set; }
-
-    public DateTime? NgayPhanCong { get; set; }
 }
