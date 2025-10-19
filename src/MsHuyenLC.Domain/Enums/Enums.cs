@@ -93,7 +93,17 @@ public enum HinhThucKyThi
     tructiep
 }
 
-public enum MucDo
+public enum CapDo
+{
+    A1,
+    A2,
+    B1,
+    B2,
+    C1,
+    C2
+}
+
+public enum DoKho
 {
     de,
     trungbinh,
@@ -104,6 +114,19 @@ public enum LoaiCauHoi
 {
     TracNghiem,
     TuLuan,
+}
+
+public enum KyNang
+{
+    Nghe,
+    Doc,
+    Viet
+}
+
+public enum LoaiDeThi
+{
+    LuyenTap,
+    ChinhThuc
 }
 
 public enum PhuongThucThanhToan

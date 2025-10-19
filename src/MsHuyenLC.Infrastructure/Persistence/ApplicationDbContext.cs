@@ -7,8 +7,9 @@ public class ApplicationDbContext : DbContext
     {
     }
     // Learning
-    public DbSet<NganHangDe> NganHangDes { get; set; } = null!;
-    public DbSet<DeThiCauHoi> DeThiCauHois { get; set; } = null!;
+    public DbSet<CauHoi> CauHois { get; set; } = null!;
+    public DbSet<DocHieu> DocHieus { get; set; } = null!;
+    public DbSet<CauHoiDeThi> CauHoiDeThis { get; set; } = null!;
     public DbSet<DeThi> DeThis { get; set; } = null!;
     public DbSet<KyThi> KyThis { get; set; } = null!;
     public DbSet<BaiThi> BaiThis { get; set; } = null!;
@@ -40,8 +41,9 @@ public class ApplicationDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<NganHangDe>().ToTable("NganHangDe");
-        modelBuilder.Entity<DeThiCauHoi>().ToTable("DeThiCauHoi");
+        modelBuilder.Entity<CauHoi>().ToTable("CauHoi");
+        modelBuilder.Entity<CauHoiDeThi>().ToTable("CauHoiDeThi");
+        modelBuilder.Entity<DocHieu>().ToTable("DocHieu");
         modelBuilder.Entity<DeThi>().ToTable("DeThi");
         modelBuilder.Entity<KyThi>().ToTable("KyThi");
         modelBuilder.Entity<BaiThi>().ToTable("BaiThi");

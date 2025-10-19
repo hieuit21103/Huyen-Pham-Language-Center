@@ -12,6 +12,7 @@ using MsHuyenLC.Infrastructure.Services;
 using MsHuyenLC.Infrastructure.Services.Email;
 using MsHuyenLC.Infrastructure.Persistence.Seed;
 using MsHuyenLC.Application.Services.Courses;
+using MsHuyenLC.Application.Services.Learnings;
 using Microsoft.OpenApi.Models;
 using MsHuyenLC.Application.Interfaces.Email;
 
@@ -128,11 +129,18 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IGenericService<PhanCong>, AssignmentService>();
 builder.Services.AddScoped<IGenericService<LichHoc>, ScheduleService>();
+builder.Services.AddScoped<TestService>();
+builder.Services.AddScoped<IGenericService<DeThi>, TestService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped(typeof(IGenericService<>), typeof(GenericService<>));
 builder.Services.AddScoped<ISystemLoggerService, SystemLoggerService>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
 
 var app = builder.Build();
 
