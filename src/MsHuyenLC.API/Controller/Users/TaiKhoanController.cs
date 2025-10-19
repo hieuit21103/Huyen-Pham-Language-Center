@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.Interfaces.Auth;
 using System.Security.Claims;
 using MsHuyenLC.Application.DTOs.Users.TaiKhoan;
+using MsHuyenLC.Application.Interfaces.System;
 
 namespace MsHuyenLC.API.Controllers.Users;
 
@@ -12,10 +13,23 @@ namespace MsHuyenLC.API.Controllers.Users;
 public class TaiKhoanController : ControllerBase
 {
     protected readonly IUserRepository _userRepository;
+    private readonly ISystemLoggerService? _logService;
 
-    public TaiKhoanController(IUserRepository userRepository)
+    public TaiKhoanController(IUserRepository userRepository, ISystemLoggerService? logService = null)
     {
         _userRepository = userRepository;
+        _logService = logService;
+    }
+
+    protected Guid? GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
+    }
+
+    protected string GetClientIpAddress()
+    {
+        return HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
     }
 
     [HttpGet("{id}")]
@@ -119,6 +133,11 @@ public class TaiKhoanController : ControllerBase
         var createdUser = await _userRepository.CreateAsync(user);
         await _userRepository.SaveChangesAsync();
 
+        if (_logService != null && GetCurrentUserId() != null)
+        {
+            await _logService.LogCreateAsync(GetCurrentUserId()!.Value, createdUser, GetClientIpAddress());
+        }
+
         return Ok(createdUser);
     }
 
@@ -133,6 +152,18 @@ public class TaiKhoanController : ControllerBase
 
         var existingUser = await _userRepository.GetByIdAsync(id);
         if (existingUser == null) return NotFound();
+
+        var oldData = new TaiKhoan
+        {
+            Id = existingUser.Id,
+            TenDangNhap = existingUser.TenDangNhap,
+            MatKhau = existingUser.MatKhau,
+            Email = existingUser.Email,
+            Sdt = existingUser.Sdt,
+            Avatar = existingUser.Avatar,
+            VaiTro = existingUser.VaiTro,
+            TrangThai = existingUser.TrangThai
+        };
 
         if (existingUser.Email != request.Email)
         {
@@ -150,6 +181,11 @@ public class TaiKhoanController : ControllerBase
         await _userRepository.UpdateAsync(existingUser);
         await _userRepository.SaveChangesAsync();
 
+        if (_logService != null && GetCurrentUserId() != null)
+        {
+            await _logService.LogUpdateAsync(GetCurrentUserId()!.Value, oldData, existingUser, GetClientIpAddress());
+        }
+
         return Ok(existingUser);
     }
 
@@ -163,6 +199,11 @@ public class TaiKhoanController : ControllerBase
 
         await _userRepository.DeleteAsync(id);
         await _userRepository.SaveChangesAsync();
+
+        if (_logService != null && GetCurrentUserId() != null)
+        {
+            await _logService.LogDeleteAsync(GetCurrentUserId()!.Value, existingUser, GetClientIpAddress());
+        }
 
         return Ok(new { message = "Xóa tài khoản thành công." });
     }

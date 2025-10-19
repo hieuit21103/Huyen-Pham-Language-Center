@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Courses.LichHoc;
 using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.Services.Courses;
+using MsHuyenLC.Application.Interfaces.System;
 
 namespace MsHuyenLC.API.Controller.Courses;
 
@@ -15,9 +16,11 @@ public class LichHocController : BaseController<LichHoc>
     protected readonly IGenericService<LopHoc> _lopHocService;
     protected readonly ScheduleService _ScheduleService;
     public LichHocController(
+        IGenericService<LichHoc> service,
+        ISystemLoggerService logService,
         ScheduleService ScheduleService,
         IGenericService<PhongHoc> phongHocService,
-        IGenericService<LopHoc> lopHocService) : base(ScheduleService)
+        IGenericService<LopHoc> lopHocService) : base(service, logService)
     {
         _phongHocService = phongHocService;
         _lopHocService = lopHocService;
@@ -114,6 +117,8 @@ public class LichHocController : BaseController<LichHoc>
             return BadRequest(new { message = "Không thể tạo lịch học." });
         }
 
+        await LogCreateAsync(result);
+
         return Ok(result);
     }
 
@@ -126,11 +131,21 @@ public class LichHocController : BaseController<LichHoc>
             var existingLichHoc = await _service.GetByIdAsync(id); 
         if (existingLichHoc == null) return NotFound();
 
-            // Validate new PhongHocId
             var phongHoc = await _phongHocService.GetByIdAsync(request.PhongHocId.ToString());
-            if (phongHoc == null) return BadRequest("Phòng học không tồn tại.");
-
-            // LopHocId is not provided in update DTO; keep existing
+        if (phongHoc == null) return BadRequest("Phòng học không tồn tại.");
+            
+            var oldData = new LichHoc
+            {
+                Id = existingLichHoc.Id,
+                LopHocId = existingLichHoc.LopHocId,
+                PhongHocId = existingLichHoc.PhongHocId,
+                Thu = existingLichHoc.Thu,
+                TuNgay = existingLichHoc.TuNgay,
+                DenNgay = existingLichHoc.DenNgay,
+                GioBatDau = existingLichHoc.GioBatDau,
+                GioKetThuc = existingLichHoc.GioKetThuc,
+                CoHieuLuc = existingLichHoc.CoHieuLuc
+            };
 
             existingLichHoc.PhongHocId = request.PhongHocId;
             existingLichHoc.Thu = request.Thu;
@@ -141,6 +156,7 @@ public class LichHocController : BaseController<LichHoc>
             existingLichHoc.CoHieuLuc = request.CoHieuLuc;
 
         await _service.UpdateAsync(existingLichHoc);
+        await LogUpdateAsync(oldData, existingLichHoc);
         return Ok();
     }
 
@@ -152,6 +168,7 @@ public class LichHocController : BaseController<LichHoc>
         if (existingLichHoc == null) return NotFound();
 
         await _service.DeleteAsync(existingLichHoc);
+        await LogDeleteAsync(existingLichHoc);
         return Ok();
     }
 

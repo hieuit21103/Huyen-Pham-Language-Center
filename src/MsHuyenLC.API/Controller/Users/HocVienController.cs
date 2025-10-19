@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MsHuyenLC.Application.Interfaces;
+using MsHuyenLC.Application.Interfaces.System;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Users.HocVien;
 
@@ -10,7 +11,8 @@ namespace MsHuyenLC.API.Controller.Users;
 public class HocVienController : BaseController<HocVien>
 {
 
-    public HocVienController(IGenericService<HocVien> service) : base(service)
+    public HocVienController(IGenericService<HocVien> service, ISystemLoggerService logService) 
+        : base(service, logService)
     {
     }
 

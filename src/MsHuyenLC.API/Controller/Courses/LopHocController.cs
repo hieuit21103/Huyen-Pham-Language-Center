@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MsHuyenLC.Application.Interfaces;
+using MsHuyenLC.Application.Interfaces.System;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Courses.LopHoc;
 using MsHuyenLC.Application.Services;
@@ -16,10 +17,11 @@ public class LopHocController : BaseController<LopHoc>
     protected readonly IGenericService<PhanCong> _assignmentService;
     public LopHocController(
         IGenericService<LopHoc> service,
+        ISystemLoggerService logService,
         IGenericService<KhoaHoc> courseService,
         IGenericService<PhongHoc> roomService,
         IGenericService<DangKy> registrationService,
-        IGenericService<PhanCong> assignmentService) : base(service)
+        IGenericService<PhanCong> assignmentService) : base(service, logService)
     {
         _courseService = courseService;
         _roomService = roomService;
@@ -59,6 +61,8 @@ public class LopHocController : BaseController<LopHoc>
         var result = await _service.AddAsync(lopHoc);
         if (result == null) return BadRequest();
 
+        await LogCreateAsync(result);
+
         var response = new LopHocResponse
         {
             Id = result.Id,
@@ -82,11 +86,22 @@ public class LopHocController : BaseController<LopHoc>
         var existingLopHoc = await _service.GetByIdAsync(id);
         if (existingLopHoc == null) return NotFound();
 
+        var oldData = new LopHoc
+        {
+            Id = existingLopHoc.Id,
+            TenLop = existingLopHoc.TenLop,
+            SiSoToiDa = existingLopHoc.SiSoToiDa,
+            SiSoHienTai = existingLopHoc.SiSoHienTai,
+            TrangThai = existingLopHoc.TrangThai,
+            KhoaHocId = existingLopHoc.KhoaHocId
+        };
+
         existingLopHoc.TenLop = request.TenLop;
         existingLopHoc.SiSoToiDa = request.SiSoToiDa;
         existingLopHoc.TrangThai = request.TrangThai;
 
         await _service.UpdateAsync(existingLopHoc);
+        await LogUpdateAsync(oldData, existingLopHoc);
 
         return Ok();
     }
@@ -98,6 +113,7 @@ public class LopHocController : BaseController<LopHoc>
         var entity = await _service.GetByIdAsync(id);
         if (entity == null) return NotFound();
         await _service.DeleteAsync(entity);
+        await LogDeleteAsync(entity);
 
         return Ok();
     }

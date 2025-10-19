@@ -11,6 +11,8 @@ public class DangKyKhach
     public TrangThaiDangKy TrangThai { get; set; } = TrangThaiDangKy.choduyet;
     public KetQuaDangKy KetQua { get; set; } = KetQuaDangKy.chuaxuly;
     public DateTime? NgayXuLy { get; set; }
+    public Guid KhoaHocId { get; set; }
+    public Guid? TaiKhoanXuLyId { get; set; }
     public KhoaHoc KhoaHoc { get; set; } = null!;
     public TaiKhoan? TaiKhoanXuLy { get; set; }
 }

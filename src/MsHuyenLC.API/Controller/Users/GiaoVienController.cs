@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Users.GiaoVien;
 using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.Interfaces.Auth;
+using MsHuyenLC.Application.Interfaces.System;
 
 namespace MsHuyenLC.API.Controller.Users;
 
@@ -18,10 +19,11 @@ public class GiaoVienController : BaseController<GiaoVien>
 
     public GiaoVienController(
         IGenericService<GiaoVien> service,
+        ISystemLoggerService logService,
         IUserRepository userRepository,
         IGenericService<PhanCong> assignmentService,
         IGenericService<LopHoc> classService,
-        IPasswordHasher passwordHasher) : base(service)
+        IPasswordHasher passwordHasher) : base(service, logService)
     {
         _userRepository = userRepository;
         _assignmentService = assignmentService;

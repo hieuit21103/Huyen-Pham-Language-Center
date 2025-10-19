@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MsHuyenLC.Application.DTOs.Users.TaiKhoan;
 using MsHuyenLC.Application.Interfaces.Auth;
+using MsHuyenLC.Application.Interfaces.System;
 using System.Security.Claims;
 
 namespace MsHuyenLC.API.Controllers.Users;
@@ -12,9 +13,12 @@ namespace MsHuyenLC.API.Controllers.Users;
 public class ProfileController : ControllerBase
 {
     protected readonly IUserRepository _userRepository;
-    public ProfileController(IUserRepository userRepository)
+    private readonly ISystemLoggerService? _logService;
+    
+    public ProfileController(IUserRepository userRepository, ISystemLoggerService? logService = null)
     {
         _userRepository = userRepository;
+        _logService = logService;
     }
     [HttpGet]
     public async Task<IActionResult> GetProfile()
@@ -52,12 +56,30 @@ public class ProfileController : ControllerBase
             return NotFound(new { message = "Người dùng không tồn tại." });
         }
 
+        var oldData = new TaiKhoan
+        {
+            Id = existingUser.Id,
+            TenDangNhap = existingUser.TenDangNhap,
+            MatKhau = existingUser.MatKhau,
+            Email = existingUser.Email,
+            Sdt = existingUser.Sdt,
+            Avatar = existingUser.Avatar,
+            VaiTro = existingUser.VaiTro,
+            TrangThai = existingUser.TrangThai
+        };
+
         existingUser.Email = request.Email ?? existingUser.Email;
         existingUser.Sdt = request.Sdt ?? existingUser.Sdt;
         existingUser.Avatar = request.Avatar ?? existingUser.Avatar;
 
         await _userRepository.UpdateAsync(existingUser);
         await _userRepository.SaveChangesAsync();
+
+        if (_logService != null && Guid.TryParse(userId, out var userGuid))
+        {
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            await _logService.LogUpdateAsync(userGuid, oldData, existingUser, ipAddress);
+        }
 
         return Ok(existingUser);
     }

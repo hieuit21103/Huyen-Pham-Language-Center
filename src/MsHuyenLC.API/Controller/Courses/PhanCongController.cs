@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.DTOs.Courses.PhanCong;
 using MsHuyenLC.Application.Services.Courses;
+using MsHuyenLC.Application.Interfaces.System;
 
 namespace MsHuyenLC.API.Controller.Courses;
 
@@ -16,8 +17,9 @@ public class PhanCongController : BaseController<PhanCong>
 
     public PhanCongController(
         IGenericService<PhanCong> service,
+        ISystemLoggerService logService,
         IGenericService<GiaoVien> teacherService,
-        IGenericService<LopHoc> classService) : base(service)
+        IGenericService<LopHoc> classService) : base(service, logService)
     {
         _teacherService = teacherService;
         _classService = classService;
@@ -57,6 +59,8 @@ public class PhanCongController : BaseController<PhanCong>
         var result = await _service.AddAsync(phanCong);
         if (result == null)
             return BadRequest(new { message = "Phân công thất bại" });
+        
+        await LogCreateAsync(result);
         
         var response = new PhanCongResponse
         {
@@ -105,7 +109,7 @@ public class PhanCongController : BaseController<PhanCong>
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> RemoveAssignment(string id)
+    public async Task<IActionResult> Delete(string id)
     {
         var phanCong = await _service.GetByIdAsync(id);
 
@@ -113,6 +117,7 @@ public class PhanCongController : BaseController<PhanCong>
             return NotFound(new { message = "Không tìm thấy phân công" });
 
         await _service.DeleteAsync(phanCong);
+        await LogDeleteAsync(phanCong);
 
         return Ok(new { message = "Đã hủy phân công giáo viên" });
     }

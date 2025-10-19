@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using MsHuyenLC.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Courses.PhongHoc;
+using MsHuyenLC.Application.Interfaces.System;
 
 namespace MsHuyenLC.API.Controller.Courses;
 
@@ -11,7 +12,9 @@ namespace MsHuyenLC.API.Controller.Courses;
 [Authorize(Roles = "admin,giaovu")]
 public class PhongHocController : BaseController<PhongHoc>
 {
-    public PhongHocController(IGenericService<PhongHoc> service) : base(service)
+    public PhongHocController(
+        IGenericService<PhongHoc> service,
+        ISystemLoggerService logService) : base(service, logService)
     {
     }
 
@@ -39,12 +42,13 @@ public class PhongHocController : BaseController<PhongHoc>
         var phongHoc = new PhongHoc
         {
             TenPhong = request.TenPhong,
-            SoGhe = request.SucChua
+            SoGhe = request.SoGhe
         };
 
         var result = await _service.AddAsync(phongHoc);
         if (result == null) return BadRequest();
 
+        await LogCreateAsync(result);
         return Ok(result);
     }
 
@@ -56,11 +60,19 @@ public class PhongHocController : BaseController<PhongHoc>
         var existingRoom = await _service.GetByIdAsync(id);
         if (existingRoom == null) return NotFound();
 
+        var oldData = new PhongHoc
+        {
+            Id = existingRoom.Id,
+            TenPhong = existingRoom.TenPhong,
+            SoGhe = existingRoom.SoGhe
+        };
+
         existingRoom.TenPhong = request.TenPhong ?? existingRoom.TenPhong;
-    existingRoom.SoGhe = request.SucChua != 0 ? request.SucChua : existingRoom.SoGhe;
+        existingRoom.SoGhe = request.SoGhe != 0 ? request.SoGhe : existingRoom.SoGhe;
 
         await _service.UpdateAsync(existingRoom);
 
+        await LogUpdateAsync(oldData, existingRoom);
         return Ok(existingRoom);
     }
 
@@ -71,6 +83,7 @@ public class PhongHocController : BaseController<PhongHoc>
         if (existingRoom == null) return NotFound();
 
         await _service.DeleteAsync(existingRoom);
+        await LogDeleteAsync(existingRoom);
 
         return Ok();
     }

@@ -4,7 +4,9 @@ using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
 using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.Interfaces.Auth;
+using MsHuyenLC.Application.Interfaces.System;
 using MsHuyenLC.Application.Services;
+using MsHuyenLC.Application.Services.System;
 using MsHuyenLC.Infrastructure.Repositories;
 using MsHuyenLC.Infrastructure.Services;
 using MsHuyenLC.Infrastructure.Services.Email;
@@ -128,6 +130,7 @@ builder.Services.AddScoped<IGenericService<PhanCong>, AssignmentService>();
 builder.Services.AddScoped<IGenericService<LichHoc>, ScheduleService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped(typeof(IGenericService<>), typeof(GenericService<>));
+builder.Services.AddScoped<ISystemLoggerService, SystemLoggerService>();
 
 builder.Services.AddControllers();
 

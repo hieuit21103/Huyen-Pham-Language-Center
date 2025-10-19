@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MsHuyenLC.Application.Interfaces;
+using MsHuyenLC.Application.Interfaces.System;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Courses.KhoaHoc;
 
@@ -9,7 +10,8 @@ namespace MsHuyenLC.API.Controller.Courses;
 [ApiController]
 public class KhoaHocController : BaseController<KhoaHoc>
 {
-    public KhoaHocController(IGenericService<KhoaHoc> service) : base(service)
+    public KhoaHocController(IGenericService<KhoaHoc> service, ISystemLoggerService logService) 
+        : base(service, logService)
     {
     }
 
@@ -50,6 +52,8 @@ public class KhoaHocController : BaseController<KhoaHoc>
         var result = await _service.AddAsync(khoaHoc);
         if (result == null) return BadRequest();
 
+        await LogCreateAsync(result);
+
         var response = new KhoaHocResponse
         {
             Id = result.Id,
@@ -73,6 +77,17 @@ public class KhoaHocController : BaseController<KhoaHoc>
         var existingKhoaHoc = await _service.GetByIdAsync(id);
         if (existingKhoaHoc == null) return NotFound();
 
+        var oldData = new KhoaHoc
+        {
+            Id = existingKhoaHoc.Id,
+            TenKhoaHoc = existingKhoaHoc.TenKhoaHoc,
+            MoTa = existingKhoaHoc.MoTa,
+            HocPhi = existingKhoaHoc.HocPhi,
+            ThoiLuong = existingKhoaHoc.ThoiLuong,
+            NgayKhaiGiang = existingKhoaHoc.NgayKhaiGiang,
+            TrangThai = existingKhoaHoc.TrangThai
+        };
+
         existingKhoaHoc.TenKhoaHoc = request.TenKhoaHoc;
         existingKhoaHoc.MoTa = request.MoTa;
         existingKhoaHoc.HocPhi = request.HocPhi;
@@ -81,6 +96,8 @@ public class KhoaHocController : BaseController<KhoaHoc>
         existingKhoaHoc.TrangThai = request.TrangThai;
 
         await _service.UpdateAsync(existingKhoaHoc);
+
+        await LogUpdateAsync(oldData, existingKhoaHoc);
 
         return Ok();
     }
@@ -91,7 +108,10 @@ public class KhoaHocController : BaseController<KhoaHoc>
     {
         var entity = await _service.GetByIdAsync(id);
         if (entity == null) return NotFound();
+        
         await _service.DeleteAsync(entity);
+
+        await LogDeleteAsync(entity);
 
         return Ok();
     }
