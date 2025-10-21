@@ -12,5 +12,5 @@ public class ThongBaoResponse
     public string TieuDe { get; set; } = null!;
     public string NoiDung { get; set; } = null!;
     public DoiTuongNhan DoiTuongNhan { get; set; }
-    public DateTime NgayGui { get; set; }
+    public DateOnly NgayGui { get; set; }
 }

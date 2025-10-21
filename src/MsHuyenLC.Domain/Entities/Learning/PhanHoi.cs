@@ -6,7 +6,7 @@ public class PhanHoi
 {
     public Guid Id { get; set; }
     public string NoiDung { get; set; } = null!;
-    public DateTime NgayGui { get; set; } = DateTime.UtcNow;
+    public DateOnly NgayGui { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
     public Guid HocVienId { get; set; }
     public Guid GiaoVienId { get; set; }
     public HocVien HocVien { get; set; } = null!;

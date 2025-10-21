@@ -11,7 +11,7 @@ public class DangKyResponse
     public string? TenKhoaHoc { get; set; }
     public Guid? LopHocId { get; set; }
     public string? TenLop { get; set; }
-    public DateTime NgayDangKy { get; set; }
-    public DateTime? NgayXepLop { get; set; }
+    public DateOnly NgayDangKy { get; set; }
+    public DateOnly? NgayXepLop { get; set; }
     public TrangThaiDangKy TrangThai { get; set; }
 }

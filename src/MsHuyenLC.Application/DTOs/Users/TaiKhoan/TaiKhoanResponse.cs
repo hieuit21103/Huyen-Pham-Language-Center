@@ -11,5 +11,5 @@ public class TaiKhoanResponse
     public VaiTro VaiTro { get; set; }
     public TrangThaiTaiKhoan TrangThai { get; set; }
     public string? Avatar { get; set; }
-    public DateTime NgayTao { get; set; }
+    public DateOnly NgayTao { get; set; }
 }

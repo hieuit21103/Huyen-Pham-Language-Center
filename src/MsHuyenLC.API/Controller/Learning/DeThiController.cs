@@ -5,6 +5,9 @@ using MsHuyenLC.Application.Services.Learnings;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
+/// <summary>
+/// Controller quản lý đề thi
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class DeThiController : BaseController<DeThi>
@@ -24,6 +27,17 @@ public class DeThiController : BaseController<DeThi>
         _cauHoiDeThiService = cauHoiDeThiService;
     }
 
+    /// <summary>
+    /// Tự động tạo đề thi với câu hỏi ngẫu nhiên
+    /// </summary>
+    /// <param name="request">Tiêu chí tạo đề thi (loại câu hỏi, kỹ năng, cấp độ, độ khó)</param>
+    /// <returns>Đề thi đã được tạo</returns>
+    /// <response code="200">Tạo đề thi thành công</response>
+    /// <response code="400">Không đủ câu hỏi hoặc dữ liệu không hợp lệ</response>
+    /// <response code="500">Lỗi server</response>
+    /// <remarks>
+    /// Hệ thống sẽ tự động chọn ngẫu nhiên câu hỏi từ ngân hàng đề theo các tiêu chí đã chọn
+    /// </remarks>
     [HttpPost("generate")]
     public async Task<ActionResult> GenerateTest([FromBody] GenerateTestRequest request)
     {
@@ -93,6 +107,17 @@ public class DeThiController : BaseController<DeThi>
         }
     }
 
+    /// <summary>
+    /// Tạo đề thi với phân bổ câu hỏi theo độ khó
+    /// </summary>
+    /// <param name="request">Tiêu chí và số lượng câu theo từng độ khó (dễ/trung bình/khó)</param>
+    /// <returns>Đề thi đã được tạo</returns>
+    /// <response code="200">Tạo đề thi thành công</response>
+    /// <response code="400">Không đủ câu hỏi hoặc dữ liệu không hợp lệ</response>
+    /// <response code="500">Lỗi server</response>
+    /// <remarks>
+    /// Cho phép tạo đề thi với số lượng câu hỏi cụ thể cho từng mức độ khó
+    /// </remarks>
     [HttpPost("generate-with-difficulty")]
     public async Task<ActionResult> GenerateTestWithDifficulty([FromBody] GenerateTestWithDifficultyRequest request)
     {
@@ -154,6 +179,17 @@ public class DeThiController : BaseController<DeThi>
         }
     }
 
+    /// <summary>
+    /// Tạo đề thi thủ công với danh sách câu hỏi được chọn
+    /// </summary>
+    /// <param name="request">Thông tin đề thi và danh sách ID câu hỏi</param>
+    /// <returns>Đề thi đã tạo</returns>
+    /// <response code="200">Tạo đề thi thành công</response>
+    /// <response code="400">Dữ liệu không hợp lệ</response>
+    /// <response code="500">Lỗi server</response>
+    /// <remarks>
+    /// Số câu hỏi phải khớp với số lượng ID câu hỏi được cung cấp
+    /// </remarks>
     [HttpPost]
     public async Task<ActionResult<DeThi>> Create([FromBody] DeThiRequest request)
     {
@@ -248,8 +284,21 @@ public class DeThiController : BaseController<DeThi>
         }
     }
 
+    /// <summary>
+    /// Cập nhật đề thi
+    /// </summary>
+    /// <param name="id">ID đề thi</param>
+    /// <param name="request">Thông tin cập nhật</param>
+    /// <returns>Đề thi đã cập nhật</returns>
+    /// <response code="200">Cập nhật thành công</response>
+    /// <response code="404">Không tìm thấy đề thi</response>
+    /// <response code="400">Dữ liệu không hợp lệ</response>
+    /// <response code="500">Lỗi server</response>
+    /// <remarks>
+    /// Sẽ xóa toàn bộ câu hỏi cũ và thêm câu hỏi mới theo request
+    /// </remarks>
     [HttpPut("{id}")]
-    public async Task<ActionResult<DeThi>> Update(string id, [FromBody] UpdateDeThiRequest request)
+    public async Task<ActionResult<DeThi>> Update(string id, [FromBody] DeThiUpdateRequest request)
     {
         try
         {
@@ -340,7 +389,7 @@ public class DeThiController : BaseController<DeThi>
             {
                 success = true,
                 message = "Cập nhật đề thi thành công",
-                 data = new
+                data = new
                 {
                     id = existingDeThi.Id,
                     tenDe = existingDeThi.TenDe,
@@ -362,6 +411,14 @@ public class DeThiController : BaseController<DeThi>
         }
     }
 
+    /// <summary>
+    /// Xóa đề thi
+    /// </summary>
+    /// <param name="id">ID đề thi</param>
+    /// <returns>Kết quả xóa</returns>
+    /// <response code="200">Xóa thành công</response>
+    /// <response code="404">Không tìm thấy đề thi</response>
+    /// <response code="500">Lỗi server</response>
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(string id)
     {
@@ -397,12 +454,20 @@ public class DeThiController : BaseController<DeThi>
         }
     }
 
+    /// <summary>
+    /// Lấy danh sách câu hỏi trong đề thi
+    /// </summary>
+    /// <param name="id">ID đề thi</param>
+    /// <returns>Danh sách câu hỏi và tổng số câu</returns>
+    /// <response code="200">Lấy danh sách thành công</response>
+    /// <response code="404">Không tìm thấy đề thi</response>
+    /// <response code="500">Lỗi server</response>
     [HttpGet("{id}/questions")]
     public async Task<ActionResult> GetQuestionsInTest(string id)
     {
         try
         {
-            var deThi = await _testService.GetByIdAsync(id);
+            var deThi = await _testService.GetTestWithQuestionsAsync(id);
 
             if (deThi == null)
             {

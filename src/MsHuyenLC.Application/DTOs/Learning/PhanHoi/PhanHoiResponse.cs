@@ -8,5 +8,5 @@ public class PhanHoiResponse
     public Guid GiaoVienId { get; set; }
     public string? TenGiaoVien { get; set; }
     public string NoiDung { get; set; } = null!;
-    public DateTime NgayGui { get; set; }
+    public DateOnly NgayGui { get; set; }
 }

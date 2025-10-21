@@ -63,12 +63,10 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        // Validate course exists
         var khoaHoc = await _khoaHocService.GetByIdAsync(request.KhoaHocId.ToString());
         if (khoaHoc == null)
             return BadRequest(new { message = "Khóa học không tồn tại." });
 
-        // Check for duplicate registration (same email + phone for same course)
         var existingRegistrations = await _service.GetAllAsync(
             PageNumber: 1,
             PageSize: 1,
@@ -88,7 +86,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             SoDienThoai = request.SoDienThoai,
             NoiDung = request.NoiDung,
             KhoaHocId = request.KhoaHocId,
-            NgayDangKy = DateTime.UtcNow,
+            NgayDangKy = DateOnly.FromDateTime(DateTime.UtcNow),
             TrangThai = TrangThaiDangKy.choduyet,
             KetQua = KetQuaDangKy.chuaxuly
         };
@@ -96,8 +94,6 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         var result = await _service.AddAsync(dangKy);
         if (result == null)
             return BadRequest(new { message = "Đăng ký thất bại." });
-
-        await LogCreateAsync(result);
 
         var response = new DangKyKhachResponse
         {
@@ -125,7 +121,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
     /// </summary>
     [HttpPost("create")]
     [Authorize(Roles = "admin,giaovu")]
-    public async Task<IActionResult> CreateByAdmin([FromBody] DangKyKhachCreateDTO request)
+    public async Task<IActionResult> CreateByAdmin([FromBody] DangKyKhachCreateRequest request)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -144,7 +140,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             SoDienThoai = request.SoDienThoai,
             NoiDung = request.NoiDung,
             KhoaHocId = request.KhoaHocId,
-            NgayDangKy = DateTime.UtcNow,
+            NgayDangKy = DateOnly.FromDateTime(DateTime.UtcNow),
             TrangThai = TrangThaiDangKy.choduyet,
             KetQua = KetQuaDangKy.chuaxuly,
             TaiKhoanXuLyId = userId != null ? Guid.Parse(userId) : null
@@ -242,7 +238,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             if (previousKetQua != request.KetQua.Value && 
                 request.KetQua.Value != KetQuaDangKy.chuaxuly)
             {
-                existing.NgayXuLy = DateTime.UtcNow;
+                existing.NgayXuLy = DateOnly.FromDateTime(DateTime.UtcNow);
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (userId != null)
                     existing.TaiKhoanXuLyId = Guid.Parse(userId);
@@ -279,7 +275,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
                         HoTen = existing.HoTen,
                         TaiKhoanId = createdAccount.Id,
                         TrangThai = TrangThaiHocVien.danghoc,
-                        NgayDangKy = DateTime.UtcNow
+                        NgayDangKy = DateOnly.FromDateTime(DateTime.UtcNow)
                     };
 
                     await _hocVienService.AddAsync(hocVien);

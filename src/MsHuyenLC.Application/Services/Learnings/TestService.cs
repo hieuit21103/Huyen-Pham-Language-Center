@@ -34,9 +34,37 @@ public class TestService : GenericService<DeThi>
         }
     }
 
+    public async Task<DeThi?> GetTestWithQuestionsAsync(string id)
+    {
+        var result = await _repository.GetAllAsync(
+            PageNumber: 1,
+            PageSize: 1,
+            Filter: dt => dt.Id.ToString() == id,
+            Includes: dt => dt.CauHoiDeThis
+        );
+        
+        var deThi = result.FirstOrDefault();
+        
+        if (deThi != null)
+        {
+            foreach (var cauHoiDeThi in deThi.CauHoiDeThis)
+            {
+                var cauHoi = await _cauHoiRepository.GetByIdAsync(cauHoiDeThi.CauHoiId.ToString());
+                if (cauHoi != null)
+                {
+                    cauHoiDeThi.CauHoi = cauHoi;
+                }
+            }
+        }
+        
+        return deThi;
+    }
+
     public IEnumerable<CauHoi> GetQuestionsInTest(DeThi deThi)
     {
-        return deThi.CauHoiDeThis.Select(chdt => chdt.CauHoi);
+        return deThi.CauHoiDeThis
+            .Where(chdt => chdt.CauHoi != null)
+            .Select(chdt => chdt.CauHoi);
     }
 
     public int GetNumberOfQuestions(DeThi deThi)

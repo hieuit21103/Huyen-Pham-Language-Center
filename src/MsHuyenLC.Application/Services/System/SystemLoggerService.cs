@@ -33,7 +33,7 @@ public class SystemLoggerService : ISystemLoggerService
                 DuLieuCu = duLieuCu ?? "",
                 DuLieuMoi = duLieuMoi ?? "",
                 IP = ip ?? "",
-                ThoiGian = DateTime.UtcNow
+                ThoiGian = DateOnly.FromDateTime(DateTime.UtcNow)
             };
 
             await _repository.AddAsync(log);

@@ -1,9 +1,8 @@
-using MsHuyenLC.Application.DTOs.Learning;
-using MsHuyenLC.Domain.Entities.Learning;
 using MsHuyenLC.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Learning.CauHoi;
+using MsHuyenLC.Application.Interfaces.System;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
@@ -12,8 +11,13 @@ namespace MsHuyenLC.API.Controller.Learning;
 [Authorize(Roles = "admin,giaovu")]
 public class CauHoiController : BaseController<CauHoi>
 {
-    public CauHoiController(IGenericService<CauHoi> service) : base(service)
+    private readonly ISystemLoggerService _systemLoggerService;
+    public CauHoiController(
+        IGenericService<CauHoi> service,
+        ISystemLoggerService systemLoggerService
+        ) : base(service)
     {
+        _systemLoggerService = systemLoggerService;
     }
 
     protected override Func<IQueryable<CauHoi>, IOrderedQueryable<CauHoi>>? BuildOrderBy(string sortBy, string? sortOrder)
@@ -63,12 +67,14 @@ public class CauHoiController : BaseController<CauHoi>
                 DocHieuId = request.DocHieuId
             };
             var result = await _service.AddAsync(cauHoi);
+            await _systemLoggerService.LogCreateAsync(GetCurrentUserId(), cauHoi, GetClientIpAddress());
             if (result == null)
             {
                 return BadRequest("Không thể tạo câu hỏi.");
             }
             createdCauHois.Add(cauHoi);
         }
+        
         return Ok(createdCauHois);
     }
 
@@ -85,6 +91,21 @@ public class CauHoiController : BaseController<CauHoi>
         {
             return NotFound("Câu hỏi không tồn tại.");
         }
+
+        var oldData = new CauHoi
+        {
+            Id = existingCauHoi.Id,
+            NoiDung = existingCauHoi.NoiDung,
+            LoaiCauHoi = existingCauHoi.LoaiCauHoi,
+            KyNang = existingCauHoi.KyNang,
+            UrlHinh = existingCauHoi.UrlHinh,
+            UrlAmThanh = existingCauHoi.UrlAmThanh,
+            DapAnDung = existingCauHoi.DapAnDung,
+            GiaiThich = existingCauHoi.GiaiThich,
+            CapDo = existingCauHoi.CapDo,
+            DoKho = existingCauHoi.DoKho,
+            DocHieuId = existingCauHoi.DocHieuId
+        };
 
         if (request.NoiDung != null)
             existingCauHoi.NoiDung = request.NoiDung;
@@ -108,6 +129,7 @@ public class CauHoiController : BaseController<CauHoi>
             existingCauHoi.DocHieuId = request.DocHieuId;
 
         await _service.UpdateAsync(existingCauHoi);
+        await _systemLoggerService.LogUpdateAsync(GetCurrentUserId(), oldData, existingCauHoi, GetClientIpAddress());
         return Ok();
     }
 
@@ -121,6 +143,7 @@ public class CauHoiController : BaseController<CauHoi>
         }
 
         await _service.DeleteAsync(existingCauHoi);
+        await _systemLoggerService.LogDeleteAsync(GetCurrentUserId(), existingCauHoi, GetClientIpAddress());
         return Ok();
     }
 }

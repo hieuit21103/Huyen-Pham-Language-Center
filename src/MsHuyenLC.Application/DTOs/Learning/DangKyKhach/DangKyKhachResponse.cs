@@ -9,10 +9,10 @@ public class DangKyKhachResponse
     public string Email { get; set; } = null!;
     public string SoDienThoai { get; set; } = null!;
     public string? NoiDung { get; set; }
-    public DateTime NgayDangKy { get; set; }
+    public DateOnly NgayDangKy { get; set; }
     public TrangThaiDangKy TrangThai { get; set; }
     public KetQuaDangKy KetQua { get; set; }
-    public DateTime? NgayXuLy { get; set; }
+    public DateOnly? NgayXuLy { get; set; }
     
     // Related data
     public Guid KhoaHocId { get; set; }

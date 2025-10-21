@@ -10,7 +10,7 @@ public class TaiKhoan
     public string? Sdt { get; set; }
     public TrangThaiTaiKhoan TrangThai { get; set; } = TrangThaiTaiKhoan.hoatdong;
     public string? Avatar { get; set; }
-    public DateTime NgayTao { get; set; } = DateTime.UtcNow;
+    public DateOnly NgayTao { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
 }
 
 

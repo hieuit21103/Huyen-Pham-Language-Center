@@ -6,7 +6,7 @@ public class KetQuaHocTap
 {
     public Guid Id { get; set; }
     public decimal DiemSo { get; set; }
-    public DateTime NgayThi { get; set; } = DateTime.UtcNow;
+    public DateOnly NgayThi { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
     public Guid HocVienId { get; set; }
     public Guid KyThiId { get; set; }
     public HocVien HocVien { get; set; } = null!;

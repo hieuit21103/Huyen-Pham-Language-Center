@@ -33,13 +33,18 @@ public class AuthController : ControllerBase
         _logService = logService;
     }
 
+    /// <summary>
+    /// Đăng nhập người dùng
+    /// <param name="request">Thông tin đăng nhập</param>
+    /// <returns>Token JWT nếu đăng nhập thành công</returns>
+    /// </summary>
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var username = loginRequest.TenDangNhap;
-        var password = loginRequest.MatKhau;
+        var username = request.TenDangNhap;
+        var password = request.MatKhau;
 
         var result = await _authService.Login(username, password);
         

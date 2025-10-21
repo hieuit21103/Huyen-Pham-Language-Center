@@ -36,7 +36,7 @@ public class ScheduleService : GenericService<LichHoc>
         return availableRooms;
     }
 
-    private async Task<bool> IsRoomAvailable(DayOfWeek dayOfWeek, TimeSpan startTime, TimeSpan endTime, DateTime startDate, DateTime endDate)
+    private async Task<bool> IsRoomAvailable(DayOfWeek dayOfWeek, TimeOnly startTime, TimeOnly endTime, DateOnly startDate, DateOnly endDate)
     {
         var conflictingSchedules = await _repository.GetAllAsync(
             1,

@@ -52,8 +52,8 @@ public class SystemLoggerController : BaseController<NhatKyHeThong>
     [HttpGet("by-date-range")]
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> GetByDateRange(
-        [FromQuery] DateTime fromDate,
-        [FromQuery] DateTime toDate,
+        [FromQuery] DateOnly fromDate,
+        [FromQuery] DateOnly toDate,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20)
     {

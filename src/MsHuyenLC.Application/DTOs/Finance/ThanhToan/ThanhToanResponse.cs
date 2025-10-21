@@ -13,5 +13,5 @@ public class ThanhToanResponse
     public PhuongThucThanhToan PhuongThuc { get; set; }
     public TrangThaiThanhToan TrangThai { get; set; }
     public string? GhiChu { get; set; }
-    public DateTime NgayThanhToan { get; set; }
+    public DateOnly NgayThanhToan { get; set; }
 }

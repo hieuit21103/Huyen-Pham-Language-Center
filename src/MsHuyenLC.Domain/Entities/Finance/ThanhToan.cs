@@ -6,9 +6,9 @@ public class ThanhToan
     public decimal SoTien { get; set; }
     public PhuongThucThanhToan PhuongThuc { get; set; } = PhuongThucThanhToan.tructuyen;
     public TrangThaiThanhToan TrangThai { get; set; } = TrangThaiThanhToan.chuathanhtoan;
-    public DateTime NgayLap { get; set; } = DateTime.UtcNow;
-    public DateTime NgayHetHan { get; set; } = DateTime.UtcNow.AddDays(14);
-    public DateTime? NgayThanhToan { get; set; }
+    public DateOnly NgayLap { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+    public DateOnly NgayHetHan { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(14));
+    public DateOnly? NgayThanhToan { get; set; }
     public Guid HocVienId { get; set; }
     public Guid KhoaHocId { get; set; }
     public HocVien HocVien { get; set; } = null!;

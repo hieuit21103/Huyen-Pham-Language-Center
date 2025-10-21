@@ -8,5 +8,5 @@ public class KetQuaHocTapResponse
     public Guid KyThiId { get; set; }
     public string? TenKyThi { get; set; }
     public decimal DiemSo { get; set; }
-    public DateTime NgayThi { get; set; }
+    public DateOnly NgayThi { get; set; }
 }

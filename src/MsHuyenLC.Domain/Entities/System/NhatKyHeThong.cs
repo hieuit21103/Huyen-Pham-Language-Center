@@ -3,7 +3,7 @@ namespace MsHuyenLC.Domain.Entities.System;
 public class NhatKyHeThong
 {
     public Guid Id { get; set; }
-    public DateTime ThoiGian { get; set; } = DateTime.UtcNow;
+    public DateOnly ThoiGian { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
     public string HanhDong { get; set; } = null!;
     public string? ChiTiet { get; set; }
     public string DuLieuCu { get; set; } = null!;

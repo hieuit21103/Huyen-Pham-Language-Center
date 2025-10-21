@@ -2,7 +2,7 @@ using MsHuyenLC.Domain.Enums;
 
 namespace MsHuyenLC.Application.DTOs.Learning.DeThi;
 
-public class UpdateDeThiRequest
+public class DeThiUpdateRequest
 {
     public string TenDe { get; set; } = null!;
     public int SoCauHoi { get; set; }

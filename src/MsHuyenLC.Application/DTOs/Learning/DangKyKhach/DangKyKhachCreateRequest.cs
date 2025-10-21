@@ -3,7 +3,7 @@ namespace MsHuyenLC.Application.DTOs.Learning.DangKyKhach;
 /// <summary>
 /// DTO for Admin/GiaoVu to manually create guest registration after consultation
 /// </summary>
-public class DangKyKhachCreateDTO
+public class DangKyKhachCreateRequest
 {
     public string HoTen { get; set; } = null!;
     public string Email { get; set; } = null!;

@@ -11,5 +11,5 @@ public class BaiThiResponse
     public float? DiemTuLuan { get; set; }
     public float? TongDiem { get; set; }
     public string? NhanXet { get; set; }
-    public DateTime NgayNop { get; set; }
+    public DateOnly NgayNop { get; set; }
 }

@@ -65,7 +65,7 @@ public class DangKyController : BaseController<DangKy>
 
         var dangKy = new DangKy
         {
-            NgayDangKy = request.NgayDangKy ?? DateTime.UtcNow,
+            NgayDangKy = request.NgayDangKy ?? DateOnly.FromDateTime(DateTime.UtcNow),
             LopHocId = request.LopHocId ?? null,
             NgayXepLop = request.NgayXepLop ?? null,
             KhoaHocId = request.KhoaHocId,
