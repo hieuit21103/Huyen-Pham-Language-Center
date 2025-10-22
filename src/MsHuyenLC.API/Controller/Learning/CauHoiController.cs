@@ -3,24 +3,26 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Learning.CauHoi;
 using MsHuyenLC.Application.Interfaces.System;
+using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
+using MsHuyenLC.Application.Services.Learnings;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "admin,giaovu")]
-public class CauHoiController : BaseController<CauHoi>
+public class CauHoiController : BaseController<NganHangCauHoi>
 {
     private readonly ISystemLoggerService _systemLoggerService;
     public CauHoiController(
-        IGenericService<CauHoi> service,
+        QuestionService service,
         ISystemLoggerService systemLoggerService
         ) : base(service)
     {
         _systemLoggerService = systemLoggerService;
     }
 
-    protected override Func<IQueryable<CauHoi>, IOrderedQueryable<CauHoi>>? BuildOrderBy(string sortBy, string? sortOrder)
+    protected override Func<IQueryable<NganHangCauHoi>, IOrderedQueryable<NganHangCauHoi>>? BuildOrderBy(string sortBy, string? sortOrder)
     {
         return sortBy?.ToLower() switch
         {
@@ -50,21 +52,36 @@ public class CauHoiController : BaseController<CauHoi>
             return BadRequest(ModelState);
         }
 
-        var createdCauHois = new List<CauHoi>();
+        var createdCauHois = new List<NganHangCauHoi>();
         foreach (var request in requests)
         {
-            var cauHoi = new CauHoi
+            var dapAnCauHois = new List<DapAnCauHoi>();
+            foreach (var dapAnRequest in request.DapAnCauHois ?? Array.Empty<DapAnRequest>())
             {
-                NoiDung = request.NoiDung,
+                if (string.IsNullOrWhiteSpace(dapAnRequest.Nhan) || string.IsNullOrWhiteSpace(dapAnRequest.NoiDung))
+                {
+                    return BadRequest(new { message = "Nhãn và nội dung đáp án không được để trống." });
+                }
+                dapAnCauHois.Add(new DapAnCauHoi
+                {
+                    Nhan = dapAnRequest.Nhan,
+                    NoiDung = dapAnRequest.NoiDung,
+                    Dung = dapAnRequest.Dung,
+                    GiaiThich = dapAnRequest.GiaiThich
+                });
+            }
+            var cauHoi = new NganHangCauHoi
+            {
+                NoiDungCauHoi = request.NoiDungCauHoi,
                 LoaiCauHoi = request.LoaiCauHoi,
                 KyNang = request.KyNang,
-                UrlHinh = request.UrlHinh,
+                UrlHinhAnh = request.UrlHinhAnh,
                 UrlAmThanh = request.UrlAmThanh,
-                DapAnDung = request.DapAnDung,
-                GiaiThich = request.GiaiThich,
                 CapDo = request.CapDo,
                 DoKho = request.DoKho,
-                DocHieuId = request.DocHieuId
+                LoiThoai = request.LoiThoai,
+                DoanVan = request.DoanVan,
+                CacDapAn = dapAnCauHois
             };
             var result = await _service.AddAsync(cauHoi);
             await _systemLoggerService.LogCreateAsync(GetCurrentUserId(), cauHoi, GetClientIpAddress());
@@ -74,7 +91,7 @@ public class CauHoiController : BaseController<CauHoi>
             }
             createdCauHois.Add(cauHoi);
         }
-        
+
         return Ok(createdCauHois);
     }
 
@@ -92,41 +109,38 @@ public class CauHoiController : BaseController<CauHoi>
             return NotFound("Câu hỏi không tồn tại.");
         }
 
-        var oldData = new CauHoi
+        var oldData = new NganHangCauHoi
         {
             Id = existingCauHoi.Id,
-            NoiDung = existingCauHoi.NoiDung,
+            NoiDungCauHoi = existingCauHoi.NoiDungCauHoi,
             LoaiCauHoi = existingCauHoi.LoaiCauHoi,
             KyNang = existingCauHoi.KyNang,
-            UrlHinh = existingCauHoi.UrlHinh,
+            UrlHinhAnh = existingCauHoi.UrlHinhAnh,
             UrlAmThanh = existingCauHoi.UrlAmThanh,
-            DapAnDung = existingCauHoi.DapAnDung,
-            GiaiThich = existingCauHoi.GiaiThich,
+            LoiThoai = existingCauHoi.LoiThoai,
+            DoanVan = existingCauHoi.DoanVan,
             CapDo = existingCauHoi.CapDo,
-            DoKho = existingCauHoi.DoKho,
-            DocHieuId = existingCauHoi.DocHieuId
+            DoKho = existingCauHoi.DoKho
         };
 
-        if (request.NoiDung != null)
-            existingCauHoi.NoiDung = request.NoiDung;
+        if (request.NoiDungCauHoi != null)
+            existingCauHoi.NoiDungCauHoi = request.NoiDungCauHoi;
         if (request.LoaiCauHoi.HasValue)
             existingCauHoi.LoaiCauHoi = request.LoaiCauHoi.Value;
         if (request.KyNang.HasValue)
             existingCauHoi.KyNang = request.KyNang.Value;
-        if (request.UrlHinh != null)
-            existingCauHoi.UrlHinh = request.UrlHinh;
+        if (request.UrlHinhAnh != null)
+            existingCauHoi.UrlHinhAnh = request.UrlHinhAnh;
         if (request.UrlAmThanh != null)
             existingCauHoi.UrlAmThanh = request.UrlAmThanh;
-        if (request.DapAnDung != null)
-            existingCauHoi.DapAnDung = request.DapAnDung;
-        if (request.GiaiThich != null)
-            existingCauHoi.GiaiThich = request.GiaiThich;
+        if (request.LoiThoai != null)
+            existingCauHoi.LoiThoai = request.LoiThoai;
+        if (request.DoanVan != null)
+            existingCauHoi.DoanVan = request.DoanVan;
         if (request.CapDo.HasValue)
             existingCauHoi.CapDo = request.CapDo.Value;
         if (request.DoKho.HasValue)
             existingCauHoi.DoKho = request.DoKho.Value;
-        if (request.DocHieuId.HasValue)
-            existingCauHoi.DocHieuId = request.DocHieuId;
 
         await _service.UpdateAsync(existingCauHoi);
         await _systemLoggerService.LogUpdateAsync(GetCurrentUserId(), oldData, existingCauHoi, GetClientIpAddress());

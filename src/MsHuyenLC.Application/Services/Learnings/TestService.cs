@@ -1,35 +1,36 @@
 using MsHuyenLC.Domain.Entities.Learning;
 using MsHuyenLC.Application.Interfaces; 
 using MsHuyenLC.Domain.Enums;
+using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
 
 namespace MsHuyenLC.Application.Services.Learnings;
 
 public class TestService : GenericService<DeThi>
 {
-    private readonly IGenericRepository<CauHoi> _cauHoiRepository;
+    private readonly IGenericRepository<NganHangCauHoi> _cauHoiRepository;
     private readonly IGenericRepository<CauHoiDeThi> _cauHoiDeThiRepository;
     
     public TestService(
         IGenericRepository<DeThi> repository,
-        IGenericRepository<CauHoi> cauHoiRepository,
+        IGenericRepository<NganHangCauHoi> cauHoiRepository,
         IGenericRepository<CauHoiDeThi> cauHoiDeThiRepository) : base(repository)
     {
         _cauHoiRepository = cauHoiRepository;
         _cauHoiDeThiRepository = cauHoiDeThiRepository;
     }
 
-    public void AddQuestionToTest(DeThi deThi, CauHoi cauHoi)
+    public void AddQuestionToTest(DeThi deThi, NganHangCauHoi cauHoi)
     {
-        deThi.CauHoiDeThis.Add(new CauHoiDeThi { DeThi = deThi, CauHoi = cauHoi });
+        deThi.CacCauHoi.Add(new CauHoiDeThi { DeThi = deThi, CauHoi = cauHoi });
         _repository.SaveChangesAsync();
     }
 
-    public void RemoveQuestionFromTest(DeThi deThi, CauHoi cauHoi)
+    public void RemoveQuestionFromTest(DeThi deThi, NganHangCauHoi cauHoi)
     {
-        var cauHoiDeThi = deThi.CauHoiDeThis.FirstOrDefault(chdt => chdt.CauHoiId == cauHoi.Id);
+        var cauHoiDeThi = deThi.CacCauHoi.FirstOrDefault(chdt => chdt.CauHoiId == cauHoi.Id);
         if (cauHoiDeThi != null)
         {
-            deThi.CauHoiDeThis.Remove(cauHoiDeThi);
+            deThi.CacCauHoi.Remove(cauHoiDeThi);
             _repository.SaveChangesAsync();
         }
     }
@@ -40,14 +41,14 @@ public class TestService : GenericService<DeThi>
             PageNumber: 1,
             PageSize: 1,
             Filter: dt => dt.Id.ToString() == id,
-            Includes: dt => dt.CauHoiDeThis
+            Includes: dt => dt.CacCauHoi
         );
         
         var deThi = result.FirstOrDefault();
         
         if (deThi != null)
         {
-            foreach (var cauHoiDeThi in deThi.CauHoiDeThis)
+            foreach (var cauHoiDeThi in deThi.CacCauHoi)
             {
                 var cauHoi = await _cauHoiRepository.GetByIdAsync(cauHoiDeThi.CauHoiId.ToString());
                 if (cauHoi != null)
@@ -60,103 +61,98 @@ public class TestService : GenericService<DeThi>
         return deThi;
     }
 
-    public IEnumerable<CauHoi> GetQuestionsInTest(DeThi deThi)
+    public IEnumerable<NganHangCauHoi> GetQuestionsInTest(DeThi deThi)
     {
-        return deThi.CauHoiDeThis
+        return deThi.CacCauHoi
             .Where(chdt => chdt.CauHoi != null)
             .Select(chdt => chdt.CauHoi);
     }
 
     public int GetNumberOfQuestions(DeThi deThi)
     {
-        return deThi.CauHoiDeThis.Count;
+        return deThi.CacCauHoi.Count;
     }
 
     public void ClearAllQuestions(DeThi deThi)
     {
-        deThi.CauHoiDeThis.Clear();
+        deThi.CacCauHoi.Clear();
         _repository.SaveChangesAsync();
     }
 
-    public bool ContainsQuestion(DeThi deThi, CauHoi cauHoi)
+    public bool ContainsQuestion(DeThi deThi, NganHangCauHoi cauHoi)
     {
-        return deThi.CauHoiDeThis.Any(chdt => chdt.CauHoiId == cauHoi.Id);
+        return deThi.CacCauHoi.Any(chdt => chdt.CauHoiId == cauHoi.Id);
     }
 
     public async Task<DeThi?> GenerateTestAsync(
         string tenDe, 
-        int soCauHoi, 
-        int thoiGianLamBai, 
+        int tongCauHoi, 
+        int thoiLuongPhut, 
         LoaiDeThi loaiDeThi, 
         LoaiCauHoi loaiCauHoi, 
         KyNang kyNang, 
         CapDo capDo, 
         DoKho doKho)
     {
-        if (soCauHoi <= 0)
-            throw new ArgumentException("Số câu hỏi phải lớn hơn 0", nameof(soCauHoi));
-        
-        if (thoiGianLamBai <= 0)
-            throw new ArgumentException("Thời gian làm bài phải lớn hơn 0", nameof(thoiGianLamBai));
-        
+        if (tongCauHoi <= 0)
+            throw new ArgumentException("Số câu hỏi phải lớn hơn 0", nameof(tongCauHoi));
+
+        if (thoiLuongPhut <= 0)
+            throw new ArgumentException("Thời gian làm bài phải lớn hơn 0", nameof(thoiLuongPhut));
+
         if (string.IsNullOrWhiteSpace(tenDe))
             throw new ArgumentException("Tên đề không được để trống", nameof(tenDe));
 
-        // Bước 2: Tạo đề thi mới
         var deThi = new DeThi
         {
             Id = Guid.NewGuid(),
             TenDe = tenDe,
-            SoCauHoi = soCauHoi,
+            TongCauHoi = tongCauHoi,
             LoaiDeThi = loaiDeThi,
-            ThoiGianLamBai = thoiGianLamBai
+            ThoiLuongPhut = thoiLuongPhut
         };
 
-        // Bước 3: Lấy câu hỏi từ ngân hàng dựa theo tiêu chí
         var availableQuestions = await _cauHoiRepository.GetAllAsync(
             PageNumber: 1,
-            PageSize: soCauHoi * 3, // Lấy nhiều hơn để có đủ dự phòng
-            Filter: q => q.LoaiCauHoi == loaiCauHoi 
-                      && q.KyNang == kyNang 
-                      && q.CapDo == capDo 
+            PageSize: tongCauHoi * 3,
+            Filter: q => q.LoaiCauHoi == loaiCauHoi
+                      && q.KyNang == kyNang
+                      && q.CapDo == capDo
                       && q.DoKho == doKho
         );
 
         var questionList = availableQuestions.ToList();
 
-        // Bước 4: Kiểm tra xem có đủ câu hỏi không
-        if (questionList.Count < soCauHoi)
+        if (questionList.Count < tongCauHoi)
         {
             throw new InvalidOperationException(
-                $"Không đủ câu hỏi trong ngân hàng. Yêu cầu: {soCauHoi}, Có sẵn: {questionList.Count}. " +
+                $"Không đủ câu hỏi trong ngân hàng. Yêu cầu: {tongCauHoi}, Có sẵn: {questionList.Count}. " +
                 $"Tiêu chí: LoaiCauHoi={loaiCauHoi}, KyNang={kyNang}, CapDo={capDo}, DoKho={doKho}"
             );
         }
 
-        // Bước 5: Chọn ngẫu nhiên câu hỏi
-        var selectedQuestions = SelectRandomQuestions(questionList, soCauHoi);
-
-        // Bước 6: Thêm câu hỏi vào đề thi
+        var selectedQuestions = SelectRandomQuestions(questionList, tongCauHoi);
+        var thuTu = 1;
         foreach (var cauHoi in selectedQuestions)
         {
             var cauHoiDeThi = new CauHoiDeThi
             {
                 Id = Guid.NewGuid(),
                 DeThiId = deThi.Id,
-                CauHoiId = cauHoi.Id
+                CauHoiId = cauHoi.Id,
+                ThuTuCauHoi = thuTu++
             };
             
-            deThi.CauHoiDeThis.Add(cauHoiDeThi);
+            deThi.CacCauHoi.Add(cauHoiDeThi);
         }
 
-        // Bước 7: Lưu đề thi vào database
         await _repository.AddAsync(deThi);
         await _repository.SaveChangesAsync();
 
         return deThi;
     }
 
-    private List<CauHoi> SelectRandomQuestions(List<CauHoi> questions, int count)
+    private List<NganHangCauHoi> SelectRandomQuestions(List<NganHangCauHoi> questions, int count)
     {
         var random = new Random();
         var shuffled = questions.OrderBy(x => random.Next()).ToList();
@@ -168,7 +164,7 @@ public class TestService : GenericService<DeThi>
         int soCauDe,
         int soCauTrungBinh,
         int soCauKho,
-        int thoiGianLamBai,
+        int thoiLuongPhut,
         LoaiDeThi loaiDeThi,
         LoaiCauHoi loaiCauHoi,
         KyNang kyNang,
@@ -179,23 +175,21 @@ public class TestService : GenericService<DeThi>
         if (tongSoCau <= 0)
             throw new ArgumentException("Tổng số câu hỏi phải lớn hơn 0");
 
-        // Tạo đề thi
         var deThi = new DeThi
         {
             Id = Guid.NewGuid(),
             TenDe = tenDe,
-            SoCauHoi = tongSoCau,
+            TongCauHoi = tongSoCau,
             LoaiDeThi = loaiDeThi,
-            ThoiGianLamBai = thoiGianLamBai
+            ThoiLuongPhut = thoiLuongPhut
         };
         
-        // Lấy câu dễ
         if (soCauDe > 0)
         {
             var cauDe = await GetQuestionsByDifficulty(loaiCauHoi, kyNang, capDo, DoKho.de, soCauDe);
             foreach (var cauHoi in cauDe)
             {
-                deThi.CauHoiDeThis.Add(new CauHoiDeThi
+                deThi.CacCauHoi.Add(new CauHoiDeThi
                 {
                     Id = Guid.NewGuid(),
                     DeThiId = deThi.Id,
@@ -204,13 +198,12 @@ public class TestService : GenericService<DeThi>
             }
         }
 
-        // Lấy câu trung bình
         if (soCauTrungBinh > 0)
         {
             var cauTrungBinh = await GetQuestionsByDifficulty(loaiCauHoi, kyNang, capDo, DoKho.trungbinh, soCauTrungBinh);
             foreach (var cauHoi in cauTrungBinh)
             {
-                deThi.CauHoiDeThis.Add(new CauHoiDeThi
+                deThi.CacCauHoi.Add(new CauHoiDeThi
                 {
                     Id = Guid.NewGuid(),
                     DeThiId = deThi.Id,
@@ -218,14 +211,13 @@ public class TestService : GenericService<DeThi>
                 });
             }
         }
-
-        // Lấy câu khó
+    
         if (soCauKho > 0)
         {
             var cauKho = await GetQuestionsByDifficulty(loaiCauHoi, kyNang, capDo, DoKho.kho, soCauKho);
             foreach (var cauHoi in cauKho)
             {
-                deThi.CauHoiDeThis.Add(new CauHoiDeThi
+                deThi.CacCauHoi.Add(new CauHoiDeThi
                 {
                     Id = Guid.NewGuid(),
                     DeThiId = deThi.Id,
@@ -234,14 +226,13 @@ public class TestService : GenericService<DeThi>
             }
         }
 
-        // Lưu đề thi
         await _repository.AddAsync(deThi);
         await _repository.SaveChangesAsync();
 
         return deThi;
     }
 
-    private async Task<List<CauHoi>> GetQuestionsByDifficulty(
+    private async Task<List<NganHangCauHoi>> GetQuestionsByDifficulty(
         LoaiCauHoi loaiCauHoi,
         KyNang kyNang,
         CapDo capDo,

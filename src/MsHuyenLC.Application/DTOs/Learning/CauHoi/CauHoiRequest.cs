@@ -1,19 +1,18 @@
 using MsHuyenLC.Domain.Enums;
-using MsHuyenLC.Domain.Entities.Learning;
+using MsHuyenLC.Application.DTOs.Learning.CauHoi;
 
 namespace MsHuyenLC.Application.DTOs.Learning.CauHoi;
 
 public class CauHoiRequest
 {
-    public string NoiDung { get; set; } = null!;
+    public string NoiDungCauHoi { get; set; } = null!;
     public LoaiCauHoi LoaiCauHoi { get; set; } = LoaiCauHoi.TracNghiem;
     public KyNang KyNang { get; set; } = KyNang.Doc;
-    public string? UrlHinh { get; set; }
+    public string? UrlHinhAnh { get; set; }
     public string? UrlAmThanh { get; set; }
-    public string? DapAnDung { get; set; }
-    public string? GiaiThich { get; set; }
+    public string? LoiThoai { get; set; }
+    public string? DoanVan { get; set; }
     public CapDo CapDo { get; set; } = CapDo.A1;
     public DoKho DoKho { get; set; } = DoKho.de;
-    public Guid? DocHieuId { get; set; }
-    public DocHieu? DocHieu { get; set; }
+    public ICollection<DapAnRequest>? DapAnCauHois { get; set; }
 }

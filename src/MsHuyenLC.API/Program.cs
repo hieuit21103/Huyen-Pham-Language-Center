@@ -130,6 +130,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IGenericService<PhanCong>, AssignmentService>();
 builder.Services.AddScoped<IGenericService<LichHoc>, ScheduleService>();
 builder.Services.AddScoped<TestService>();
+builder.Services.AddScoped<QuestionService>();
 builder.Services.AddScoped<IGenericService<DeThi>, TestService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped(typeof(IGenericService<>), typeof(GenericService<>));

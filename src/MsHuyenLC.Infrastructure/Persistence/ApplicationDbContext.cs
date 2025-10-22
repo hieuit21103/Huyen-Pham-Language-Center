@@ -1,3 +1,5 @@
+using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
+
 namespace MsHuyenLC.Infrastructure.Persistence;
 
 public class ApplicationDbContext : DbContext
@@ -7,13 +9,15 @@ public class ApplicationDbContext : DbContext
     {
     }
     // Learning
-    public DbSet<CauHoi> CauHois { get; set; } = null!;
-    public DbSet<DocHieu> DocHieus { get; set; } = null!;
+    public DbSet<NganHangCauHoi> CauHois { get; set; } = null!;
+    public DbSet<DapAnCauHoi> DapAnCauHois { get; set; } = null!;
+    public DbSet<NhomCauHoi> NhomCauHois { get; set; } = null!;
+    public DbSet<NhomCauHoiChiTiet> NhomCauHoiChiTiets { get; set; } = null!;
     public DbSet<CauHoiDeThi> CauHoiDeThis { get; set; } = null!;
     public DbSet<DeThi> DeThis { get; set; } = null!;
     public DbSet<KyThi> KyThis { get; set; } = null!;
-    public DbSet<BaiThi> BaiThis { get; set; } = null!;
-    public DbSet<BaiThiChiTiet> BaiThiChiTiets { get; set; } = null!;
+    public DbSet<PhienLamBai> BaiThis { get; set; } = null!;
+    public DbSet<CauTraLoi> BaiThiChiTiets { get; set; } = null!;
     public DbSet<DangKy> DangKys { get; set; } = null!;
     public DbSet<DangKyKhach> DangKyKhachs { get; set; } = null!;
     public DbSet<ThongBao> ThongBaos { get; set; } = null!;
@@ -41,13 +45,15 @@ public class ApplicationDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<CauHoi>().ToTable("CauHoi");
+        modelBuilder.Entity<NganHangCauHoi>().ToTable("NganHangCauHoi");
+        modelBuilder.Entity<DapAnCauHoi>().ToTable("DapAnCauHoi");
         modelBuilder.Entity<CauHoiDeThi>().ToTable("CauHoiDeThi");
-        modelBuilder.Entity<DocHieu>().ToTable("DocHieu");
+        modelBuilder.Entity<NhomCauHoi>().ToTable("NhomCauHoi");
+        modelBuilder.Entity<NhomCauHoiChiTiet>().ToTable("NhomCauHoiChiTiet");
         modelBuilder.Entity<DeThi>().ToTable("DeThi");
         modelBuilder.Entity<KyThi>().ToTable("KyThi");
-        modelBuilder.Entity<BaiThi>().ToTable("BaiThi");
-        modelBuilder.Entity<BaiThiChiTiet>().ToTable("BaiThiChiTiet");
+        modelBuilder.Entity<PhienLamBai>().ToTable("PhienLamBai");
+        modelBuilder.Entity<CauTraLoi>().ToTable("CauTraLoi");
         modelBuilder.Entity<DangKy>().ToTable("DangKy");
         modelBuilder.Entity<DangKyKhach>().ToTable("DangKyKhach");
         modelBuilder.Entity<ThongBao>().ToTable("ThongBao");

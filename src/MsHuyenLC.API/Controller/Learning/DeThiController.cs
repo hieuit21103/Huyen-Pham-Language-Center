@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using MsHuyenLC.Application.DTOs.Learning.DeThi;
 using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.Services.Learnings;
+using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
@@ -13,13 +14,13 @@ namespace MsHuyenLC.API.Controller.Learning;
 public class DeThiController : BaseController<DeThi>
 {
     private readonly TestService _testService;
-    private readonly IGenericService<CauHoi> _cauHoiService;
+    private readonly IGenericService<NganHangCauHoi> _cauHoiService;
     private readonly IGenericService<CauHoiDeThi> _cauHoiDeThiService;
 
     public DeThiController(
         IGenericService<DeThi> service,
         TestService testService,
-        IGenericService<CauHoi> cauHoiService,
+        IGenericService<NganHangCauHoi> cauHoiService,
         IGenericService<CauHoiDeThi> cauHoiDeThiService) : base(service)
     {
         _testService = testService;
@@ -71,8 +72,8 @@ public class DeThiController : BaseController<DeThi>
                 {
                     id = deThi.Id,
                     tenDe = deThi.TenDe,
-                    soCauHoi = deThi.SoCauHoi,
-                    thoiGianLamBai = deThi.ThoiGianLamBai,
+                    soCauHoi = deThi.TongCauHoi,
+                    thoiGianLamBai = deThi.ThoiLuongPhut,
                     loaiDeThi = deThi.LoaiDeThi,
                     kyThiId = deThi.KyThiId
                 }
@@ -143,8 +144,8 @@ public class DeThiController : BaseController<DeThi>
                 {
                     id = deThi.Id,
                     tenDe = deThi.TenDe,
-                    soCauHoi = deThi.SoCauHoi,
-                    thoiGianLamBai = deThi.ThoiGianLamBai,
+                    soCauHoi = deThi.TongCauHoi,
+                    thoiGianLamBai = deThi.ThoiLuongPhut,
                     loaiDeThi = deThi.LoaiDeThi,
                     kyThiId = deThi.KyThiId
                 }
@@ -220,7 +221,7 @@ public class DeThiController : BaseController<DeThi>
             }
 
             // Validate câu hỏi tồn tại
-            var cauHoi = new List<CauHoi>();
+            var cauHoi = new List<NganHangCauHoi>();
             foreach (var cauHoiId in request.CauHoiIds)
             {
                 var ch = await _cauHoiService.GetByIdAsync(cauHoiId);
@@ -239,8 +240,8 @@ public class DeThiController : BaseController<DeThi>
             var deThi = new DeThi
             {
                 TenDe = request.TenDe,
-                SoCauHoi = request.SoCauHoi,
-                ThoiGianLamBai = request.ThoiGianLamBai,
+                TongCauHoi = request.SoCauHoi,
+                ThoiLuongPhut = request.ThoiGianLamBai,
                 LoaiDeThi = request.LoaiDeThi,
                 KyThiId = request.KyThiId,
             };
@@ -266,8 +267,8 @@ public class DeThiController : BaseController<DeThi>
                 {
                     id = createdDeThi.Id,
                     tenDe = createdDeThi.TenDe,
-                    soCauHoi = createdDeThi.SoCauHoi,
-                    thoiGianLamBai = createdDeThi.ThoiGianLamBai,
+                    soCauHoi = createdDeThi.TongCauHoi,
+                    thoiGianLamBai = createdDeThi.ThoiLuongPhut,
                     loaiDeThi = createdDeThi.LoaiDeThi,
                     kyThiId = createdDeThi.KyThiId
                 }
@@ -338,7 +339,7 @@ public class DeThiController : BaseController<DeThi>
             }
 
             // Validate câu hỏi tồn tại
-            var cauHoi = new List<CauHoi>();
+            var cauHoi = new List<NganHangCauHoi>();
             foreach (var cauHoiId in request.CauHoiIds)
             {
                 var ch = await _cauHoiService.GetByIdAsync(cauHoiId);
@@ -353,16 +354,14 @@ public class DeThiController : BaseController<DeThi>
                 cauHoi.Add(ch);
             }
 
-            // Cập nhật thông tin đề thi
             existingDeThi.TenDe = request.TenDe;
-            existingDeThi.SoCauHoi = request.SoCauHoi;
-            existingDeThi.ThoiGianLamBai = request.ThoiGianLamBai;
+            existingDeThi.TongCauHoi = request.SoCauHoi;
+            existingDeThi.ThoiLuongPhut = request.ThoiGianLamBai;
             existingDeThi.LoaiDeThi = request.LoaiDeThi;
             existingDeThi.KyThiId = request.KyThiId;
 
             await _testService.UpdateAsync(existingDeThi);
 
-            // Xóa các câu hỏi cũ
             var oldCauHoiDeThis = await _cauHoiDeThiService.GetAllAsync(
                 PageNumber: 1,
                 PageSize: 1000,
@@ -374,7 +373,6 @@ public class DeThiController : BaseController<DeThi>
                 await _cauHoiDeThiService.DeleteAsync(old);
             }
 
-            // Thêm câu hỏi mới
             foreach (var ch in cauHoi)
             {
                 var cauHoiDeThi = new CauHoiDeThi
@@ -393,8 +391,8 @@ public class DeThiController : BaseController<DeThi>
                 {
                     id = existingDeThi.Id,
                     tenDe = existingDeThi.TenDe,
-                    soCauHoi = existingDeThi.SoCauHoi,
-                    thoiGianLamBai = existingDeThi.ThoiGianLamBai,
+                    soCauHoi = existingDeThi.TongCauHoi,
+                    thoiGianLamBai = existingDeThi.ThoiLuongPhut,
                     loaiDeThi = existingDeThi.LoaiDeThi,
                     kyThiId = existingDeThi.KyThiId
                 }
