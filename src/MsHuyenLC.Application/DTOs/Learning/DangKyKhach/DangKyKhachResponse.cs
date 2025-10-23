@@ -6,6 +6,7 @@ public class DangKyKhachResponse
 {
     public Guid Id { get; set; }
     public string HoTen { get; set; } = null!;
+    public GioiTinh GioiTinh { get; set; }
     public string Email { get; set; } = null!;
     public string SoDienThoai { get; set; } = null!;
     public string? NoiDung { get; set; }

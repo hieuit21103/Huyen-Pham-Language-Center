@@ -53,9 +53,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         };
     }
 
-    /// <summary>
-    /// Guest self-registration (Public endpoint - no authentication required)
-    /// </summary>
+    
     [HttpPost("register")]
     [AllowAnonymous]
     public async Task<IActionResult> GuestRegister([FromBody] DangKyKhachRequest request)
@@ -82,6 +80,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         var dangKy = new DangKyKhach
         {
             HoTen = request.HoTen,
+            GioiTinh = request.GioiTinh,
             Email = request.Email,
             SoDienThoai = request.SoDienThoai,
             NoiDung = request.NoiDung,
@@ -99,6 +98,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         {
             Id = result.Id,
             HoTen = result.HoTen,
+            GioiTinh = result.GioiTinh,
             Email = result.Email,
             SoDienThoai = result.SoDienThoai,
             NoiDung = result.NoiDung,
@@ -116,9 +116,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         });
     }
 
-    /// <summary>
-    /// Admin/GiaoVu manually create registration after consultation
-    /// </summary>
+    
     [HttpPost("create")]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> CreateByAdmin([FromBody] DangKyKhachCreateRequest request)
@@ -126,7 +124,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        // Validate course exists
+        
         var khoaHoc = await _khoaHocService.GetByIdAsync(request.KhoaHocId.ToString());
         if (khoaHoc == null)
             return BadRequest(new { message = "Khóa học không tồn tại." });
@@ -137,6 +135,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         {
             HoTen = request.HoTen,
             Email = request.Email,
+            GioiTinh = request.GioiTinh,
             SoDienThoai = request.SoDienThoai,
             NoiDung = request.NoiDung,
             KhoaHocId = request.KhoaHocId,
@@ -162,6 +161,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             NgayDangKy = result.NgayDangKy,
             TrangThai = result.TrangThai,
             KetQua = result.KetQua,
+            GioiTinh = result.GioiTinh,
             KhoaHocId = result.KhoaHocId,
             TenKhoaHoc = khoaHoc.TenKhoaHoc,
             TaiKhoanXuLyId = result.TaiKhoanXuLyId
@@ -170,9 +170,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         return Ok(response);
     }
 
-    /// <summary>
-    /// Update guest registration (Admin/GiaoVu can edit all fields)
-    /// </summary>
+    
     [HttpPut("{id}")]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> Update(string id, [FromBody] DangKyKhachUpdateRequest request)
@@ -194,12 +192,13 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             KhoaHocId = existing.KhoaHocId,
             TrangThai = existing.TrangThai,
             KetQua = existing.KetQua,
+            GioiTinh = existing.GioiTinh,
             NgayDangKy = existing.NgayDangKy,
             NgayXuLy = existing.NgayXuLy,
             TaiKhoanXuLyId = existing.TaiKhoanXuLyId
         };
 
-        // Update basic info if provided
+        
         if (!string.IsNullOrWhiteSpace(request.HoTen))
             existing.HoTen = request.HoTen;
 
@@ -212,7 +211,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         if (request.NoiDung != null)
             existing.NoiDung = request.NoiDung;
 
-        // Validate and update course if provided
+        
         if (request.KhoaHocId.HasValue)
         {
             var khoaHoc = await _khoaHocService.GetByIdAsync(request.KhoaHocId.Value.ToString());
@@ -222,10 +221,10 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             existing.KhoaHocId = request.KhoaHocId.Value;
         }
 
-        // Track previous status to detect approval
+        
         var previousTrangThai = existing.TrangThai;
 
-        // Update status and result
+        
         if (request.TrangThai.HasValue)
             existing.TrangThai = request.TrangThai.Value;
 
@@ -234,7 +233,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             var previousKetQua = existing.KetQua;
             existing.KetQua = request.KetQua.Value;
 
-            // Update processing info when status changes to processed
+            
             if (previousKetQua != request.KetQua.Value && 
                 request.KetQua.Value != KetQuaDangKy.chuaxuly)
             {
@@ -245,16 +244,16 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             }
         }
 
-        // Auto-create account when approved (status changes to daduyet)
+        
         if (previousTrangThai != TrangThaiDangKy.daduyet && 
             existing.TrangThai == TrangThaiDangKy.daduyet)
         {
-            // Check if account already exists
+            
             var existingAccount = await _userRepository.GetByEmailAsync(existing.Email);
             
             if (existingAccount == null)
             {
-                // Create TaiKhoan with email as username and phone as password
+                
                 var taiKhoan = new TaiKhoan
                 {
                     TenDangNhap = existing.Email,
@@ -269,10 +268,11 @@ public class DangKyKhachController : BaseController<DangKyKhach>
                 
                 if (createdAccount != null)
                 {
-                    // Create HocVien profile linked to the account
+                    
                     var hocVien = new HocVien
                     {
                         HoTen = existing.HoTen,
+                        GioiTinh = existing.GioiTinh,
                         TaiKhoanId = createdAccount.Id,
                         TrangThai = TrangThaiHocVien.danghoc,
                         NgayDangKy = DateOnly.FromDateTime(DateTime.UtcNow)
@@ -280,13 +280,13 @@ public class DangKyKhachController : BaseController<DangKyKhach>
 
                     await _hocVienService.AddAsync(hocVien);
 
-                    // Update KetQua to indicate account created
+                    
                     existing.KetQua = KetQuaDangKy.daxuly;
                 }
             }
             else
             {
-                // Account already exists - just mark as processed
+                
                 existing.KetQua = KetQuaDangKy.daxuly;
             }
         }
@@ -301,9 +301,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         return Ok(new { message });
     }
 
-    /// <summary>
-    /// Delete guest registration
-    /// </summary>
+    
     [HttpDelete("{id}")]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> Delete(string id)
@@ -318,9 +316,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         return Ok(new { message = "Xóa đăng ký thành công." });
     }
 
-    /// <summary>
-    /// Get statistics for dashboard
-    /// </summary>
+    
     [HttpGet("statistics")]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> GetStatistics()
@@ -348,9 +344,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         return Ok(stats);
     }
 
-    /// <summary>
-    /// Search guest registrations
-    /// </summary>
+    
     [HttpGet("search")]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> Search(

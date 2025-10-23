@@ -44,6 +44,22 @@ public class HocVienController : BaseController<HocVien>
         };
     }
 
+    [Authorize]
+    [HttpGet("taikhoan/{id}")]
+    public async Task<IActionResult> GetByAccountId(string id)
+    {
+        var result = await _service.GetAllAsync(
+            PageNumber: 1,
+            PageSize: 1,
+            Filter: hv => hv.TaiKhoanId.ToString() == id
+        );
+
+        var hocVien = result.FirstOrDefault();
+        if (hocVien == null) return NotFound();
+
+        return Ok(hocVien);
+    }
+
     [Authorize(Roles = "admin,giaovu,giaovien")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, [FromBody] HocVienUpdateRequest request)

@@ -92,7 +92,8 @@ public class TestService : GenericService<DeThi>
         LoaiCauHoi loaiCauHoi, 
         KyNang kyNang, 
         CapDo capDo, 
-        DoKho doKho)
+        DoKho doKho,
+        Guid nguoiTaoId)
     {
         if (tongCauHoi <= 0)
             throw new ArgumentException("Số câu hỏi phải lớn hơn 0", nameof(tongCauHoi));
@@ -109,7 +110,8 @@ public class TestService : GenericService<DeThi>
             TenDe = tenDe,
             TongCauHoi = tongCauHoi,
             LoaiDeThi = loaiDeThi,
-            ThoiLuongPhut = thoiLuongPhut
+            ThoiLuongPhut = thoiLuongPhut,
+            NguoiTaoId = nguoiTaoId
         };
 
         var availableQuestions = await _cauHoiRepository.GetAllAsync(
@@ -168,7 +170,8 @@ public class TestService : GenericService<DeThi>
         LoaiDeThi loaiDeThi,
         LoaiCauHoi loaiCauHoi,
         KyNang kyNang,
-        CapDo capDo)
+        CapDo capDo,
+        Guid nguoiTaoId)
     {
         int tongSoCau = soCauDe + soCauTrungBinh + soCauKho;
         
@@ -181,7 +184,8 @@ public class TestService : GenericService<DeThi>
             TenDe = tenDe,
             TongCauHoi = tongSoCau,
             LoaiDeThi = loaiDeThi,
-            ThoiLuongPhut = thoiLuongPhut
+            ThoiLuongPhut = thoiLuongPhut,
+            NguoiTaoId = nguoiTaoId
         };
         
         if (soCauDe > 0)

@@ -12,12 +12,14 @@ namespace MsHuyenLC.API.Controllers.Users;
 [Authorize(Roles = "admin")]
 public class TaiKhoanController : ControllerBase
 {
-    protected readonly IUserRepository _userRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IPasswordHasher _passwordHasher;
     private readonly ISystemLoggerService? _logService;
 
-    public TaiKhoanController(IUserRepository userRepository, ISystemLoggerService? logService = null)
+    public TaiKhoanController(IUserRepository userRepository, IPasswordHasher passwordHasher, ISystemLoggerService? logService = null)
     {
         _userRepository = userRepository;
+        _passwordHasher = passwordHasher;
         _logService = logService;
     }
 
@@ -124,7 +126,7 @@ public class TaiKhoanController : ControllerBase
         var user = new TaiKhoan
         {
             TenDangNhap = request.TenDangNhap,
-            MatKhau = request.MatKhau,
+            MatKhau = _passwordHasher.HashPassword(request.MatKhau),
             Email = request.Email,
             Sdt = request.Sdt,
             Avatar = request.Avatar,

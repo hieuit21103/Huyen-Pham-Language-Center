@@ -8,6 +8,7 @@ namespace MsHuyenLC.Application.DTOs.Learning.DangKyKhach;
 public class DangKyKhachUpdateRequest
 {
     public string? HoTen { get; set; }
+    public GioiTinh GioiTinh { get; set; }
     public string? Email { get; set; }
     public string? SoDienThoai { get; set; }
     public string? NoiDung { get; set; }

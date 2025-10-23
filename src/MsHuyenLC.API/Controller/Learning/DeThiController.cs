@@ -52,7 +52,8 @@ public class DeThiController : BaseController<DeThi>
                 request.LoaiCauHoi,
                 request.KyNang,
                 request.CapDo,
-                request.DoKho
+                request.DoKho,
+                GetCurrentUserId()
             );
 
             if (deThi == null)
@@ -133,7 +134,8 @@ public class DeThiController : BaseController<DeThi>
                 request.LoaiDeThi,
                 request.LoaiCauHoi,
                 request.KyNang,
-                request.CapDo
+                request.CapDo,
+                GetCurrentUserId()
             );
 
             return Ok(new
@@ -244,6 +246,7 @@ public class DeThiController : BaseController<DeThi>
                 ThoiLuongPhut = request.ThoiGianLamBai,
                 LoaiDeThi = request.LoaiDeThi,
                 KyThiId = request.KyThiId,
+                NguoiTaoId = GetCurrentUserId()
             };
 
             var createdDeThi = await _testService.AddAsync(deThi);

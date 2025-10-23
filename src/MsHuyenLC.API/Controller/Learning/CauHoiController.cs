@@ -52,6 +52,11 @@ public class CauHoiController : BaseController<NganHangCauHoi>
             return BadRequest(ModelState);
         }
 
+        if (requests == null || !requests.Any())
+        {
+            return BadRequest(new { message = "Danh sách câu hỏi rỗng." });
+        }
+
         var createdCauHois = new List<NganHangCauHoi>();
         foreach (var request in requests)
         {
@@ -70,6 +75,21 @@ public class CauHoiController : BaseController<NganHangCauHoi>
                     GiaiThich = dapAnRequest.GiaiThich
                 });
             }
+
+            var nhomCauHoiChiTiets = new List<NhomCauHoiChiTiet>();
+            if (request.NhomCauHoiChiTiets != null && request.NhomCauHoiChiTiets.Any())
+            {
+                foreach (var nhomRequest in request.NhomCauHoiChiTiets)
+                {
+                    nhomCauHoiChiTiets.Add(new NhomCauHoiChiTiet
+                    {
+                        NhomId = nhomRequest.NhomId,
+                        CauHoiId = nhomRequest.CauHoiId,
+                        ThuTu = nhomRequest.ThuTu
+                    });
+                }
+            }
+
             var cauHoi = new NganHangCauHoi
             {
                 NoiDungCauHoi = request.NoiDungCauHoi,
@@ -95,69 +115,69 @@ public class CauHoiController : BaseController<NganHangCauHoi>
         return Ok(createdCauHois);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, [FromBody] CauHoiUpdateRequest request)
-    {
-        if (!ModelState.IsValid)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(string id, [FromBody] CauHoiUpdateRequest request)
         {
-            return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var existingCauHoi = await _service.GetByIdAsync(id);
+            if (existingCauHoi == null)
+            {
+                return NotFound("Câu hỏi không tồn tại.");
+            }
+
+            var oldData = new NganHangCauHoi
+            {
+                Id = existingCauHoi.Id,
+                NoiDungCauHoi = existingCauHoi.NoiDungCauHoi,
+                LoaiCauHoi = existingCauHoi.LoaiCauHoi,
+                KyNang = existingCauHoi.KyNang,
+                UrlHinhAnh = existingCauHoi.UrlHinhAnh,
+                UrlAmThanh = existingCauHoi.UrlAmThanh,
+                LoiThoai = existingCauHoi.LoiThoai,
+                DoanVan = existingCauHoi.DoanVan,
+                CapDo = existingCauHoi.CapDo,
+                DoKho = existingCauHoi.DoKho
+            };
+
+            if (request.NoiDungCauHoi != null)
+                existingCauHoi.NoiDungCauHoi = request.NoiDungCauHoi;
+            if (request.LoaiCauHoi.HasValue)
+                existingCauHoi.LoaiCauHoi = request.LoaiCauHoi.Value;
+            if (request.KyNang.HasValue)
+                existingCauHoi.KyNang = request.KyNang.Value;
+            if (request.UrlHinhAnh != null)
+                existingCauHoi.UrlHinhAnh = request.UrlHinhAnh;
+            if (request.UrlAmThanh != null)
+                existingCauHoi.UrlAmThanh = request.UrlAmThanh;
+            if (request.LoiThoai != null)
+                existingCauHoi.LoiThoai = request.LoiThoai;
+            if (request.DoanVan != null)
+                existingCauHoi.DoanVan = request.DoanVan;
+            if (request.CapDo.HasValue)
+                existingCauHoi.CapDo = request.CapDo.Value;
+            if (request.DoKho.HasValue)
+                existingCauHoi.DoKho = request.DoKho.Value;
+
+            await _service.UpdateAsync(existingCauHoi);
+            await _systemLoggerService.LogUpdateAsync(GetCurrentUserId(), oldData, existingCauHoi, GetClientIpAddress());
+            return Ok();
         }
 
-        var existingCauHoi = await _service.GetByIdAsync(id);
-        if (existingCauHoi == null)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(string id)
         {
-            return NotFound("Câu hỏi không tồn tại.");
+            var existingCauHoi = await _service.GetByIdAsync(id);
+            if (existingCauHoi == null)
+            {
+                return NotFound("Câu hỏi không tồn tại.");
+            }
+
+            await _service.DeleteAsync(existingCauHoi);
+            await _systemLoggerService.LogDeleteAsync(GetCurrentUserId(), existingCauHoi, GetClientIpAddress());
+            return Ok();
         }
-
-        var oldData = new NganHangCauHoi
-        {
-            Id = existingCauHoi.Id,
-            NoiDungCauHoi = existingCauHoi.NoiDungCauHoi,
-            LoaiCauHoi = existingCauHoi.LoaiCauHoi,
-            KyNang = existingCauHoi.KyNang,
-            UrlHinhAnh = existingCauHoi.UrlHinhAnh,
-            UrlAmThanh = existingCauHoi.UrlAmThanh,
-            LoiThoai = existingCauHoi.LoiThoai,
-            DoanVan = existingCauHoi.DoanVan,
-            CapDo = existingCauHoi.CapDo,
-            DoKho = existingCauHoi.DoKho
-        };
-
-        if (request.NoiDungCauHoi != null)
-            existingCauHoi.NoiDungCauHoi = request.NoiDungCauHoi;
-        if (request.LoaiCauHoi.HasValue)
-            existingCauHoi.LoaiCauHoi = request.LoaiCauHoi.Value;
-        if (request.KyNang.HasValue)
-            existingCauHoi.KyNang = request.KyNang.Value;
-        if (request.UrlHinhAnh != null)
-            existingCauHoi.UrlHinhAnh = request.UrlHinhAnh;
-        if (request.UrlAmThanh != null)
-            existingCauHoi.UrlAmThanh = request.UrlAmThanh;
-        if (request.LoiThoai != null)
-            existingCauHoi.LoiThoai = request.LoiThoai;
-        if (request.DoanVan != null)
-            existingCauHoi.DoanVan = request.DoanVan;
-        if (request.CapDo.HasValue)
-            existingCauHoi.CapDo = request.CapDo.Value;
-        if (request.DoKho.HasValue)
-            existingCauHoi.DoKho = request.DoKho.Value;
-
-        await _service.UpdateAsync(existingCauHoi);
-        await _systemLoggerService.LogUpdateAsync(GetCurrentUserId(), oldData, existingCauHoi, GetClientIpAddress());
-        return Ok();
     }
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(string id)
-    {
-        var existingCauHoi = await _service.GetByIdAsync(id);
-        if (existingCauHoi == null)
-        {
-            return NotFound("Câu hỏi không tồn tại.");
-        }
-
-        await _service.DeleteAsync(existingCauHoi);
-        await _systemLoggerService.LogDeleteAsync(GetCurrentUserId(), existingCauHoi, GetClientIpAddress());
-        return Ok();
-    }
-}

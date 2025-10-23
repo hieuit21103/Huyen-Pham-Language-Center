@@ -51,7 +51,7 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
     /// Hệ thống sẽ tự động chấm điểm cho các câu trắc nghiệm
     /// </remarks>
     [HttpPost("submit")]
-    [Authorize(Roles = "hocvien")]
+    [Authorize]
     public async Task<ActionResult> Submit([FromBody] SubmitRequest request)
     {
         try

@@ -67,9 +67,9 @@ public enum GioiTinh
 public enum VaiTro
 {
     admin,
+    giaovu,
     giaovien,
-    hocvien,
-    giaovu
+    hocvien
 }
 #endregion
 
