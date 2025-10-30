@@ -9,7 +9,6 @@ namespace MsHuyenLC.API.Controller.Courses;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "admin,giaovu")]
 public class PhanCongController : BaseController<PhanCong>
 {
     private readonly IGenericService<GiaoVien> _teacherService;
@@ -26,6 +25,7 @@ public class PhanCongController : BaseController<PhanCong>
     }
 
     [HttpPost]
+    [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> AssignTeacher([FromBody] PhanCongRequest request)
     {
         if (!ModelState.IsValid)
@@ -76,6 +76,7 @@ public class PhanCongController : BaseController<PhanCong>
     }
 
     [HttpGet("giaovien/{id}")]
+    [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> GetTeacherClasses(string id)
     {
         var giaoVien = await _teacherService.GetByIdAsync(id);
@@ -108,7 +109,45 @@ public class PhanCongController : BaseController<PhanCong>
         return Ok(responses);
     }
 
+    [HttpGet("lophoc/{id}")]
+    [Authorize(Roles = "admin,giaovu,giaovien,hocvien")]
+    public async Task<IActionResult> GetClassTeacher(string id)
+    {
+        var lopHoc = await _classService.GetByIdAsync(id);
+
+        if (lopHoc == null)
+            return NotFound(new { message = "Không tìm thấy lớp học" });
+
+        var assignment = await _service.GetAllAsync(
+            PageNumber: 1,
+            PageSize: 1,
+            Filter: p => p.LopHocId.ToString() == id
+        );
+
+        if (!assignment.Any())
+            return NotFound(new { message = "Lớp học chưa được phân công giáo viên" });
+
+        var phanCong = assignment.First();
+        var giaoVien = await _teacherService.GetByIdAsync(phanCong.GiaoVienId.ToString());
+
+        var response = new PhanCongResponse
+        {
+            Id = phanCong.Id,
+            GiaoVienId = phanCong.GiaoVienId,
+            TenGiaoVien = giaoVien?.HoTen ?? "",
+            LopHocId = phanCong.LopHocId,
+            TenLop = lopHoc.TenLop,
+            NgayPhanCong = phanCong.NgayPhanCong
+        };
+
+        return Ok(new {
+            success = true,
+            data = response
+        });
+    }
+
     [HttpDelete("{id}")]
+    [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> Delete(string id)
     {
         var phanCong = await _service.GetByIdAsync(id);

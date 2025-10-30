@@ -6,7 +6,6 @@ using StackExchange.Redis;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "admin,giaovu")]
 public class UploadController : ControllerBase
 {
     private readonly IMinioClient _minio;
@@ -20,6 +19,7 @@ public class UploadController : ControllerBase
         endpoint = Environment.GetEnvironmentVariable("Minio__Endpoint") ?? "host.docker.internal:9000";
         accessKey = Environment.GetEnvironmentVariable("Minio__AccessKey") ?? "admin123";
         secretKey = Environment.GetEnvironmentVariable("Minio__SecretKey") ?? "admin123";
+        cdnDomain = Environment.GetEnvironmentVariable("Minio__Domain") ?? endpoint;
 
         _minio = new MinioClient()
             .WithEndpoint(endpoint)
@@ -28,6 +28,7 @@ public class UploadController : ControllerBase
     }
 
     [HttpPost("image")]
+    [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> Upload(IFormFile file)
     {
         string _bucket = "images";
@@ -64,11 +65,12 @@ public class UploadController : ControllerBase
             .WithObjectSize(file.Length)
             .WithContentType(file.ContentType));
 
-        var url = $"{endpoint}/{_bucket}/{fileName}";
+        var url = $"{cdnDomain}/{_bucket}/{fileName}";
         return Ok(new { url });
     }
 
     [HttpPost("audio")]
+    [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> UploadAudio(IFormFile file)
     {
         string _bucket = "audio";
@@ -105,7 +107,49 @@ public class UploadController : ControllerBase
             .WithObjectSize(file.Length)
             .WithContentType(file.ContentType));
 
-        var url = $"{endpoint}/{_bucket}/{fileName}";
+        var url = $"{cdnDomain}/{_bucket}/{fileName}";
+        return Ok(new { url });
+    }
+
+    [HttpPost("avatar")]
+    [Authorize(Roles = "admin,giaovu,hocvien")]
+    public async Task<IActionResult> UploadAvatar(IFormFile file)
+    {
+        string _bucket = "avatars";
+        string _allowedExtensions = ".jpg,.jpeg,.png,.gif,.bmp,.svg";
+        long fileSizeLimit = 2 * 1024 * 1024; // 2 MB
+
+        if (file == null || file.Length == 0) return BadRequest("No file uploaded");
+
+        if (!_allowedExtensions.Contains(Path.GetExtension(file.FileName).ToLower()))
+        {
+            return BadRequest(
+                new { message = "Loại tệp không hợp lệ. Chỉ cho phép các tệp hình ảnh." }
+            );
+        }
+
+        if (file.Length > fileSizeLimit)
+        {
+            return BadRequest(
+                new { message = "Kích thước tệp vượt quá giới hạn 2 MB." }
+            );
+        }
+
+        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+        using var stream = file.OpenReadStream();
+
+        bool found = await _minio.BucketExistsAsync(new BucketExistsArgs().WithBucket(_bucket));
+        if (!found)
+            await _minio.MakeBucketAsync(new MakeBucketArgs().WithBucket(_bucket));
+
+        await _minio.PutObjectAsync(new PutObjectArgs()
+            .WithBucket(_bucket)
+            .WithObject(fileName)
+            .WithStreamData(stream)
+            .WithObjectSize(file.Length)
+            .WithContentType(file.ContentType));
+
+        var url = $"{cdnDomain}/{_bucket}/{fileName}";
         return Ok(new { url });
     }
 

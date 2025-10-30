@@ -5,7 +5,7 @@ namespace MsHuyenLC.Application.DTOs.Learning.DeThi;
 public class GenerateTestRequest
 {
     public string TenDe { get; set; } = null!;
-    public int SoCauHoi { get; set; }
+    public int TongCauHoi { get; set; }
     public int ThoiGianLamBai { get; set; }
     public LoaiDeThi LoaiDeThi { get; set; } = LoaiDeThi.LuyenTap;
     public LoaiCauHoi LoaiCauHoi { get; set; }

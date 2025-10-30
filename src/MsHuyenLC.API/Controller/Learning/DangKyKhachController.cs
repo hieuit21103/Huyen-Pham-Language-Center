@@ -16,6 +16,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IGenericService<HocVien> _hocVienService;
+    private readonly IGenericService<DangKy> _dangKyService;
 
     public DangKyKhachController(
         IGenericService<DangKyKhach> service,
@@ -23,12 +24,14 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         IGenericService<KhoaHoc> khoaHocService,
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
-        IGenericService<HocVien> hocVienService) : base(service, logService)
+        IGenericService<HocVien> hocVienService,
+        IGenericService<DangKy> dangKyService) : base(service, logService)
     {
         _khoaHocService = khoaHocService;
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _hocVienService = hocVienService;
+        _dangKyService = dangKyService;
     }
 
     protected override Func<IQueryable<DangKyKhach>, IOrderedQueryable<DangKyKhach>>? BuildOrderBy(string sortBy, string? sortOrder)
@@ -265,10 +268,10 @@ public class DangKyKhachController : BaseController<DangKyKhach>
                 };
 
                 var createdAccount = await _userRepository.CreateAsync(taiKhoan);
-                
+
                 if (createdAccount != null)
                 {
-                    
+
                     var hocVien = new HocVien
                     {
                         HoTen = existing.HoTen,
@@ -278,11 +281,29 @@ public class DangKyKhachController : BaseController<DangKyKhach>
                         NgayDangKy = DateOnly.FromDateTime(DateTime.UtcNow)
                     };
 
-                    await _hocVienService.AddAsync(hocVien);
+                    var createdHocVien = await _hocVienService.AddAsync(hocVien);
 
-                    
+                    if (createdHocVien != null)
+                    {
+                        var dangKyHocVien = new DangKy
+                        {
+                            HocVienId = createdHocVien.Id,
+                            KhoaHocId = existing.KhoaHocId,
+                            NgayDangKy = DateOnly.FromDateTime(DateTime.UtcNow),
+                            TrangThai = TrangThaiDangKy.choxeplop,
+                        };
+
+                        var createdDangKy = await _dangKyService.AddAsync(dangKyHocVien);
+                        if (createdDangKy == null)
+                        {
+                            return BadRequest(new { message = "Tạo đăng ký học viên thất bại." });
+                        }
+                    }
+
                     existing.KetQua = KetQuaDangKy.daxuly;
                 }
+                
+
             }
             else
             {

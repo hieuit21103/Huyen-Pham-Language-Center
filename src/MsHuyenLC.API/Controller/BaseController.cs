@@ -32,7 +32,7 @@ public abstract class BaseController<TEntity> : ControllerBase where TEntity : c
     [HttpGet]
     public virtual async Task<IActionResult> GetAll(
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
+        [FromQuery] int pageSize = int.MaxValue,
         [FromQuery] string? sortBy = null,
         [FromQuery] string? sortOrder = "asc"
     )

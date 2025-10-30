@@ -3,6 +3,7 @@ using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.Interfaces.System;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Users.HocVien;
+using System.Security.Claims;
 
 namespace MsHuyenLC.API.Controller.Users;
 
@@ -10,6 +11,7 @@ namespace MsHuyenLC.API.Controller.Users;
 [ApiController]
 public class HocVienController : BaseController<HocVien>
 {
+    
 
     public HocVienController(IGenericService<HocVien> service, ISystemLoggerService logService) 
         : base(service, logService)
@@ -60,11 +62,20 @@ public class HocVienController : BaseController<HocVien>
         return Ok(hocVien);
     }
 
-    [Authorize(Roles = "admin,giaovu,giaovien")]
+    [Authorize(Roles = "admin,giaovu,giaovien,hocvien")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, [FromBody] HocVienUpdateRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        var hocVien = await _service.GetByIdAsync(id);
+        if (hocVien == null) return NotFound();
+
+        if(hocVien.TaiKhoanId.ToString() != User.FindFirst(ClaimTypes.NameIdentifier)?.Value &&
+           !User.IsInRole("admin") && !User.IsInRole("giaovu"))
+        {
+            return Forbid();
+        }
 
         var existingStudent = await _service.GetByIdAsync(id);
         if (existingStudent == null) return NotFound();
@@ -77,7 +88,7 @@ public class HocVienController : BaseController<HocVien>
 
         await _service.UpdateAsync(existingStudent);
 
-        return Ok();
+        return Ok(new { message = "Cập nhật học viên thành công." });
     }
 
     [Authorize(Roles = "admin,giaovu")]
@@ -88,6 +99,6 @@ public class HocVienController : BaseController<HocVien>
         if (entity == null) return NotFound();
         await _service.DeleteAsync(entity);
 
-        return Ok();
+        return Ok(new { message = "Xóa học viên thành công." });
     }
 }

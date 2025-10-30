@@ -25,6 +25,7 @@ services:
       Redis__InstanceName: "MsHuyenLC:"
 
       # MinIO Settings
+      Minio__Domain: ${MINIO_DOMAIN}
       Minio__Endpoint: ${MINIO_ENDPOINT}
       Minio__AccessKey: ${MINIO_ROOT_USER}
       Minio__SecretKey: ${MINIO_ROOT_PASSWORD}

@@ -54,24 +54,59 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<NhomCauHoi>().ToTable("NhomCauHoi");
         modelBuilder.Entity<NhomCauHoiChiTiet>().ToTable("NhomCauHoiChiTiet");
         modelBuilder.Entity<DeThi>().ToTable("DeThi");
+        modelBuilder.Entity<DeThi>()
+            .Navigation(dt => dt.KyThi)
+            .AutoInclude();
         modelBuilder.Entity<KyThi>().ToTable("KyThi");
         modelBuilder.Entity<PhienLamBai>().ToTable("PhienLamBai");
+        modelBuilder.Entity<PhienLamBai>()
+            .Navigation(p => p.DeThi)
+            .AutoInclude();
         modelBuilder.Entity<CauTraLoi>().ToTable("CauTraLoi");
+        modelBuilder.Entity<CauTraLoi>()
+            .Navigation(ct => ct.CauHoi)
+            .AutoInclude();
         modelBuilder.Entity<DangKy>().ToTable("DangKy");
+        modelBuilder.Entity<DangKy>()
+            .Navigation(dk => dk.HocVien)
+            .AutoInclude();
+        modelBuilder.Entity<DangKy>()
+            .Navigation(dk => dk.LopHoc)
+            .AutoInclude();
+        modelBuilder.Entity<DangKy>()
+            .Navigation(dk => dk.KhoaHoc)
+            .AutoInclude();
         modelBuilder.Entity<DangKyKhach>().ToTable("DangKyKhach");
         modelBuilder.Entity<ThongBao>().ToTable("ThongBao");
         modelBuilder.Entity<PhanHoi>().ToTable("PhanHoi");
+        modelBuilder.Entity<PhanHoi>()
+            .Navigation(ph => ph.HocVien)
+            .AutoInclude();
         modelBuilder.Entity<KetQuaHocTap>().ToTable("KetQuaHocTap");
 
         modelBuilder.Entity<KhoaHoc>().ToTable("KhoaHoc");
         modelBuilder.Entity<LopHoc>().ToTable("LopHoc");
+        modelBuilder.Entity<LopHoc>()
+            .Navigation(lh => lh.CacDangKy)
+            .AutoInclude();
         modelBuilder.Entity<LichHoc>().ToTable("LichHoc");
+        modelBuilder.Entity<LichHoc>()
+            .Navigation(lh => lh.LopHoc)
+            .AutoInclude();
         modelBuilder.Entity<PhanCong>().ToTable("PhanCong");
-
+        modelBuilder.Entity<PhanCong>()
+            .Navigation(pc => pc.LopHoc)
+            .AutoInclude();
+        modelBuilder.Entity<PhanCong>()
+            .Navigation(pc => pc.GiaoVien)
+            .AutoInclude();
         modelBuilder.Entity<ThanhToan>().ToTable("ThanhToan");
 
         modelBuilder.Entity<TaiKhoan>().ToTable("TaiKhoan");
         modelBuilder.Entity<HocVien>().ToTable("HocVien");
+        modelBuilder.Entity<HocVien>()
+            .Navigation(hv => hv.TaiKhoan)
+            .AutoInclude();
         modelBuilder.Entity<GiaoVien>().ToTable("GiaoVien");
         modelBuilder.Entity<GiaoVu>().ToTable("GiaoVu");
 

@@ -9,7 +9,7 @@ public class PhienLamBai
     public TimeSpan ThoiGianLam { get; set; }
     public DateOnly NgayLam { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
     public Guid HocVienId { get; set; }
-    public TaiKhoan HocVien { get; set; } = null!;
+    public HocVien HocVien { get; set; } = null!;
     public Guid DeThiId { get; set; }
     public DeThi DeThi { get; set; } = null!;
 }

@@ -6,7 +6,7 @@ public class DeThiRequest
 {
     public Guid Id { get; set; }
     public string TenDe { get; set; } = null!;
-    public int SoCauHoi { get; set; }
+    public int TongCauHoi { get; set; }
     public LoaiDeThi LoaiDeThi { get; set; } = LoaiDeThi.LuyenTap;
     public Guid? KyThiId { get; set; }
     public KyThi? KyThi { get; set; }

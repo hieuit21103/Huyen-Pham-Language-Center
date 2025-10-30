@@ -10,9 +10,11 @@ namespace MsHuyenLC.API.Controller.Learning;
 [ApiController]
 public class DangKyController : BaseController<DangKy>
 {
-    public DangKyController(IGenericService<DangKy> service, ISystemLoggerService logService) 
+    private readonly IGenericService<LopHoc> _lopHocService;
+    public DangKyController(IGenericService<DangKy> service, ISystemLoggerService logService, IGenericService<LopHoc> lopHocService)
         : base(service, logService)
     {
+        _lopHocService = lopHocService;
     }
 
     protected override Func<IQueryable<DangKy>, IOrderedQueryable<DangKy>>? BuildOrderBy(string sortBy, string? sortOrder)
@@ -26,6 +28,28 @@ public class DangKyController : BaseController<DangKy>
                 ? (q => q.OrderByDescending(k => k.Id))
                 : (q => q.OrderBy(k => k.Id)),
         };
+    }
+
+    [HttpGet("student/{hocVienId}")]
+    [Authorize]
+    public async Task<IActionResult> GetDangKyByHocVienId(string hocVienId)
+    {
+        var entities = await _service.GetAllAsync(
+            1,
+            int.MaxValue,
+            Filter: dk => dk.HocVienId.ToString() == hocVienId
+        );
+
+        var response = entities.Select(dk => new DangKyHocVienResponse
+        {
+            Id = dk.Id,
+            KhoaHoc = dk.KhoaHoc,
+            LopHoc = dk.LopHoc,
+            NgayDangKy = dk.NgayDangKy,
+            TrangThai = dk.TrangThai
+        }).ToList();
+
+        return Ok(response);
     }
 
     [HttpPost("student")]
@@ -97,6 +121,36 @@ public class DangKyController : BaseController<DangKy>
 
         var existingDangKy = await _service.GetByIdAsync(id);
         if (existingDangKy == null) return NotFound();
+
+
+        if (existingDangKy.LopHocId == null)
+        {
+            if (request.LopHocId != null)
+            {
+                var existingLopHoc = await _lopHocService.GetByIdAsync(request.LopHocId.Value.ToString());
+                if (existingLopHoc != null)
+                {
+                    existingLopHoc.CapNhatSiSo(1);
+                    await _lopHocService.UpdateAsync(existingLopHoc);
+                }
+            }
+        }
+        else
+        {
+            var oldLopHoc = await _lopHocService.GetByIdAsync(existingDangKy.LopHocId.Value.ToString());
+            if (oldLopHoc != null && request.LopHocId != null && oldLopHoc.Id != request.LopHocId.Value)
+            {
+                oldLopHoc.CapNhatSiSo(-1);
+                await _lopHocService.UpdateAsync(oldLopHoc);
+
+                var newLopHoc = await _lopHocService.GetByIdAsync(request.LopHocId.Value.ToString());
+                if (newLopHoc != null)
+                {
+                    newLopHoc.CapNhatSiSo(1);
+                    await _lopHocService.UpdateAsync(newLopHoc);
+                }
+            }
+        }
 
         var oldData = new DangKy
         {

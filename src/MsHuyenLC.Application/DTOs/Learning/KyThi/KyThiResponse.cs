@@ -7,9 +7,10 @@ public class KyThiResponse
     public Guid Id { get; set; }
     public string TenKyThi { get; set; } = null!;
     public DateOnly NgayThi { get; set; }
+    public TimeOnly GioBatDau { get; set; }
+    public TimeOnly GioKetThuc { get; set; }
     public int ThoiLuong { get; set; }
     public Guid LopHocId { get; set; }
     public string? TenLop { get; set; }
-    public HinhThucKyThi HinhThuc { get; set; }
     public TrangThaiKyThi TrangThai { get; set; }
 }

@@ -33,12 +33,11 @@ public enum TrangThaiKhoaHoc
 
 public enum TrangThaiDangKy
 {
-    choduyet,    
-    daduyet,       
-    daxeplop,      
-    danghoc,      
-    hoantat,        
-    huy             
+    choduyet,
+    daduyet,
+    choxeplop,
+    daxeplop,
+    huy
 }
 
 public enum TrangThaiKyThi
@@ -73,24 +72,12 @@ public enum VaiTro
 }
 #endregion
 
-public enum DoiTuongNhan
-{
-    lophoc,
-    tatca
-}
-
 public enum KetQuaDangKy
 {
     chuaxuly,
     datuchoi,
     dahuy,
     daxuly
-}
-
-public enum HinhThucKyThi
-{
-    tructuyen,
-    tructiep
 }
 
 public enum CapDo

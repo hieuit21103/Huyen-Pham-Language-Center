@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MsHuyenLC.Infrastructure.Persistence;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MsHuyenLC.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251025092618_v8_AddPhienNavigationToCauTraLoi")]
+    partial class v8_AddPhienNavigationToCauTraLoi
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -450,11 +453,8 @@ namespace MsHuyenLC.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<TimeOnly>("GioBatDau")
-                        .HasColumnType("time without time zone");
-
-                    b.Property<TimeOnly>("GioKetThuc")
-                        .HasColumnType("time without time zone");
+                    b.Property<int>("HinhThuc")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("LopHocId")
                         .HasColumnType("uuid");
@@ -647,25 +647,22 @@ namespace MsHuyenLC.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("GiaoVienId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("HocVienId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("LoaiPhanHoi")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateOnly>("NgayTao")
+                    b.Property<DateOnly>("NgayGui")
                         .HasColumnType("date");
 
                     b.Property<string>("NoiDung")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("TieuDe")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("GiaoVienId");
 
                     b.HasIndex("HocVienId");
 
@@ -678,10 +675,38 @@ namespace MsHuyenLC.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int>("DoiTuongNhan")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FileDinhKem")
+                        .HasColumnType("text");
+
+                    b.Property<int>("LoaiThongBao")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("LopHocId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MaThongBao")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("MucDoUuTien")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("NgaySua")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("NgayTao")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("NgayXoa")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("NguoiGuiId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("NguoiGuiTaiKhoanId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("NoiDung")
@@ -694,9 +719,41 @@ namespace MsHuyenLC.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("NguoiGuiId");
+                    b.HasIndex("LopHocId");
+
+                    b.HasIndex("NguoiGuiTaiKhoanId");
 
                     b.ToTable("ThongBao", (string)null);
+                });
+
+            modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.ThongBaoNguoiNhan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("DaDoc")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("NgayNhan")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("NguoiNhanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ThoiGianDoc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ThongBaoId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NguoiNhanId");
+
+                    b.HasIndex("ThongBaoId");
+
+                    b.ToTable("ThongBaoNguoiNhan", (string)null);
                 });
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.System.NhatKyHeThong", b =>
@@ -1123,7 +1180,7 @@ namespace MsHuyenLC.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MsHuyenLC.Domain.Entities.Users.HocVien", "HocVien")
+                    b.HasOne("MsHuyenLC.Domain.Entities.Users.TaiKhoan", "HocVien")
                         .WithMany()
                         .HasForeignKey("HocVienId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1136,24 +1193,57 @@ namespace MsHuyenLC.Infrastructure.Migrations
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.PhanHoi", b =>
                 {
+                    b.HasOne("MsHuyenLC.Domain.Entities.Users.GiaoVien", "GiaoVien")
+                        .WithMany()
+                        .HasForeignKey("GiaoVienId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("MsHuyenLC.Domain.Entities.Users.HocVien", "HocVien")
                         .WithMany()
                         .HasForeignKey("HocVienId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("GiaoVien");
+
                     b.Navigation("HocVien");
                 });
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.ThongBao", b =>
                 {
-                    b.HasOne("MsHuyenLC.Domain.Entities.Users.TaiKhoan", "NguoiGui")
+                    b.HasOne("MsHuyenLC.Domain.Entities.Courses.LopHoc", "LopHoc")
                         .WithMany()
-                        .HasForeignKey("NguoiGuiId")
+                        .HasForeignKey("LopHocId");
+
+                    b.HasOne("MsHuyenLC.Domain.Entities.Users.TaiKhoan", "NguoiGuiTaiKhoan")
+                        .WithMany()
+                        .HasForeignKey("NguoiGuiTaiKhoanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("NguoiGui");
+                    b.Navigation("LopHoc");
+
+                    b.Navigation("NguoiGuiTaiKhoan");
+                });
+
+            modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.ThongBaoNguoiNhan", b =>
+                {
+                    b.HasOne("MsHuyenLC.Domain.Entities.Users.TaiKhoan", "NguoiNhan")
+                        .WithMany()
+                        .HasForeignKey("NguoiNhanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MsHuyenLC.Domain.Entities.Learning.ThongBao", "ThongBao")
+                        .WithMany("DanhSachNguoiNhan")
+                        .HasForeignKey("ThongBaoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("NguoiNhan");
+
+                    b.Navigation("ThongBao");
                 });
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.System.NhatKyHeThong", b =>
@@ -1222,6 +1312,11 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.Navigation("CacCauHoiDeThi");
 
                     b.Navigation("CacChiTiet");
+                });
+
+            modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.ThongBao", b =>
+                {
+                    b.Navigation("DanhSachNguoiNhan");
                 });
 #pragma warning restore 612, 618
         }

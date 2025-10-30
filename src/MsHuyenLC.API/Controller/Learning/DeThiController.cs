@@ -46,7 +46,7 @@ public class DeThiController : BaseController<DeThi>
         {
             var deThi = await _testService.GenerateTestAsync(
                 request.TenDe,
-                request.SoCauHoi,
+                request.TongCauHoi,
                 request.ThoiGianLamBai,
                 request.LoaiDeThi,
                 request.LoaiCauHoi,
@@ -213,12 +213,12 @@ public class DeThiController : BaseController<DeThi>
                 });
             }
 
-            if (request.SoCauHoi != request.CauHoiIds.Count)
+            if (request.TongCauHoi != request.CauHoiIds.Count)
             {
                 return BadRequest(new
                 {
                     success = false,
-                    message = $"Số câu hỏi ({request.SoCauHoi}) không khớp với số lượng câu hỏi được chọn ({request.CauHoiIds.Count})"
+                    message = $"Số câu hỏi ({request.TongCauHoi}) không khớp với số lượng câu hỏi được chọn ({request.CauHoiIds.Count})"
                 });
             }
 
@@ -242,7 +242,7 @@ public class DeThiController : BaseController<DeThi>
             var deThi = new DeThi
             {
                 TenDe = request.TenDe,
-                TongCauHoi = request.SoCauHoi,
+                TongCauHoi = request.TongCauHoi,
                 ThoiLuongPhut = request.ThoiGianLamBai,
                 LoaiDeThi = request.LoaiDeThi,
                 KyThiId = request.KyThiId,
@@ -332,12 +332,12 @@ public class DeThiController : BaseController<DeThi>
                 });
             }
 
-            if (request.SoCauHoi != request.CauHoiIds.Count)
+            if (request.TongCauHoi != request.CauHoiIds.Count)
             {
                 return BadRequest(new
                 {
                     success = false,
-                    message = $"Số câu hỏi ({request.SoCauHoi}) không khớp với số lượng câu hỏi được chọn ({request.CauHoiIds.Count})"
+                    message = $"Số câu hỏi ({request.TongCauHoi}) không khớp với số lượng câu hỏi được chọn ({request.CauHoiIds.Count})"
                 });
             }
 
@@ -358,7 +358,7 @@ public class DeThiController : BaseController<DeThi>
             }
 
             existingDeThi.TenDe = request.TenDe;
-            existingDeThi.TongCauHoi = request.SoCauHoi;
+            existingDeThi.TongCauHoi = request.TongCauHoi;
             existingDeThi.ThoiLuongPhut = request.ThoiGianLamBai;
             existingDeThi.LoaiDeThi = request.LoaiDeThi;
             existingDeThi.KyThiId = request.KyThiId;

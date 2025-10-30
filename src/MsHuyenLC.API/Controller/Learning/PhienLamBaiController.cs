@@ -67,12 +67,13 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
                 PageSize: 1,
                 Filter: hv => hv.TaiKhoanId.ToString() == taiKhoanId
             );
+            Console.WriteLine(hocVien.FirstOrDefault());
             if (hocVien.Count() == 0)
             {
                 return NotFound(new { message = "Không tìm thấy học viên." });
             }
 
-            var thoiGianLamBai = request.ThoiGianLamBai;
+            var thoiGianLamBai = TimeSpan.FromSeconds(request.ThoiGianLamBai);
             var soCauDung = 0;
             var diemTong = 0;
 
@@ -103,7 +104,7 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
 
             var baiThi = new PhienLamBai
             {
-                TongCauHoi = request.CacTraLoi.Count,
+                TongCauHoi = request.TongCauHoi,
                 SoCauDung = soCauDung == -1 ? null : soCauDung,
                 Diem = diemTong == -1 ? null : diemTong,
                 ThoiGianLam = thoiGianLamBai,
@@ -236,8 +237,9 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
 
             var cauTraLoi = await _cauTraLoiService.GetAllAsync(
                 PageNumber: 1,
-                PageSize: 1000,
-                Filter: ct => ct.PhienId == phienLamBai.Id
+                PageSize: int.MaxValue,
+                Filter: ct => ct.PhienId == phienLamBai.Id,
+                Includes: ct => ct.CauHoi
             );
 
             return Ok(new
@@ -248,8 +250,9 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
                     phienLamBai = new
                     {
                         id = phienLamBai.Id,
+                        tongCauHoi = phienLamBai.TongCauHoi,
+                        soCauDung = phienLamBai.SoCauDung,
                         tongDiem = phienLamBai.Diem,
-                        nhanXet = phienLamBai.SoCauDung,
                         thoiGianLam = phienLamBai.ThoiGianLam,
                         ngayLam = phienLamBai.NgayLam,
                         deThiId = phienLamBai.DeThiId,
@@ -259,6 +262,14 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
                     {
                         id = ct.Id,
                         cauHoiId = ct.CauHoiId,
+                        cacDapAn = ct.CauHoi.CacDapAn.Select(da => new
+                        {
+                            id = da.Id,
+                            nhan = da.Nhan,
+                            noiDung = da.NoiDung,
+                            dung = da.Dung,
+                            giaiThich = da.GiaiThich
+                        }),
                         cauTraLoiText = ct.CauTraLoiText,
                         dung = ct.Dung,
                         noiDungCauHoi = ct.CauHoi.NoiDungCauHoi

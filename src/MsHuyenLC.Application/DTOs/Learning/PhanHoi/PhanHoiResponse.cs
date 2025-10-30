@@ -5,8 +5,8 @@ public class PhanHoiResponse
     public Guid Id { get; set; }
     public Guid HocVienId { get; set; }
     public string? TenHocVien { get; set; }
-    public Guid GiaoVienId { get; set; }
-    public string? TenGiaoVien { get; set; }
+    public string LoaiPhanHoi { get; set; } = null!;
+    public string TieuDe { get; set; } = null!;
     public string NoiDung { get; set; } = null!;
-    public DateOnly NgayGui { get; set; }
+    public DateOnly NgayTao { get; set; }
 }

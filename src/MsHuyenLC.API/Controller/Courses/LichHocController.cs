@@ -40,9 +40,9 @@ public class LichHocController : BaseController<LichHoc>
     }
 
     [HttpGet("class/{classId}")]
-    [Authorize(Roles="admin,giaovu")]
+    [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> GetClassSchedule(
-            string classId, 
+            string classId,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10
         )
@@ -58,9 +58,9 @@ public class LichHocController : BaseController<LichHoc>
     }
 
     [HttpGet("teacher/{teacherId}")]
-    [Authorize(Roles="admin,giaovu,giaovien")]
+    [Authorize(Roles = "admin,giaovu,giaovien")]
     public async Task<IActionResult> GetTeacherSchedule(
-            string teacherId, 
+            string teacherId,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10
     )
@@ -78,19 +78,18 @@ public class LichHocController : BaseController<LichHoc>
     [HttpGet("student/{studentId}")]
     [Authorize(Roles = "admin,giaovu,giaovien,hocvien")]
     public async Task<IActionResult> GetStudentSchedule(
-            string studentId, 
+        string studentId,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10
     )
     {
         var schedule = await _service.GetAllAsync(
             PageNumber: pageNumber,
-            PageSize: pageSize,
-                Filter: s => s.LopHocId != null && s.LopHocId.ToString() == studentId,
-            OrderBy: q => q.OrderBy(s => s.Thu)
+            PageSize: pageSize
         );
 
-        return Ok(schedule);
+        var studentSchedules = schedule.Where(s => s.LopHoc.CacDangKy.Any(dk => dk.HocVienId.ToString() == studentId));
+        return Ok(studentSchedules);
     }
 
     [HttpPost]
@@ -99,10 +98,10 @@ public class LichHocController : BaseController<LichHoc>
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var lichHoc = new LichHoc 
+        var lichHoc = new LichHoc
         {
-                LopHocId = request.LopHocId,
-                PhongHocId = request.PhongHocId,
+            LopHocId = request.LopHocId,
+            PhongHocId = request.PhongHocId,
             Thu = request.Thu,
             TuNgay = request.TuNgay,
             DenNgay = request.DenNgay,
@@ -128,36 +127,41 @@ public class LichHocController : BaseController<LichHoc>
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var existingLichHoc = await _service.GetByIdAsync(id); 
+        var existingLichHoc = await _service.GetByIdAsync(id);
         if (existingLichHoc == null) return NotFound();
 
-            var phongHoc = await _phongHocService.GetByIdAsync(request.PhongHocId.ToString());
+        var phongHoc = await _phongHocService.GetByIdAsync(request.PhongHocId.ToString());
         if (phongHoc == null) return BadRequest("Phòng học không tồn tại.");
-            
-            var oldData = new LichHoc
-            {
-                Id = existingLichHoc.Id,
-                LopHocId = existingLichHoc.LopHocId,
-                PhongHocId = existingLichHoc.PhongHocId,
-                Thu = existingLichHoc.Thu,
-                TuNgay = existingLichHoc.TuNgay,
-                DenNgay = existingLichHoc.DenNgay,
-                GioBatDau = existingLichHoc.GioBatDau,
-                GioKetThuc = existingLichHoc.GioKetThuc,
-                CoHieuLuc = existingLichHoc.CoHieuLuc
-            };
 
-            existingLichHoc.PhongHocId = request.PhongHocId;
-            existingLichHoc.Thu = request.Thu;
-            existingLichHoc.TuNgay = request.TuNgay;
-            existingLichHoc.DenNgay = request.DenNgay;
-            existingLichHoc.GioBatDau = request.GioBatDau;
-            existingLichHoc.GioKetThuc = request.GioKetThuc;
-            existingLichHoc.CoHieuLuc = request.CoHieuLuc;
+        var oldData = new LichHoc
+        {
+            Id = existingLichHoc.Id,
+            LopHocId = existingLichHoc.LopHocId,
+            PhongHocId = existingLichHoc.PhongHocId,
+            Thu = existingLichHoc.Thu,
+            TuNgay = existingLichHoc.TuNgay,
+            DenNgay = existingLichHoc.DenNgay,
+            GioBatDau = existingLichHoc.GioBatDau,
+            GioKetThuc = existingLichHoc.GioKetThuc,
+            CoHieuLuc = existingLichHoc.CoHieuLuc
+        };
+
+        existingLichHoc.PhongHocId = request.PhongHocId;
+        existingLichHoc.Thu = request.Thu;
+        existingLichHoc.TuNgay = request.TuNgay;
+        existingLichHoc.DenNgay = request.DenNgay;
+        existingLichHoc.GioBatDau = request.GioBatDau;
+        existingLichHoc.GioKetThuc = request.GioKetThuc;
+        existingLichHoc.CoHieuLuc = request.CoHieuLuc;
 
         await _service.UpdateAsync(existingLichHoc);
         await LogUpdateAsync(oldData, existingLichHoc);
-        return Ok();
+        return Ok(new
+        {
+            success = true,
+            message = "Cập nhật lịch học thành công.",
+            data = existingLichHoc
+        });
     }
 
     [HttpDelete("{id}")]

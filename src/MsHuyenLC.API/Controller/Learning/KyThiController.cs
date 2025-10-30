@@ -41,7 +41,6 @@ public class KyThiController : BaseController<KyThi>
                 NgayThi = request.NgayThi,
                 ThoiLuong = request.ThoiLuong,
                 LopHocId = request.LopHocId,
-                HinhThuc = request.HinhThuc,
                 TrangThai = TrangThaiKyThi.sapdienra
             };
 
@@ -58,7 +57,6 @@ public class KyThiController : BaseController<KyThi>
                     ngayThi = createdKyThi.NgayThi,
                     thoiLuong = createdKyThi.ThoiLuong,
                     lopHocId = createdKyThi.LopHocId,
-                    hinhThuc = createdKyThi.HinhThuc,
                     trangThai = createdKyThi.TrangThai
                 }
             });
@@ -106,9 +104,10 @@ public class KyThiController : BaseController<KyThi>
 
             existingKyThi.TenKyThi = request.TenKyThi;
             existingKyThi.NgayThi = request.NgayThi;
+            existingKyThi.GioBatDau = request.GioBatDau;
+            existingKyThi.GioKetThuc = request.GioKetThuc;
             existingKyThi.ThoiLuong = request.ThoiLuong;
             existingKyThi.LopHocId = request.LopHocId;
-            existingKyThi.HinhThuc = request.HinhThuc;
             existingKyThi.TrangThai = request.TrangThai;
 
             await _service.UpdateAsync(existingKyThi);
@@ -122,9 +121,10 @@ public class KyThiController : BaseController<KyThi>
                     id = existingKyThi.Id,
                     tenKyThi = existingKyThi.TenKyThi,
                     ngayThi = existingKyThi.NgayThi,
+                    gioBatDau = existingKyThi.GioBatDau,
+                    gioKetThuc = existingKyThi.GioKetThuc,
                     thoiLuong = existingKyThi.ThoiLuong,
                     lopHocId = existingKyThi.LopHocId,
-                    hinhThuc = existingKyThi.HinhThuc,
                     trangThai = existingKyThi.TrangThai
                 }
             });
@@ -258,7 +258,6 @@ public class KyThiController : BaseController<KyThi>
                     tenKyThi = kt.TenKyThi,
                     ngayThi = kt.NgayThi,
                     thoiLuong = kt.ThoiLuong,
-                    hinhThuc = kt.HinhThuc,
                     trangThai = kt.TrangThai
                 }),
                 total = kyThis.Count()
