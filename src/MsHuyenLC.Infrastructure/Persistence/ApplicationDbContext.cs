@@ -62,6 +62,9 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<PhienLamBai>()
             .Navigation(p => p.DeThi)
             .AutoInclude();
+        modelBuilder.Entity<PhienLamBai>()
+            .Navigation(p => p.HocVien)
+            .AutoInclude();
         modelBuilder.Entity<CauTraLoi>().ToTable("CauTraLoi");
         modelBuilder.Entity<CauTraLoi>()
             .Navigation(ct => ct.CauHoi)
