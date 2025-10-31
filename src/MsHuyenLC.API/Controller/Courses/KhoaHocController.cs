@@ -38,7 +38,13 @@ public class KhoaHocController : BaseController<KhoaHoc>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] KhoaHocRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var khoaHoc = new KhoaHoc
         {
@@ -50,7 +56,12 @@ public class KhoaHocController : BaseController<KhoaHoc>
         };
 
         var result = await _service.AddAsync(khoaHoc);
-        if (result == null) return BadRequest();
+        if (result == null) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Tạo khóa học thất bại" 
+            });
 
         await LogCreateAsync(result);
 
@@ -65,17 +76,34 @@ public class KhoaHocController : BaseController<KhoaHoc>
             TrangThai = result.TrangThai
         };
 
-        return Ok(response);
-    }
+        return Ok(
+            new
+            {
+                success = true,
+                message = "Tạo khóa học thành công",
+                data = response
+            });
+    }   
 
     [Authorize(Roles = "admin,giaovu")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, [FromBody] KhoaHocUpdateRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var existingKhoaHoc = await _service.GetByIdAsync(id);
-        if (existingKhoaHoc == null) return NotFound();
+        if (existingKhoaHoc == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy khóa học" 
+            });
 
         var oldData = new KhoaHoc
         {
@@ -99,7 +127,14 @@ public class KhoaHocController : BaseController<KhoaHoc>
 
         await LogUpdateAsync(oldData, existingKhoaHoc);
 
-        return Ok();
+        return Ok(
+            new
+            {
+                success = true,
+                message = "Cập nhật khóa học thành công",
+                data = existingKhoaHoc
+            }
+        );
     }
 
     [Authorize(Roles = "admin,giaovu")]
@@ -107,12 +142,23 @@ public class KhoaHocController : BaseController<KhoaHoc>
     public async Task<IActionResult> Delete(string id)
     {
         var entity = await _service.GetByIdAsync(id);
-        if (entity == null) return NotFound();
+        if (entity == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy khóa học" 
+            });
         
         await _service.DeleteAsync(entity);
 
         await LogDeleteAsync(entity);
 
-        return Ok();
+        return Ok(
+            new
+            {
+                success = true,
+                message = "Xóa khóa học thành công"
+            }
+        );
     }
 }

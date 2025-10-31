@@ -62,11 +62,20 @@ public class DangKyKhachController : BaseController<DangKyKhach>
     public async Task<IActionResult> GuestRegister([FromBody] DangKyKhachRequest request)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+            return BadRequest(new
+            {
+                success = false,
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState
+            });
 
         var khoaHoc = await _khoaHocService.GetByIdAsync(request.KhoaHocId.ToString());
         if (khoaHoc == null)
-            return BadRequest(new { message = "Khóa học không tồn tại." });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Khóa học không tồn tại" 
+            });
 
         var existingRegistrations = await _service.GetAllAsync(
             PageNumber: 1,
@@ -78,7 +87,11 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         );
 
         if (existingRegistrations.Any())
-            return BadRequest(new { message = "Bạn đã đăng ký khóa học này rồi. Vui lòng chờ xử lý." });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Bạn đã đăng ký khóa học này rồi. Vui lòng chờ xử lý" 
+            });
 
         var dangKy = new DangKyKhach
         {
@@ -95,7 +108,11 @@ public class DangKyKhachController : BaseController<DangKyKhach>
 
         var result = await _service.AddAsync(dangKy);
         if (result == null)
-            return BadRequest(new { message = "Đăng ký thất bại." });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Đăng ký thất bại" 
+            });
 
         var response = new DangKyKhachResponse
         {
@@ -114,7 +131,8 @@ public class DangKyKhachController : BaseController<DangKyKhach>
 
         return Ok(new 
         { 
-            message = "Đăng ký thành công. Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.",
+            success = true,
+            message = "Đăng ký thành công. Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất",
             data = response 
         });
     }
@@ -125,12 +143,21 @@ public class DangKyKhachController : BaseController<DangKyKhach>
     public async Task<IActionResult> CreateByAdmin([FromBody] DangKyKhachCreateRequest request)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+            return BadRequest(new
+            {
+                success = false,
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState
+            });
 
         
         var khoaHoc = await _khoaHocService.GetByIdAsync(request.KhoaHocId.ToString());
         if (khoaHoc == null)
-            return BadRequest(new { message = "Khóa học không tồn tại." });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Khóa học không tồn tại" 
+            });
 
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -150,7 +177,11 @@ public class DangKyKhachController : BaseController<DangKyKhach>
 
         var result = await _service.AddAsync(dangKy);
         if (result == null)
-            return BadRequest(new { message = "Tạo đăng ký thất bại." });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Tạo đăng ký thất bại" 
+            });
 
         await LogCreateAsync(result);
 
@@ -170,7 +201,12 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             TaiKhoanXuLyId = result.TaiKhoanXuLyId
         };
 
-        return Ok(response);
+        return Ok(new
+        {
+            success = true,
+            message = "Tạo đăng ký thành công",
+            data = response
+        });
     }
 
     
@@ -179,11 +215,20 @@ public class DangKyKhachController : BaseController<DangKyKhach>
     public async Task<IActionResult> Update(string id, [FromBody] DangKyKhachUpdateRequest request)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+            return BadRequest(new
+            {
+                success = false,
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState
+            });
 
         var existing = await _service.GetByIdAsync(id);
         if (existing == null)
-            return NotFound(new { message = "Không tìm thấy đăng ký." });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy đăng ký" 
+            });
 
         var oldData = new DangKyKhach
         {
@@ -219,7 +264,11 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         {
             var khoaHoc = await _khoaHocService.GetByIdAsync(request.KhoaHocId.Value.ToString());
             if (khoaHoc == null)
-                return BadRequest(new { message = "Khóa học không tồn tại." });
+                return BadRequest(new 
+                { 
+                    success = false, 
+                    message = "Khóa học không tồn tại" 
+                });
 
             existing.KhoaHocId = request.KhoaHocId.Value;
         }
@@ -296,7 +345,11 @@ public class DangKyKhachController : BaseController<DangKyKhach>
                         var createdDangKy = await _dangKyService.AddAsync(dangKyHocVien);
                         if (createdDangKy == null)
                         {
-                            return BadRequest(new { message = "Tạo đăng ký học viên thất bại." });
+                            return BadRequest(new 
+                            { 
+                                success = false, 
+                                message = "Tạo đăng ký học viên thất bại" 
+                            });
                         }
                     }
 
@@ -317,9 +370,13 @@ public class DangKyKhachController : BaseController<DangKyKhach>
 
         var message = existing.TrangThai == TrangThaiDangKy.daduyet && previousTrangThai != TrangThaiDangKy.daduyet
             ? "Đã duyệt và tạo tài khoản thành công. Thông tin đăng nhập: Email = " + existing.Email + ", Mật khẩu = Số điện thoại"
-            : "Cập nhật đăng ký thành công.";
+            : "Cập nhật đăng ký thành công";
 
-        return Ok(new { message });
+        return Ok(new 
+        { 
+            success = true, 
+            message 
+        });
     }
 
     
@@ -329,12 +386,20 @@ public class DangKyKhachController : BaseController<DangKyKhach>
     {
         var existing = await _service.GetByIdAsync(id);
         if (existing == null)
-            return NotFound(new { message = "Không tìm thấy đăng ký." });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy đăng ký" 
+            });
 
         await _service.DeleteAsync(existing);
         await LogDeleteAsync(existing);
 
-        return Ok(new { message = "Xóa đăng ký thành công." });
+        return Ok(new 
+        { 
+            success = true, 
+            message = "Xóa đăng ký thành công" 
+        });
     }
 
     
@@ -362,7 +427,12 @@ public class DangKyKhachController : BaseController<DangKyKhach>
                                                            d.NgayDangKy.Year == DateTime.UtcNow.Year)
         };
 
-        return Ok(stats);
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy thống kê thành công",
+            data = stats
+        });
     }
 
     
@@ -374,7 +444,11 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         [FromQuery] int pageSize = 10)
     {
         if (string.IsNullOrWhiteSpace(query))
-            return BadRequest(new { message = "Từ khóa tìm kiếm không hợp lệ." });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Từ khóa tìm kiếm không hợp lệ" 
+            });
 
         var registrations = await _service.GetAllAsync(
             PageNumber: pageNumber,
@@ -414,6 +488,11 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             responses.Add(response);
         }
 
-        return Ok(responses);
+        return Ok(new
+        {
+            success = true,
+            message = "Tìm kiếm thành công",
+            data = responses
+        });
     }
 }

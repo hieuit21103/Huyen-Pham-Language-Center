@@ -22,7 +22,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<DangKyKhach> DangKyKhachs { get; set; } = null!;
     public DbSet<ThongBao> ThongBaos { get; set; } = null!;
     public DbSet<PhanHoi> PhanHois { get; set; } = null!;
-    public DbSet<KetQuaHocTap> KetQuaHocTaps { get; set; } = null!;
 
     // Courses
     public DbSet<KhoaHoc> KhoaHocs { get; set; } = null!;
@@ -42,6 +41,7 @@ public class ApplicationDbContext : DbContext
     // System
     public DbSet<NhatKyHeThong> NhatKyHeThongs { get; set; } = null!;
     public DbSet<SaoLuuDuLieu> SaoLuuDuLieus { get; set; } = null!;
+    public DbSet<CauHinhHeThong> CauHinhHeThongs { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -82,8 +82,6 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<PhanHoi>()
             .Navigation(ph => ph.HocVien)
             .AutoInclude();
-        modelBuilder.Entity<KetQuaHocTap>().ToTable("KetQuaHocTap");
-
         modelBuilder.Entity<KhoaHoc>().ToTable("KhoaHoc");
         modelBuilder.Entity<LopHoc>().ToTable("LopHoc");
         modelBuilder.Entity<LopHoc>()
@@ -111,7 +109,11 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<GiaoVu>().ToTable("GiaoVu");
 
         modelBuilder.Entity<NhatKyHeThong>().ToTable("NhatKyHeThong");
+        modelBuilder.Entity<NhatKyHeThong>()
+            .Navigation(nk => nk.TaiKhoan)
+            .AutoInclude();
         modelBuilder.Entity<SaoLuuDuLieu>().ToTable("SaoLuuDuLieu");
+        modelBuilder.Entity<CauHinhHeThong>().ToTable("CauHinhHeThong");
 
         modelBuilder.Entity<TaiKhoan>()
             .HasIndex(tk => tk.TenDangNhap)

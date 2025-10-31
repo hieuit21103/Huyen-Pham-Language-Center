@@ -26,15 +26,28 @@ public class ProfileController : ControllerBase
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
         {
-            return BadRequest(new { message = "Chưa đăng nhập." });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Chưa đăng nhập" 
+            });
         }
         var user = await _userRepository.GetByIdAsync(userId);
         if (user == null)
         {
-            return NotFound(new { message = "Người dùng không tồn tại." });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy người dùng" 
+            });
         }
 
-        return Ok(user);
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy thông tin profile thành công",
+            data = user
+        });
     }
 
     [HttpPut]
@@ -42,18 +55,30 @@ public class ProfileController : ControllerBase
     {
         if (request == null)
         {
-            return BadRequest(new { message = "Dữ liệu không hợp lệ." });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ" 
+            });
         }
 
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
         {
-            return BadRequest(new { message = "Chưa đăng nhập." });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Chưa đăng nhập" 
+            });
         }
         var existingUser = await _userRepository.GetByIdAsync(userId);
         if (existingUser == null)
         {
-            return NotFound(new { message = "Người dùng không tồn tại." });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy người dùng" 
+            });
         }
 
         var oldData = new TaiKhoan
@@ -81,6 +106,11 @@ public class ProfileController : ControllerBase
             await _logService.LogUpdateAsync(userGuid, oldData, existingUser, ipAddress);
         }
 
-        return Ok(existingUser);
+        return Ok(new
+        {
+            success = true,
+            message = "Cập nhật profile thành công",
+            data = existingUser
+        });
     }
 }

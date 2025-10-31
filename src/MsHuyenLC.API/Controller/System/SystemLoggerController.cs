@@ -46,7 +46,12 @@ public class SystemLoggerController : BaseController<NhatKyHeThong>
             OrderBy: q => q.OrderByDescending(log => log.ThoiGian)
         );
 
-        return Ok(logs);
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy nhật ký theo người dùng thành công",
+            data = logs
+        });
     }
 
     [HttpGet("by-date-range")]
@@ -64,7 +69,12 @@ public class SystemLoggerController : BaseController<NhatKyHeThong>
             OrderBy: q => q.OrderByDescending(log => log.ThoiGian)
         );
 
-        return Ok(logs);
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy nhật ký theo khoảng thời gian thành công",
+            data = logs
+        });
     }
 
     [HttpGet("search")]
@@ -84,6 +94,11 @@ public class SystemLoggerController : BaseController<NhatKyHeThong>
             OrderBy: q => q.OrderByDescending(log => log.ThoiGian)
         );
 
-        return Ok(logs);
+        return Ok(new
+        {
+            success = true,
+            message = "Tìm kiếm nhật ký thành công",
+            data = logs
+        });
     }
 }

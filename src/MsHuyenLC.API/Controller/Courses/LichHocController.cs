@@ -89,14 +89,25 @@ public class LichHocController : BaseController<LichHoc>
         );
 
         var studentSchedules = schedule.Where(s => s.LopHoc.CacDangKy.Any(dk => dk.HocVienId.ToString() == studentId));
-        return Ok(studentSchedules);
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy lịch học của học viên thành công",
+            data = studentSchedules
+        });
     }
 
     [HttpPost]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> Create([FromBody] LichHocRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var lichHoc = new LichHoc
         {
@@ -113,25 +124,50 @@ public class LichHocController : BaseController<LichHoc>
         var result = await _service.AddAsync(lichHoc);
         if (result == null)
         {
-            return BadRequest(new { message = "Không thể tạo lịch học." });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Tạo lịch học thất bại" 
+            });
         }
 
         await LogCreateAsync(result);
 
-        return Ok(result);
+        return Ok(new
+        {
+            success = true,
+            message = "Tạo lịch học thành công",
+            data = result
+        });
     }
 
     [HttpPut("{id}")]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> Update(string id, [FromBody] LichHocUpdateRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var existingLichHoc = await _service.GetByIdAsync(id);
-        if (existingLichHoc == null) return NotFound();
+        if (existingLichHoc == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy lịch học" 
+            });
 
         var phongHoc = await _phongHocService.GetByIdAsync(request.PhongHocId.ToString());
-        if (phongHoc == null) return BadRequest("Phòng học không tồn tại.");
+        if (phongHoc == null) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Phòng học không tồn tại" 
+            });
 
         var oldData = new LichHoc
         {
@@ -156,10 +192,11 @@ public class LichHocController : BaseController<LichHoc>
 
         await _service.UpdateAsync(existingLichHoc);
         await LogUpdateAsync(oldData, existingLichHoc);
+        
         return Ok(new
         {
             success = true,
-            message = "Cập nhật lịch học thành công.",
+            message = "Cập nhật lịch học thành công",
             data = existingLichHoc
         });
     }
@@ -169,11 +206,21 @@ public class LichHocController : BaseController<LichHoc>
     public async Task<IActionResult> Delete(string id)
     {
         var existingLichHoc = await _service.GetByIdAsync(id);
-        if (existingLichHoc == null) return NotFound();
+        if (existingLichHoc == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy lịch học" 
+            });
 
         await _service.DeleteAsync(existingLichHoc);
         await LogDeleteAsync(existingLichHoc);
-        return Ok();
+        
+        return Ok(new
+        {
+            success = true,
+            message = "Xóa lịch học thành công"
+        });
     }
 
     [HttpGet("available-rooms")]
@@ -181,6 +228,11 @@ public class LichHocController : BaseController<LichHoc>
     public async Task<IActionResult> GetAvailableRooms()
     {
         var available = await _ScheduleService.GetAvailableRoomAsync();
-        return Ok(available);
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy phòng học trống thành công",
+            data = available
+        });
     }
 }

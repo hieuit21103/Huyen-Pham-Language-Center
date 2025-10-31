@@ -32,7 +32,12 @@ public class KyThiController : BaseController<KyThi>
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Dữ liệu không hợp lệ",
+                    errors = ModelState
+                });
             }
 
             var kyThi = new KyThi
@@ -89,7 +94,12 @@ public class KyThiController : BaseController<KyThi>
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Dữ liệu không hợp lệ",
+                    errors = ModelState
+                });
             }
 
             var existingKyThi = await _service.GetByIdAsync(id);

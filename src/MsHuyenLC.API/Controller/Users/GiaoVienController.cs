@@ -51,15 +51,28 @@ public class GiaoVienController : BaseController<GiaoVien>
     public async Task<IActionResult> Create([FromBody] GiaoVienRequest request)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var taiKhoan = await _userRepository.GetByIdAsync(request.TaiKhoanId.ToString());
         
         if (taiKhoan == null)
-            return BadRequest(new { message = "Tài khoản không tồn tại" });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Tài khoản không tồn tại" 
+            });
 
         if (taiKhoan.VaiTro != VaiTro.giaovien)
-            return BadRequest(new { message = "Tài khoản không có vai trò giáo viên" });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Tài khoản không có vai trò giáo viên" 
+            });
 
         var giaoVien = new GiaoVien
         {
@@ -72,7 +85,11 @@ public class GiaoVienController : BaseController<GiaoVien>
 
         var result = await _service.AddAsync(giaoVien);
         if (result == null)
-            return BadRequest(new { message = "Tạo giáo viên thất bại" });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Tạo giáo viên thất bại" 
+            });
 
         var response = new GiaoVienResponse
         {
@@ -86,19 +103,33 @@ public class GiaoVienController : BaseController<GiaoVien>
             Sdt = taiKhoan.Sdt
         };
 
-        return Ok(response);
+        return Ok(new
+        {
+            success = true,
+            message = "Tạo giáo viên thành công",
+            data = response
+        });
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, [FromBody] GiaoVienUpdateRequest request)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var giaoVien = await _service.GetByIdAsync(id);
             
         if (giaoVien == null)
-            return NotFound(new { message = "Không tìm thấy giáo viên" });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy giáo viên" 
+            });
 
         giaoVien.HoTen = request.HoTen;
         giaoVien.ChuyenMon = request.ChuyenMon;
@@ -107,7 +138,12 @@ public class GiaoVienController : BaseController<GiaoVien>
 
         await _service.UpdateAsync(giaoVien);
 
-        return Ok(new { message = "Cập nhật thông tin giáo viên thành công" });
+        return Ok(new 
+        { 
+            success = true, 
+            message = "Cập nhật thông tin giáo viên thành công",
+            data = giaoVien
+        });
     }
 
     [HttpDelete("{id}")]
@@ -116,7 +152,11 @@ public class GiaoVienController : BaseController<GiaoVien>
         var giaoVien = await _service.GetByIdAsync(id);
 
         if (giaoVien == null)
-            return NotFound(new { message = "Không tìm thấy giáo viên" });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy giáo viên" 
+            });
 
         var taiKhoan = await _userRepository.GetByIdAsync(giaoVien.TaiKhoanId.ToString());
         if (taiKhoan != null)
@@ -125,6 +165,10 @@ public class GiaoVienController : BaseController<GiaoVien>
             await _userRepository.UpdateAsync(taiKhoan);
         }
 
-        return Ok(new { message = "Đã vô hiệu hóa giáo viên" });
+        return Ok(new 
+        { 
+            success = true, 
+            message = "Vô hiệu hóa giáo viên thành công" 
+        });
     }
 }

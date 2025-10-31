@@ -46,10 +46,21 @@ public class LopHocController : BaseController<LopHoc>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] LopHocRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var khoaHoc = await _courseService.GetByIdAsync(request.KhoaHocId.ToString());
-        if (khoaHoc == null) return BadRequest("Khóa học không tồn tại");
+        if (khoaHoc == null) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Khóa học không tồn tại" 
+            });
 
         var lopHoc = new LopHoc
         {
@@ -59,7 +70,12 @@ public class LopHocController : BaseController<LopHoc>
         };
 
         var result = await _service.AddAsync(lopHoc);
-        if (result == null) return BadRequest();
+        if (result == null) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Tạo lớp học thất bại" 
+            });
 
         await LogCreateAsync(result);
 
@@ -74,17 +90,33 @@ public class LopHocController : BaseController<LopHoc>
             TenKhoaHoc = khoaHoc.TenKhoaHoc
         };
 
-        return Ok(response);
+        return Ok(new
+        {
+            success = true,
+            message = "Tạo lớp học thành công",
+            data = response
+        });
     }
 
     [Authorize(Roles = "admin,giaovu")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, [FromBody] LopHocUpdateRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var existingLopHoc = await _service.GetByIdAsync(id);
-        if (existingLopHoc == null) return NotFound();
+        if (existingLopHoc == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy lớp học" 
+            });
 
         var oldData = new LopHoc
         {
@@ -103,7 +135,12 @@ public class LopHocController : BaseController<LopHoc>
         await _service.UpdateAsync(existingLopHoc);
         await LogUpdateAsync(oldData, existingLopHoc);
 
-        return Ok();
+        return Ok(new
+        {
+            success = true,
+            message = "Cập nhật lớp học thành công",
+            data = existingLopHoc
+        });
     }
 
     [Authorize(Roles = "admin,giaovu")]
@@ -111,11 +148,21 @@ public class LopHocController : BaseController<LopHoc>
     public async Task<IActionResult> Delete(string id)
     {
         var entity = await _service.GetByIdAsync(id);
-        if (entity == null) return NotFound();
+        if (entity == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy lớp học" 
+            });
+        
         await _service.DeleteAsync(entity);
         await LogDeleteAsync(entity);
 
-        return Ok();
+        return Ok(new
+        {
+            success = true,
+            message = "Xóa lớp học thành công"
+        });
     }
 
     [HttpGet("{id}/students")]
@@ -124,7 +171,11 @@ public class LopHocController : BaseController<LopHoc>
     {
         var lopHoc = await _service.GetByIdAsync(id);
         if (lopHoc == null)
-            return NotFound(new { message = "Không tìm thấy lớp học" });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy lớp học" 
+            });
         
         var assignment = (await _assignmentService.GetAllAsync(
             1,
@@ -133,7 +184,11 @@ public class LopHocController : BaseController<LopHoc>
         )).ToList();
         
         if (!assignment.Any())
-            return BadRequest(new { message = "Lớp học chưa được phân công giáo viên" });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Lớp học chưa được phân công giáo viên" 
+            });
 
         var currentUserId = User.FindFirst("id")?.Value;
         if (!User.IsInRole("admin") && !User.IsInRole("giaovu") && 

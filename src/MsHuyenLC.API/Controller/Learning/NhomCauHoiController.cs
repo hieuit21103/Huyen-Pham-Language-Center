@@ -44,7 +44,12 @@ public class NhomCauHoiController : BaseController<NhomCauHoi>
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return BadRequest(new
+            {
+                success = false,
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState
+            });
         }
         var nhomCauHoi = new NhomCauHoi
         {
@@ -60,9 +65,18 @@ public class NhomCauHoiController : BaseController<NhomCauHoi>
         await _systemLoggerService.LogCreateAsync(GetCurrentUserId(), nhomCauHoi, GetClientIpAddress());
         if (result == null)
         {
-            return BadRequest(new { message = "Không thể tạo nhóm câu hỏi." });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Không thể tạo nhóm câu hỏi" 
+            });
         }
-        return Ok(nhomCauHoi);
+        return Ok(new
+        {
+            success = true,
+            message = "Tạo nhóm câu hỏi thành công",
+            data = nhomCauHoi
+        });
     }
 
     [HttpPut("{id}")]
@@ -70,13 +84,22 @@ public class NhomCauHoiController : BaseController<NhomCauHoi>
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return BadRequest(new
+            {
+                success = false,
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState
+            });
         }
 
         var existingNhomCauHoi = await _service.GetByIdAsync(id);
         if (existingNhomCauHoi == null)
         {
-            return NotFound(new { message = "Nhóm câu hỏi không tồn tại." });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy nhóm câu hỏi" 
+            });
         }
 
         var oldData = new NhomCauHoi
@@ -114,7 +137,12 @@ public class NhomCauHoiController : BaseController<NhomCauHoi>
 
         await _service.UpdateAsync(existingNhomCauHoi);
         await _systemLoggerService.LogUpdateAsync(GetCurrentUserId(), oldData, existingNhomCauHoi, GetClientIpAddress());
-        return Ok();
+        return Ok(new
+        {
+            success = true,
+            message = "Cập nhật nhóm câu hỏi thành công",
+            data = existingNhomCauHoi
+        });
     }
 
     [HttpDelete("{id}")]
@@ -123,11 +151,19 @@ public class NhomCauHoiController : BaseController<NhomCauHoi>
         var existingNhomCauHoi = await _service.GetByIdAsync(id);
         if (existingNhomCauHoi == null)
         {
-            return NotFound(new { message = "Nhóm câu hỏi không tồn tại." });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy nhóm câu hỏi" 
+            });
         }
 
         await _service.DeleteAsync(existingNhomCauHoi);
         await _systemLoggerService.LogDeleteAsync(GetCurrentUserId(), existingNhomCauHoi, GetClientIpAddress());
-        return Ok();
+        return Ok(new
+        {
+            success = true,
+            message = "Xóa nhóm câu hỏi thành công"
+        });
     }
 }

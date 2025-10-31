@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MsHuyenLC.Infrastructure.Persistence;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MsHuyenLC.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251031174224_v11")]
+    partial class v11
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -670,25 +673,6 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.HasIndex("NguoiGuiId");
 
                     b.ToTable("ThongBao", (string)null);
-                });
-
-            modelBuilder.Entity("MsHuyenLC.Domain.Entities.System.CauHinhHeThong", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("GiaTri")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Ten")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CauHinhHeThong", (string)null);
                 });
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.System.NhatKyHeThong", b =>

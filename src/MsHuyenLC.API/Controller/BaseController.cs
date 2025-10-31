@@ -43,9 +43,16 @@ public abstract class BaseController<TEntity> : ControllerBase where TEntity : c
         {
             orderBy = BuildOrderBy(sortBy, sortOrder);
         }
-        
+
         var entities = await _service.GetAllAsync(pageNumber, pageSize, null, orderBy);
-        return Ok(entities);
+        var totalItems = await _service.CountAsync();
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy danh sách thành công",
+            count = totalItems,
+            data = entities
+        });
     }
 
     protected virtual Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? BuildOrderBy(string sortBy, string? sortOrder)
@@ -58,7 +65,12 @@ public abstract class BaseController<TEntity> : ControllerBase where TEntity : c
     {
         var entity = await _service.GetByIdAsync(id);
         if (entity == null) return NotFound();
-        return Ok(entity);
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy chi tiết thành công",
+            data = entity
+        });
     }
 
     #region Logging Helper Methods

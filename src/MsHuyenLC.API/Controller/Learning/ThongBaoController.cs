@@ -57,7 +57,15 @@ public class ThongBaoController : BaseController<ThongBao>
             NgayTao = tb.NgayTao
         });
 
-        return Ok(response);
+        var totalItems = await _service.CountAsync();
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy danh sách thông báo thành công",
+            count = totalItems,
+            data = response
+        });
     }
 
     /// <summary>
@@ -67,11 +75,21 @@ public class ThongBaoController : BaseController<ThongBao>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] ThongBaoRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var userId = GetCurrentUserId();
         if (userId == Guid.Empty)
-            return Unauthorized();
+            return Unauthorized(new 
+            { 
+                success = false, 
+                message = "Không xác thực được người dùng" 
+            });
 
         var thongBao = new ThongBao
         {
@@ -82,7 +100,12 @@ public class ThongBaoController : BaseController<ThongBao>
         };
 
         var result = await _service.AddAsync(thongBao);
-        if (result == null) return BadRequest("Không thể tạo thông báo");
+        if (result == null) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Tạo thông báo thất bại" 
+            });
 
         await LogCreateAsync(result);
 
@@ -95,7 +118,12 @@ public class ThongBaoController : BaseController<ThongBao>
             NgayTao = result.NgayTao
         };
 
-        return Ok(response);
+        return Ok(new
+        {
+            success = true,
+            message = "Tạo thông báo thành công",
+            data = response
+        });
     }
 
     /// <summary>
@@ -105,14 +133,29 @@ public class ThongBaoController : BaseController<ThongBao>
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, [FromBody] ThongBaoRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var userId = GetCurrentUserId();
         if (userId == Guid.Empty)
-            return Unauthorized();
+            return Unauthorized(new 
+            { 
+                success = false, 
+                message = "Không xác thực được người dùng" 
+            });
 
         var existingThongBao = await _service.GetByIdAsync(id);
-        if (existingThongBao == null) return NotFound("Không tìm thấy thông báo");
+        if (existingThongBao == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy thông báo" 
+            });
 
         if (existingThongBao.NguoiGuiId != userId)
             return Forbid();
@@ -141,7 +184,12 @@ public class ThongBaoController : BaseController<ThongBao>
             NgayTao = existingThongBao.NgayTao
         };
 
-        return Ok(response);
+        return Ok(new
+        {
+            success = true,
+            message = "Cập nhật thông báo thành công",
+            data = response
+        });
     }
 
     /// <summary>
@@ -153,10 +201,19 @@ public class ThongBaoController : BaseController<ThongBao>
     {
         var userId = GetCurrentUserId();
         if (userId == Guid.Empty)
-            return Unauthorized();
+            return Unauthorized(new 
+            { 
+                success = false, 
+                message = "Không xác thực được người dùng" 
+            });
 
         var existingThongBao = await _service.GetByIdAsync(id);
-        if (existingThongBao == null) return NotFound("Không tìm thấy thông báo");
+        if (existingThongBao == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy thông báo" 
+            });
 
         // Kiểm tra quyền: chỉ người gửi mới được xóa
         if (existingThongBao.NguoiGuiId != userId)
@@ -165,6 +222,10 @@ public class ThongBaoController : BaseController<ThongBao>
         await LogDeleteAsync(existingThongBao);
         await _service.DeleteAsync(existingThongBao);
 
-        return Ok(new { message = "Đã xóa thông báo" });
+        return Ok(new 
+        { 
+            success = true, 
+            message = "Xóa thông báo thành công" 
+        });
     }
 }

@@ -49,12 +49,21 @@ public class CauHoiController : BaseController<NganHangCauHoi>
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return BadRequest(new
+            {
+                success = false,
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState
+            });
         }
 
         if (requests == null || !requests.Any())
         {
-            return BadRequest(new { message = "Danh sách câu hỏi rỗng." });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Danh sách câu hỏi rỗng" 
+            });
         }
 
         var createdCauHois = new List<NganHangCauHoi>();
@@ -65,7 +74,11 @@ public class CauHoiController : BaseController<NganHangCauHoi>
             {
                 if (string.IsNullOrWhiteSpace(dapAnRequest.Nhan) || string.IsNullOrWhiteSpace(dapAnRequest.NoiDung))
                 {
-                    return BadRequest(new { message = "Nhãn và nội dung đáp án không được để trống." });
+                    return BadRequest(new 
+                    { 
+                        success = false, 
+                        message = "Nhãn và nội dung đáp án không được để trống" 
+                    });
                 }
                 dapAnCauHois.Add(new DapAnCauHoi
                 {
@@ -107,12 +120,21 @@ public class CauHoiController : BaseController<NganHangCauHoi>
             await _systemLoggerService.LogCreateAsync(GetCurrentUserId(), cauHoi, GetClientIpAddress());
             if (result == null)
             {
-                return BadRequest("Không thể tạo câu hỏi.");
+                return BadRequest(new 
+                { 
+                    success = false, 
+                    message = "Không thể tạo câu hỏi" 
+                });
             }
             createdCauHois.Add(cauHoi);
         }
 
-        return Ok(createdCauHois);
+        return Ok(new
+        {
+            success = true,
+            message = "Tạo câu hỏi thành công",
+            data = createdCauHois
+        });
     }
 
         [HttpPut("{id}")]
@@ -120,13 +142,22 @@ public class CauHoiController : BaseController<NganHangCauHoi>
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Dữ liệu không hợp lệ",
+                    errors = ModelState
+                });
             }
 
             var existingCauHoi = await _service.GetByIdAsync(id);
             if (existingCauHoi == null)
             {
-                return NotFound("Câu hỏi không tồn tại.");
+                return NotFound(new 
+                { 
+                    success = false, 
+                    message = "Không tìm thấy câu hỏi" 
+                });
             }
 
             var oldData = new NganHangCauHoi
@@ -164,7 +195,12 @@ public class CauHoiController : BaseController<NganHangCauHoi>
 
             await _service.UpdateAsync(existingCauHoi);
             await _systemLoggerService.LogUpdateAsync(GetCurrentUserId(), oldData, existingCauHoi, GetClientIpAddress());
-            return Ok();
+            return Ok(new
+            {
+                success = true,
+                message = "Cập nhật câu hỏi thành công",
+                data = existingCauHoi
+            });
         }
 
         [HttpDelete("{id}")]
@@ -173,11 +209,19 @@ public class CauHoiController : BaseController<NganHangCauHoi>
             var existingCauHoi = await _service.GetByIdAsync(id);
             if (existingCauHoi == null)
             {
-                return NotFound("Câu hỏi không tồn tại.");
+                return NotFound(new 
+                { 
+                    success = false, 
+                    message = "Không tìm thấy câu hỏi" 
+                });
             }
 
             await _service.DeleteAsync(existingCauHoi);
             await _systemLoggerService.LogDeleteAsync(GetCurrentUserId(), existingCauHoi, GetClientIpAddress());
-            return Ok();
+            return Ok(new
+            {
+                success = true,
+                message = "Xóa câu hỏi thành công"
+            });
         }
     }

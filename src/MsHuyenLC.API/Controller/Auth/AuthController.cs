@@ -41,7 +41,12 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return BadRequest(
+            new { 
+                success= false,
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState
+            });
 
         var username = request.TenDangNhap;
         var password = request.MatKhau;
@@ -55,9 +60,20 @@ public class AuthController : ControllerBase
             await _logService.LogLoginAsync(user.Id, ipAddress, result != "");
         }
 
-        if (result == "") return Unauthorized(new { message = "Sai tài khoản hoặc mật khẩu" });
+        if (result == "") {
+            return Unauthorized(new
+            {
+                success = false,
+                message = "Sai tài khoản hoặc mật khẩu"
+            });
+        }
 
-        return Ok(result);
+        return Ok(new
+        {
+            success = true,
+            message = "Đăng nhập thành công",
+            token = result
+        });
     }
 
     [HttpPost("logout")]
@@ -66,14 +82,22 @@ public class AuthController : ControllerBase
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
-            return BadRequest(new { message = "Chưa đăng nhập" });
+            return BadRequest(new
+            {
+                success = false,
+                message = "Chưa đăng nhập"
+            });
 
         await _authService.Logout(userId);
         
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
         await _logService.LogLogoutAsync(Guid.Parse(userId), ipAddress);
-        
-        return Ok(new { message = "Đăng xuất thành công" });
+
+        return Ok(new
+        {
+            success = true,
+            message = "Đăng xuất thành công"
+        });
     }
 
     [HttpPost("change-password")]
@@ -82,11 +106,19 @@ public class AuthController : ControllerBase
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
-            return BadRequest(new { message = "Chưa đăng nhập" });
+            return BadRequest(new
+            {
+                success = false,
+                message = "Chưa đăng nhập"
+            });
 
         var result = await _authService.ChangePassword(userId, request.MatKhauCu, request.MatKhauMoi);
         if (!result)
-            return BadRequest(new { message = "Đổi mật khẩu thất bại" });
+            return BadRequest(new
+            {
+                success = false,
+                message = "Đổi mật khẩu thất bại. Mật khẩu cũ không đúng."
+            });
 
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
         await _logService.LogAsync(
@@ -97,34 +129,62 @@ public class AuthController : ControllerBase
             "",
             ipAddress);
 
-        return Ok(new { message = "Đổi mật khẩu thành công" });
+        return Ok(new
+        {
+            success = true,
+            message = "Đổi mật khẩu thành công"
+        });
     }
 
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var user = await _userRepository.GetByEmailAsync(request.Email);
         if (user == null)
-            return NotFound(new { message = "Không tìm thấy người dùng với email này" });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy người dùng với email này" 
+            });
 
         var token = _tokenService.GeneratePasswordResetToken(user.Id.ToString());
 
         var resetLink = $"{request.ReturnUrl}?token={token}&email={request.Email}";
         await _emailService.SendPasswordResetEmailAsync(request.Email, user.TenDangNhap, resetLink, 30);
 
-        return Ok(new { message = "Gửi email đặt lại mật khẩu thành công" });
+        return Ok(new 
+        { 
+            success = true, 
+            message = "Gửi email đặt lại mật khẩu thành công" 
+        });
     }
 
     [HttpPost("reset-password/confirm")]
     public async Task<IActionResult> ConfirmResetPassword([FromBody] ConfirmResetPasswordRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var result = await _authService.ResetPassword(request.Email, request.Token, request.MatKhauMoi);
         if (!result)
-            return BadRequest(new { message = "Đặt lại mật khẩu thất bại. Token không hợp lệ hoặc đã hết hạn." });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Đặt lại mật khẩu thất bại. Token không hợp lệ hoặc đã hết hạn." 
+            });
 
         var user = await _userRepository.GetByEmailAsync(request.Email);
         if (user != null)
@@ -139,6 +199,10 @@ public class AuthController : ControllerBase
                 ipAddress);
         }
 
-        return Ok(new { message = "Đặt lại mật khẩu thành công" });
+        return Ok(new 
+        { 
+            success = true, 
+            message = "Đặt lại mật khẩu thành công" 
+        });
     }
 }

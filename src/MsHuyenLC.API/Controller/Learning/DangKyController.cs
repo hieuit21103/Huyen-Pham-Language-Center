@@ -49,14 +49,24 @@ public class DangKyController : BaseController<DangKy>
             TrangThai = dk.TrangThai
         }).ToList();
 
-        return Ok(response);
+        return Ok(new{
+            success = true,
+            message = "Lấy đăng ký của học viên thành công",
+            data = response
+        });
     }
 
     [HttpPost("student")]
     [Authorize]
     public async Task<IActionResult> RegisterStudent([FromBody] DangKyRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var dangKy = new DangKy
         {
@@ -66,7 +76,12 @@ public class DangKyController : BaseController<DangKy>
         };
 
         var result = await _service.AddAsync(dangKy);
-        if (result == null) return BadRequest();
+        if (result == null) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Đăng ký thất bại" 
+            });
 
         await LogCreateAsync(result);
 
@@ -78,14 +93,25 @@ public class DangKyController : BaseController<DangKy>
             NgayDangKy = result.NgayDangKy
         };
 
-        return Ok(response);
+        return Ok(new
+        {
+            success = true,
+            message = "Đăng ký thành công",
+            data = response
+        });
     }
 
     [HttpPost]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> CreateDangKy([FromBody] DangKyCreateRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var dangKy = new DangKy
         {
@@ -98,7 +124,12 @@ public class DangKyController : BaseController<DangKy>
         };
 
         var result = await _service.AddAsync(dangKy);
-        if (result == null) return BadRequest();
+        if (result == null) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Tạo đăng ký thất bại" 
+            });
 
         await LogCreateAsync(result);
 
@@ -110,17 +141,33 @@ public class DangKyController : BaseController<DangKy>
             NgayDangKy = result.NgayDangKy
         };
 
-        return Ok(response);
+        return Ok(new
+        {
+            success = true,
+            message = "Tạo đăng ký thành công",
+            data = response
+        });
     }
 
     [HttpPut("{id}")]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> UpdateDangKy(string id, [FromBody] DangKyUpdateRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var existingDangKy = await _service.GetByIdAsync(id);
-        if (existingDangKy == null) return NotFound();
+        if (existingDangKy == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy đăng ký" 
+            });
 
 
         if (existingDangKy.LopHocId == null)
@@ -184,7 +231,12 @@ public class DangKyController : BaseController<DangKy>
             KhoaHocId = existingDangKy.KhoaHocId,
         };
 
-        return Ok(response);
+        return Ok(new
+        {
+            success = true,
+            message = "Cập nhật đăng ký thành công",
+            data = response
+        });
     }
 
     [HttpDelete("{id}")]
@@ -192,12 +244,21 @@ public class DangKyController : BaseController<DangKy>
     public async Task<IActionResult> DeleteDangKy(string id)
     {
         var existingDangKy = await _service.GetByIdAsync(id);
-        if (existingDangKy == null) return NotFound();
+        if (existingDangKy == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy đăng ký" 
+            });
 
         await _service.DeleteAsync(existingDangKy);
 
         await LogDeleteAsync(existingDangKy);
 
-        return Ok();
+        return Ok(new
+        {
+            success = true,
+            message = "Xóa đăng ký thành công"
+        });
     }
 }

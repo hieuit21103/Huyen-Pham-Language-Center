@@ -37,11 +37,26 @@ public class TaiKhoanController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetUserById(string id)
     {
-        if (string.IsNullOrEmpty(id)) return BadRequest(new { message = "Tài khoản không hợp lệ." });
+        if (string.IsNullOrEmpty(id)) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Tài khoản không hợp lệ" 
+            });
+        
         var user = await _userRepository.GetByIdAsync(id);
-        if (user == null) return NotFound();
+        if (user == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy tài khoản" 
+            });
 
-        return Ok(user);
+        return Ok(new
+        {
+            success = true,
+            data = user
+        });
     }
 
     [HttpGet]
@@ -62,7 +77,11 @@ public class TaiKhoanController : ControllerBase
             PageSize: pageSize,
             OrderBy: orderBy
         );
-        return Ok(users);
+        return Ok(new{
+            success = true,
+            message = "Lấy danh sách thành công",
+            data = users
+        });
     }
 
     protected virtual Func<IQueryable<TaiKhoan>, IOrderedQueryable<TaiKhoan>>? BuildOrderBy(string sortBy, string? sortOrder)
@@ -90,7 +109,12 @@ public class TaiKhoanController : ControllerBase
         [FromQuery] string? sortOrder = "asc"
     )
     {
-        if (string.IsNullOrEmpty(query)) return BadRequest(new { message = "Tham số tìm kiếm không hợp lệ." });
+        if (string.IsNullOrEmpty(query)) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Tham số tìm kiếm không hợp lệ" 
+            });
 
         Func<IQueryable<TaiKhoan>, IOrderedQueryable<TaiKhoan>>? orderBy = null;
         if (!string.IsNullOrEmpty(sortBy))
@@ -99,29 +123,52 @@ public class TaiKhoanController : ControllerBase
         }
 
         var users = await _userRepository.GetAllAsync(
-            Filter: u => u.TenDangNhap.Contains(query) || u.Email.Contains(query),
+            Filter: u => u.TenDangNhap.Contains(query) || (u.Email != null && u.Email.Contains(query)),
             PageNumber: pageNumber,
             PageSize: pageSize,
             OrderBy: orderBy
         );
 
-        return Ok(users);
+        return Ok(new
+        {
+            success = true,
+            data = users
+        });
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] TaiKhoanRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
-        if (request == null) return BadRequest(new { message = "Dữ liệu không hợp lệ." });
+        if (request == null) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ" 
+            });
 
         var existingUserByUsername = await _userRepository.GetByUsernameAsync(request.TenDangNhap);
         if (existingUserByUsername != null)
-            return Conflict(new { message = "Tên đăng nhập đã tồn tại." });
+            return Conflict(new 
+            { 
+                success = false, 
+                message = "Tên đăng nhập đã tồn tại" 
+            });
 
         var existingUserByEmail = await _userRepository.GetByEmailAsync(request.Email ?? string.Empty);
         if (existingUserByEmail != null)
-            return Conflict(new { message = "Email đã tồn tại." });
+            return Conflict(new 
+            { 
+                success = false, 
+                message = "Email đã tồn tại" 
+            });
 
         var user = new TaiKhoan
         {
@@ -140,20 +187,34 @@ public class TaiKhoanController : ControllerBase
             await _logService.LogCreateAsync(GetCurrentUserId()!.Value, createdUser, GetClientIpAddress());
         }
 
-        return Ok(createdUser);
+        return Ok(new
+        {
+            success = true,
+            message = "Tạo tài khoản thành công",
+            data = createdUser
+        });
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateUser(string id, [FromBody] TaiKhoanUpdateRequest request)
     {
         if (string.IsNullOrEmpty(id) || request == null)
-            return BadRequest(new { message = "Dữ liệu không hợp lệ." });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ" 
+            });
 
         if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value != id && !User.IsInRole("admin"))
             return Forbid();
 
         var existingUser = await _userRepository.GetByIdAsync(id);
-        if (existingUser == null) return NotFound();
+        if (existingUser == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy tài khoản" 
+            });
 
         var oldData = new TaiKhoan
         {
@@ -171,7 +232,11 @@ public class TaiKhoanController : ControllerBase
         {
             var userWithSameEmail = await _userRepository.GetByEmailAsync(request.Email ?? string.Empty);
             if (userWithSameEmail != null)
-                return Conflict(new { message = "Email đã tồn tại." });
+                return Conflict(new 
+                { 
+                    success = false, 
+                    message = "Email đã tồn tại" 
+                });
         }
 
         existingUser.VaiTro = request.VaiTro;
@@ -188,16 +253,31 @@ public class TaiKhoanController : ControllerBase
             await _logService.LogUpdateAsync(GetCurrentUserId()!.Value, oldData, existingUser, GetClientIpAddress());
         }
 
-        return Ok(existingUser);
+        return Ok(new
+        {
+            success = true,
+            message = "Cập nhật tài khoản thành công",
+            data = existingUser
+        });
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(string id)
     {
-        if (string.IsNullOrEmpty(id)) return BadRequest(new { message = "Tài khoản không hợp lệ." });
+        if (string.IsNullOrEmpty(id)) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Tài khoản không hợp lệ" 
+            });
 
         var existingUser = await _userRepository.GetByIdAsync(id);
-        if (existingUser == null) return NotFound();
+        if (existingUser == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy tài khoản" 
+            });
 
         await _userRepository.DeleteAsync(id);
         await _userRepository.SaveChangesAsync();
@@ -207,6 +287,10 @@ public class TaiKhoanController : ControllerBase
             await _logService.LogDeleteAsync(GetCurrentUserId()!.Value, existingUser, GetClientIpAddress());
         }
 
-        return Ok(new { message = "Xóa tài khoản thành công." });
+        return Ok(new 
+        { 
+            success = true, 
+            message = "Xóa tài khoản thành công" 
+        });
     }
 }

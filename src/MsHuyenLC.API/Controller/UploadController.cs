@@ -35,19 +35,31 @@ public class UploadController : ControllerBase
         string _allowedExtensions = ".jpg,.jpeg,.png,.gif,.bmp,.svg";
         long fileSizeLimit = 5 * 1024 * 1024; // 5 MB
 
-        if (file == null || file.Length == 0) return BadRequest("No file uploaded");
+        if (file == null || file.Length == 0) return BadRequest(new 
+        { 
+            success = false, 
+            message = "Không có tệp được tải lên" 
+        });
 
         if (!_allowedExtensions.Contains(Path.GetExtension(file.FileName).ToLower()))
         {
             return BadRequest(
-                new { message = "Loại tệp không hợp lệ. Chỉ cho phép các tệp hình ảnh." }
+                new 
+                { 
+                    success = false, 
+                    message = "Loại tệp không hợp lệ. Chỉ cho phép các tệp hình ảnh" 
+                }
             );
         }
 
         if (file.Length > fileSizeLimit)
         {
             return BadRequest(
-                new { message = "Kích thước tệp vượt quá giới hạn 5 MB." }
+                new 
+                { 
+                    success = false, 
+                    message = "Kích thước tệp vượt quá giới hạn 5 MB" 
+                }
             );
         }
 
@@ -66,7 +78,12 @@ public class UploadController : ControllerBase
             .WithContentType(file.ContentType));
 
         var url = $"{cdnDomain}/{_bucket}/{fileName}";
-        return Ok(new { url });
+        return Ok(new 
+        { 
+            success = true, 
+            message = "Tải lên hình ảnh thành công",
+            data = new { url } 
+        });
     }
 
     [HttpPost("audio")]
@@ -77,19 +94,31 @@ public class UploadController : ControllerBase
         string _allowedExtensions = ".mp3,.wav,.aac,.flac,.ogg";
         long fileSizeLimit = 10 * 1024 * 1024; // 10 MB
 
-        if (file == null || file.Length == 0) return BadRequest("No file uploaded");
+        if (file == null || file.Length == 0) return BadRequest(new 
+        { 
+            success = false, 
+            message = "Không có tệp được tải lên" 
+        });
 
         if (!_allowedExtensions.Contains(Path.GetExtension(file.FileName).ToLower()))
         {
             return BadRequest(
-                new { message = "Tệp không hợp lệ. Chỉ cho phép các tệp âm thanh." }
+                new 
+                { 
+                    success = false, 
+                    message = "Tệp không hợp lệ. Chỉ cho phép các tệp âm thanh" 
+                }
             );
         }
 
         if (file.Length > fileSizeLimit)
         {
             return BadRequest(
-                new { message = "Kích thước tệp vượt quá giới hạn 10 MB." }
+                new 
+                { 
+                    success = false, 
+                    message = "Kích thước tệp vượt quá giới hạn 10 MB" 
+                }
             );
         }
 
@@ -108,7 +137,12 @@ public class UploadController : ControllerBase
             .WithContentType(file.ContentType));
 
         var url = $"{cdnDomain}/{_bucket}/{fileName}";
-        return Ok(new { url });
+        return Ok(new 
+        { 
+            success = true, 
+            message = "Tải lên âm thanh thành công",
+            url
+        });
     }
 
     [HttpPost("avatar")]
@@ -119,19 +153,31 @@ public class UploadController : ControllerBase
         string _allowedExtensions = ".jpg,.jpeg,.png,.gif,.bmp,.svg";
         long fileSizeLimit = 2 * 1024 * 1024; // 2 MB
 
-        if (file == null || file.Length == 0) return BadRequest("No file uploaded");
+        if (file == null || file.Length == 0) return BadRequest(new 
+        { 
+            success = false, 
+            message = "Không có tệp được tải lên" 
+        });
 
         if (!_allowedExtensions.Contains(Path.GetExtension(file.FileName).ToLower()))
         {
             return BadRequest(
-                new { message = "Loại tệp không hợp lệ. Chỉ cho phép các tệp hình ảnh." }
+                new 
+                { 
+                    success = false, 
+                    message = "Loại tệp không hợp lệ. Chỉ cho phép các tệp hình ảnh" 
+                }
             );
         }
 
         if (file.Length > fileSizeLimit)
         {
             return BadRequest(
-                new { message = "Kích thước tệp vượt quá giới hạn 2 MB." }
+                new 
+                { 
+                    success = false, 
+                    message = "Kích thước tệp vượt quá giới hạn 2 MB" 
+                }
             );
         }
 
@@ -150,7 +196,12 @@ public class UploadController : ControllerBase
             .WithContentType(file.ContentType));
 
         var url = $"{cdnDomain}/{_bucket}/{fileName}";
-        return Ok(new { url });
+        return Ok(new 
+        { 
+            success = true, 
+            message = "Tải lên avatar thành công",
+            url
+        });
     }
 
     [HttpDelete("delete/{bucket}/{objectName}")]
@@ -161,12 +212,20 @@ public class UploadController : ControllerBase
             await _minio.RemoveObjectAsync(new RemoveObjectArgs()
                 .WithBucket(bucket)
                 .WithObject(objectName));
-            return Ok();
+            return Ok(new
+            {
+                success = true,
+                message = "Xóa tệp thành công"
+            });
         }
         catch (Exception ex)
         {
             return BadRequest(
-                new { message = $"Lỗi: {ex.Message}" });
+                new 
+                { 
+                    success = false, 
+                    message = $"Lỗi: {ex.Message}" 
+                });
         }
     }
 }

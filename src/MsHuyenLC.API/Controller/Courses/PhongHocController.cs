@@ -37,7 +37,13 @@ public class PhongHocController : BaseController<PhongHoc>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] PhongHocRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new
+            {
+                success = false,
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState
+            });
 
         var phongHoc = new PhongHoc
         {
@@ -46,16 +52,30 @@ public class PhongHocController : BaseController<PhongHoc>
         };
 
         var result = await _service.AddAsync(phongHoc);
-        if (result == null) return BadRequest();
+        if (result == null) return BadRequest(new
+        {
+            success = false,
+            message = "Tạo phòng học thất bại"
+        });
 
         await LogCreateAsync(result);
-        return Ok(result);
+        return Ok(new
+        {
+            success = true,
+            message = "Tạo phòng học thành công",
+            data = result
+        });
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, [FromBody] PhongHocRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return BadRequest(new
+        {
+            success = false,
+            message = "Dữ liệu không hợp lệ",
+            errors = ModelState
+        });
 
         var existingRoom = await _service.GetByIdAsync(id);
         if (existingRoom == null) return NotFound();
@@ -73,7 +93,12 @@ public class PhongHocController : BaseController<PhongHoc>
         await _service.UpdateAsync(existingRoom);
 
         await LogUpdateAsync(oldData, existingRoom);
-        return Ok(existingRoom);
+        return Ok(new
+        {
+            success = true,
+            message = "Cập nhật phòng học thành công",
+            data = existingRoom
+        });
     }
 
     [HttpDelete("{id}")]
@@ -85,6 +110,10 @@ public class PhongHocController : BaseController<PhongHoc>
         await _service.DeleteAsync(existingRoom);
         await LogDeleteAsync(existingRoom);
 
-        return Ok();
+        return Ok(new
+        {
+            success = true,
+            message = "Xóa phòng học thành công"
+        });
     }
 }

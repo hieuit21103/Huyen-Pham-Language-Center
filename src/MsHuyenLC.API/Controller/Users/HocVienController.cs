@@ -57,19 +57,39 @@ public class HocVienController : BaseController<HocVien>
         );
 
         var hocVien = result.FirstOrDefault();
-        if (hocVien == null) return NotFound();
+        if (hocVien == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy học viên" 
+            });
 
-        return Ok(hocVien);
+        return Ok(new
+        {
+            success = true,
+            data = hocVien
+        });
     }
 
     [Authorize(Roles = "admin,giaovu,giaovien,hocvien")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, [FromBody] HocVienUpdateRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var hocVien = await _service.GetByIdAsync(id);
-        if (hocVien == null) return NotFound();
+        if (hocVien == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy học viên" 
+            });
 
         if(hocVien.TaiKhoanId.ToString() != User.FindFirst(ClaimTypes.NameIdentifier)?.Value &&
            !User.IsInRole("admin") && !User.IsInRole("giaovu"))
@@ -78,7 +98,12 @@ public class HocVienController : BaseController<HocVien>
         }
 
         var existingStudent = await _service.GetByIdAsync(id);
-        if (existingStudent == null) return NotFound();
+        if (existingStudent == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy học viên" 
+            });
 
         existingStudent.HoTen = request.HoTen;
         existingStudent.NgaySinh = request.NgaySinh;
@@ -88,7 +113,12 @@ public class HocVienController : BaseController<HocVien>
 
         await _service.UpdateAsync(existingStudent);
 
-        return Ok(new { message = "Cập nhật học viên thành công." });
+        return Ok(new 
+        { 
+            success = true, 
+            message = "Cập nhật học viên thành công",
+            data = existingStudent
+        });
     }
 
     [Authorize(Roles = "admin,giaovu")]
@@ -96,9 +126,19 @@ public class HocVienController : BaseController<HocVien>
     public async Task<IActionResult> Delete(string id)
     {
         var entity = await _service.GetByIdAsync(id);
-        if (entity == null) return NotFound();
+        if (entity == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy học viên" 
+            });
+        
         await _service.DeleteAsync(entity);
 
-        return Ok(new { message = "Xóa học viên thành công." });
+        return Ok(new 
+        { 
+            success = true, 
+            message = "Xóa học viên thành công" 
+        });
     }
 }

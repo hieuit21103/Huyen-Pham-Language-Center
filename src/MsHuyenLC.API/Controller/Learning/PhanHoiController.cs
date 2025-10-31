@@ -51,14 +51,25 @@ public class PhanHoiController : BaseController<PhanHoi>
             NoiDung = e.NoiDung,
             NgayTao = e.NgayTao
         }).ToList();
-        return Ok(response);
+        var totalItems = await _service.CountAsync();
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy danh sách phản hồi thành công",
+            count = totalItems,
+            data = response
+        });
     }
 
     [HttpGet("{id}")]
     public override async Task<IActionResult> GetById(string id)
     {
         var request = await _service.GetByIdAsync(id);
-        if (request == null) return NotFound();
+        if (request == null) return NotFound(new 
+        { 
+            success = false, 
+            message = "Không tìm thấy phản hồi" 
+        });
 
         var response = new PhanHoiResponse
         {
@@ -70,7 +81,12 @@ public class PhanHoiController : BaseController<PhanHoi>
             NoiDung = request.NoiDung,
             NgayTao = request.NgayTao
         };
-        return Ok(response);
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy phản hồi thành công",
+            data = response
+        });
     }                   
 
     [HttpPost]
@@ -78,7 +94,12 @@ public class PhanHoiController : BaseController<PhanHoi>
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return BadRequest(new
+            {
+                success = false,
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState
+            });
         }
         var phanHoi = new PhanHoi
         {
@@ -90,12 +111,16 @@ public class PhanHoiController : BaseController<PhanHoi>
         var createdPhanHoi = await _service.AddAsync(phanHoi);
         if (createdPhanHoi == null)
         {
-            return BadRequest(new { message = "Tạo phản hồi thất bại." });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Tạo phản hồi thất bại" 
+            });
         }
         return Ok(new
         {
             success = true,
-            message = "Tạo phản hồi thành công.",
+            message = "Tạo phản hồi thành công",
             data = createdPhanHoi
         });
     }
@@ -105,12 +130,21 @@ public class PhanHoiController : BaseController<PhanHoi>
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return BadRequest(new
+            {
+                success = false,
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState
+            });
         }
         var existingPhanHoi = await _service.GetByIdAsync(id);
         if (existingPhanHoi == null)
         {
-            return NotFound(new { message = "Phản hồi không tồn tại." });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy phản hồi" 
+            });
         }
         existingPhanHoi.HocVienId = request.HocVienId;
         existingPhanHoi.LoaiPhanHoi = request.LoaiPhanHoi;
@@ -121,7 +155,7 @@ public class PhanHoiController : BaseController<PhanHoi>
         return Ok(new
         {
             success = true,
-            message = "Cập nhật phản hồi thành công.",
+            message = "Cập nhật phản hồi thành công",
             data = existingPhanHoi
         });
     }
@@ -132,10 +166,18 @@ public class PhanHoiController : BaseController<PhanHoi>
         var existingPhanHoi = await _service.GetByIdAsync(id);
         if (existingPhanHoi == null)
         {
-            return NotFound(new { message = "Phản hồi không tồn tại." });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy phản hồi" 
+            });
         }
 
         await _service.DeleteAsync(existingPhanHoi);
-        return Ok(new { success = true, message = "Xóa phản hồi thành công." });
+        return Ok(new 
+        { 
+            success = true, 
+            message = "Xóa phản hồi thành công" 
+        });
     }
 }

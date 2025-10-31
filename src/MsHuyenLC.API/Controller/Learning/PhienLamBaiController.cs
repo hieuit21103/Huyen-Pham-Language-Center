@@ -58,7 +58,12 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Dữ liệu không hợp lệ",
+                    errors = ModelState
+                });
             }
 
             var taiKhoanId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -70,7 +75,11 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
             Console.WriteLine(hocVien.FirstOrDefault());
             if (hocVien.Count() == 0)
             {
-                return NotFound(new { message = "Không tìm thấy học viên." });
+                return NotFound(new 
+                { 
+                    success = false, 
+                    message = "Không tìm thấy học viên" 
+                });
             }
 
             var thoiGianLamBai = TimeSpan.FromSeconds(request.ThoiGianLamBai);
@@ -115,7 +124,11 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
             var createdPhienLamBai = await _service.AddAsync(baiThi);
             if (createdPhienLamBai == null)
             {
-                return BadRequest(new { message = "Không thể nộp bài thi." });
+                return BadRequest(new 
+                { 
+                    success = false, 
+                    message = "Không thể nộp bài thi" 
+                });
             }
 
             foreach (var answer in request.CacTraLoi)
@@ -130,7 +143,11 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
                 var result = await _cauTraLoiService.AddAsync(cauTraLoi);
                 if (result == null)
                 {
-                    return BadRequest(new { message = "Không thể lưu câu trả lời." });
+                    return BadRequest(new 
+                    { 
+                        success = false, 
+                        message = "Không thể lưu câu trả lời" 
+                    });
                 }
             }
 
@@ -292,17 +309,23 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
     /// Lấy danh sách bài thi của học viên
     /// </summary>
     /// <param name="hocVienId">ID học viên</param>
+    /// <param name="pageNumber">Số trang</param>
+    /// <param name="pageSize">Kích thước trang</param>
     /// <returns>Danh sách bài thi</returns>
     /// <response code="200">Lấy danh sách thành công</response>
     /// <response code="500">Lỗi server</response>
     [HttpGet("hocvien/{hocVienId}")]
-    public async Task<ActionResult> GetByHocVien(string hocVienId)
+    public async Task<ActionResult> GetByHocVien(
+        string hocVienId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10
+    )
     {
         try
         {
             var phienLamBai = await _service.GetAllAsync(
-                PageNumber: 1,
-                PageSize: 100,
+                PageNumber: pageNumber,
+                PageSize: pageSize,
                 Filter: plb => plb.HocVienId == Guid.Parse(hocVienId)
             );
 
@@ -313,11 +336,11 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
                 {
                     id = plb.Id,
                     deThiId = plb.DeThiId,
+                    deThi = plb.DeThi,
                     tongDiem = plb.Diem,
                     ngayNop = plb.NgayLam,
-                    nhanXet = plb.SoCauDung
                 }),
-                total = phienLamBai.Count()
+                count = phienLamBai.Count()
             });
         }
         catch (Exception ex)

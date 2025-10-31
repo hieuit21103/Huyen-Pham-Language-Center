@@ -29,17 +29,30 @@ public class PhanCongController : BaseController<PhanCong>
     public async Task<IActionResult> AssignTeacher([FromBody] PhanCongRequest request)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
         var giaoVien = await _teacherService.GetByIdAsync(request.GiaoVienId.ToString());
 
         if (giaoVien == null)
-            return NotFound(new { message = "Không tìm thấy giáo viên" });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy giáo viên" 
+            });
 
         var lopHoc = await _classService.GetByIdAsync(request.LopHocId.ToString());
 
         if (lopHoc == null)
-            return NotFound(new { message = "Không tìm thấy lớp học" });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy lớp học" 
+            });
 
         var existingAssignment = await _service.GetAllAsync(
             PageNumber: 1,
@@ -48,7 +61,11 @@ public class PhanCongController : BaseController<PhanCong>
         );
         
         if (existingAssignment.Any())
-            return BadRequest(new { message = "Lớp học đã được phân công giáo viên" });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Lớp học đã được phân công giáo viên" 
+            });
 
         var phanCong = new PhanCong
         {
@@ -58,7 +75,11 @@ public class PhanCongController : BaseController<PhanCong>
 
         var result = await _service.AddAsync(phanCong);
         if (result == null)
-            return BadRequest(new { message = "Phân công thất bại" });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Phân công thất bại" 
+            });
         
         await LogCreateAsync(result);
         
@@ -72,7 +93,12 @@ public class PhanCongController : BaseController<PhanCong>
             NgayPhanCong = result.NgayPhanCong
         };
         
-        return Ok(response);
+        return Ok(new
+        {
+            success = true,
+            message = "Phân công giáo viên thành công",
+            data = response
+        });
     }
 
     [HttpGet("giaovien/{id}")]
@@ -116,7 +142,11 @@ public class PhanCongController : BaseController<PhanCong>
         var lopHoc = await _classService.GetByIdAsync(id);
 
         if (lopHoc == null)
-            return NotFound(new { message = "Không tìm thấy lớp học" });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy lớp học" 
+            });
 
         var assignment = await _service.GetAllAsync(
             PageNumber: 1,
@@ -125,7 +155,11 @@ public class PhanCongController : BaseController<PhanCong>
         );
 
         if (!assignment.Any())
-            return NotFound(new { message = "Lớp học chưa được phân công giáo viên" });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Lớp học chưa được phân công giáo viên" 
+            });
 
         var phanCong = assignment.First();
         var giaoVien = await _teacherService.GetByIdAsync(phanCong.GiaoVienId.ToString());
@@ -153,11 +187,19 @@ public class PhanCongController : BaseController<PhanCong>
         var phanCong = await _service.GetByIdAsync(id);
 
         if (phanCong == null)
-            return NotFound(new { message = "Không tìm thấy phân công" });
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy phân công" 
+            });
 
         await _service.DeleteAsync(phanCong);
         await LogDeleteAsync(phanCong);
 
-        return Ok(new { message = "Đã hủy phân công giáo viên" });
+        return Ok(new 
+        { 
+            success = true, 
+            message = "Xóa phân công thành công" 
+        });
     }
 }
