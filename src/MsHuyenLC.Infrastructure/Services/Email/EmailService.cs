@@ -47,8 +47,7 @@ public class EmailService : IEmailService
         string to,
         string fullName,
         string username,
-        string temporaryPassword,
-        string loginUrl)
+        string temporaryPassword)
     {
         var subject = "Tài khoản của bạn đã được tạo - HPLC";
         var body = EmailTemplateHelper.GetAccountCreationTemplate(fullName, username, temporaryPassword);
@@ -91,7 +90,7 @@ public class EmailService : IEmailService
         string to,
         string fullName,
         string courseName,
-        DateTime startDate)
+        DateOnly startDate)
     {
         var subject = "Chào mừng bạn đến với khóa học - HPLC";
         var body = EmailTemplateHelper.GetWelcomeStudentTemplate(fullName, courseName, startDate);

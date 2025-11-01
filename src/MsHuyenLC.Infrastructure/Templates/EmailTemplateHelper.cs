@@ -80,7 +80,7 @@ public static class EmailTemplateHelper
     /// <summary>
     /// Lấy template email chào mừng học viên
     /// </summary>
-    public static string GetWelcomeStudentTemplate(string fullName, string courseName, DateTime startDate)
+    public static string GetWelcomeStudentTemplate(string fullName, string courseName, DateOnly startDate)
     {
         var replacements = new Dictionary<string, string>
         {

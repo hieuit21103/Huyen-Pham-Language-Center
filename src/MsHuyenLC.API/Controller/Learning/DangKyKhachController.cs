@@ -5,6 +5,7 @@ using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.Interfaces.Auth;
 using MsHuyenLC.Application.Interfaces.System;
 using System.Security.Claims;
+using MsHuyenLC.Application.Interfaces.Email;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
@@ -17,6 +18,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
     private readonly IPasswordHasher _passwordHasher;
     private readonly IGenericService<HocVien> _hocVienService;
     private readonly IGenericService<DangKy> _dangKyService;
+    private readonly IEmailService _emailService;
 
     public DangKyKhachController(
         IGenericService<DangKyKhach> service,
@@ -25,13 +27,15 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
         IGenericService<HocVien> hocVienService,
-        IGenericService<DangKy> dangKyService) : base(service, logService)
+        IGenericService<DangKy> dangKyService,
+        IEmailService emailService) : base(service, logService)
     {
         _khoaHocService = khoaHocService;
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _hocVienService = hocVienService;
         _dangKyService = dangKyService;
+        _emailService = emailService;
     }
 
     protected override Func<IQueryable<DangKyKhach>, IOrderedQueryable<DangKyKhach>>? BuildOrderBy(string sortBy, string? sortOrder)
@@ -343,6 +347,21 @@ public class DangKyKhachController : BaseController<DangKyKhach>
                         };
 
                         var createdDangKy = await _dangKyService.AddAsync(dangKyHocVien);
+                        
+                        await _emailService.SendAccountCreationEmailAsync(
+                            to: createdAccount.Email,
+                            fullName: createdHocVien.HoTen,
+                            userName: createdAccount.Email,
+                            temporaryPassword: existing.SoDienThoai
+                        );
+
+                        await _emailService.SendWelcomeStudentEmailAsync(
+                            to: createdAccount.Email,
+                            fullName: createdHocVien.HoTen,
+                            courseName: (await _khoaHocService.GetByIdAsync(existing.KhoaHocId.ToString()))?.TenKhoaHoc ?? "",
+                            startDate: DateOnly.FromDateTime(DateTime.UtcNow)
+                        );
+
                         if (createdDangKy == null)
                         {
                             return BadRequest(new 
