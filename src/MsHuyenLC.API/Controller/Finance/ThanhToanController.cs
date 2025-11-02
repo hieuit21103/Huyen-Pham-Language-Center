@@ -104,6 +104,7 @@ public class ThanhToanController : BaseController<ThanhToan>
                 var payment = await _service.GetByIdAsync(orderId.ToString());
                 if (payment != null)
                 {
+                    payment.MaThanhToan = callbackRequest.vnp_TransactionNo;
                     payment.TrangThai = TrangThaiThanhToan.dathanhtoan;
                     payment.MaGiaoDichNganHang = result.TransactionId;
                     payment.ThongTinNganHang = result.BankCode;

@@ -278,13 +278,19 @@ public class DangKyController : BaseController<DangKy>
     public async Task<IActionResult> DeleteDangKy(string id)
     {
         var existingDangKy = await _service.GetByIdAsync(id);
-        if (existingDangKy == null) 
-            return NotFound(new 
-            { 
-                success = false, 
-                message = "Không tìm thấy đăng ký" 
+        if (existingDangKy == null)
+            return NotFound(new
+            {
+                success = false,
+                message = "Không tìm thấy đăng ký"
             });
 
+        var existingLopHoc = await _lopHocService.GetByIdAsync(existingDangKy.LopHocId.ToString());
+        if (existingLopHoc != null)
+        {
+            existingLopHoc.CapNhatSiSo(-1);
+            await _lopHocService.UpdateAsync(existingLopHoc);
+        }
         await _service.DeleteAsync(existingDangKy);
 
         await LogDeleteAsync(existingDangKy);

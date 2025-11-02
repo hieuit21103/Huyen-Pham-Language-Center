@@ -22,6 +22,7 @@ import {
   Bell,
   Briefcase,
   BarChart,
+  DollarSign,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
@@ -104,6 +105,7 @@ export default function AdminSidebar({ onCollapsedChange }: AdminSidebarProps) {
       title: "Báo cáo & Thống kê",
       items: [
         { icon: BarChart, label: "Kết quả học tập", path: "/admin/bao-cao-ket-qua" },
+        { icon: DollarSign, label: "Doanh thu", path: "/admin/bao-cao-doanh-thu" },
       ]
     }
   ];
@@ -113,6 +115,7 @@ export default function AdminSidebar({ onCollapsedChange }: AdminSidebarProps) {
     title: "Hệ thống",
     items: [
       { icon: Archive, label: "Nhật ký hệ thống", path: "/admin/nhat-ky-he-thong" },
+      { icon: Database, label: "Sao lưu dữ liệu", path: "/admin/sao-luu-du-lieu" },
       { icon: Settings, label: "Cài đặt", path: "/admin/cai-dat" },
     ]
   };
