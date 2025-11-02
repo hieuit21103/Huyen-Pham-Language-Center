@@ -60,7 +60,6 @@ export default function Header() {
 
   const dropdown = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Thanh Toán', href: '/thanh-toan', icon: CreditCard },
     { name: 'Đổi Mật Khẩu', href: '/doi-mat-khau', icon: Key },
     { name: 'Đăng Xuất', href: '/', icon: LogOut, onClick: handleLogout },
   ]

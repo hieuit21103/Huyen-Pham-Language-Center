@@ -51,10 +51,9 @@ export default function AdminQuestionBank() {
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
   const [importFile, setImportFile] = useState<File | null>(null);
   
-  // Pagination states
+  // Pagination states 
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [pageSize] = useState(10);
+  const pageSize = 10;
   
   const [filterLoaiCauHoi, setFilterLoaiCauHoi] = useState<string>("");
   const [filterKyNang, setFilterKyNang] = useState<string>("");
@@ -97,46 +96,23 @@ export default function AdminQuestionBank() {
   }, []);
 
   useEffect(() => {
-    setCurrentPage(1); // Reset to page 1 when filters change
+    setCurrentPage(1); 
   }, [filterLoaiCauHoi, filterKyNang, filterCapDo, filterDoKho, searchTerm]);
 
   useEffect(() => {
     loadQuestions();
-  }, [currentPage, filterLoaiCauHoi, filterKyNang, filterCapDo, filterDoKho, searchTerm]);
+  }, []);
 
   const loadQuestions = async () => {
     setLoading(true);
-    
-    if (filterLoaiCauHoi || filterKyNang || filterCapDo || filterDoKho || searchTerm) {
-      const filters: any = {
-        pageNumber: currentPage,
-        pageSize: pageSize,
-        sortBy: 'id',
-        sortOrder: 'desc'
-      };
-      
-      if (filterLoaiCauHoi) filters.loaiCauHoi = parseInt(filterLoaiCauHoi);
-      if (filterKyNang) filters.kyNang = parseInt(filterKyNang);
-      if (filterCapDo) filters.capDo = parseInt(filterCapDo);
-      if (filterDoKho) filters.doKho = parseInt(filterDoKho);
-      if (searchTerm) filters.keyword = searchTerm;
-      
-      const response = await searchCauHois(filters);
-      if (response.success && Array.isArray(response.data)) {
-        setQuestions(response.data);
-        setTotalCount(response.count || 0);
-      }
-    } else {
-      const response = await getCauHois({ 
-        pageNumber: currentPage,
-        pageSize: pageSize,
-        sortBy: 'id', 
-        sortOrder: 'desc' 
-      });
-      if (response.success && Array.isArray(response.data)) {
-        setQuestions(response.data);
-        setTotalCount(response.count || 0);
-      }
+    const response = await getCauHois({ 
+      pageNumber: 1,
+      pageSize: 1000,
+      sortBy: 'id', 
+      sortOrder: 'desc' 
+    });
+    if (response.success && Array.isArray(response.data)) {
+      setQuestions(response.data);
     }
     setLoading(false);
   };
@@ -342,10 +318,10 @@ export default function AdminQuestionBank() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedQuestions.length === filteredQuestions.length) {
+    if (selectedQuestions.length === getPaginatedData().length) {
       setSelectedQuestions([]);
     } else {
-      setSelectedQuestions(filteredQuestions.map(q => q.id!));
+      setSelectedQuestions(getPaginatedData().map(q => q.id!));
     }
   };
 
@@ -473,10 +449,48 @@ export default function AdminQuestionBank() {
     }
   };
 
-  const filteredQuestions = questions;
+  const filteredQuestions = questions.filter((q) => {
+    // Filter by search term
+    if (searchTerm && !q.noiDungCauHoi?.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    // Filter by loaiCauHoi
+    if (filterLoaiCauHoi && q.loaiCauHoi !== parseInt(filterLoaiCauHoi)) {
+      return false;
+    }
+    
+    // Filter by kyNang
+    if (filterKyNang && q.kyNang !== parseInt(filterKyNang)) {
+      return false;
+    }
+    
+    // Filter by capDo
+    if (filterCapDo && q.capDo !== parseInt(filterCapDo)) {
+      return false;
+    }
+    
+    // Filter by doKho
+    if (filterDoKho && q.doKho !== parseInt(filterDoKho)) {
+      return false;
+    }
+    
+    return true;
+  });
+
+  const getPaginatedData = () => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredQuestions.slice(startIndex, endIndex);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const stats = {
-    total: totalCount,
+    total: filteredQuestions.length,
     tracNghiem: filteredQuestions.filter(q => q.loaiCauHoi === 0).length,
     tuLuan: filteredQuestions.filter(q => q.loaiCauHoi === 1).length,
     reading: filteredQuestions.filter(q => q.kyNang === 0).length,
@@ -652,7 +666,7 @@ export default function AdminQuestionBank() {
                   <th className="px-4 py-3 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedQuestions.length === filteredQuestions.length && filteredQuestions.length > 0}
+                      checked={selectedQuestions.length === getPaginatedData().length && getPaginatedData().length > 0}
                       onChange={toggleSelectAll}
                       className="rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                     />
@@ -678,7 +692,7 @@ export default function AdminQuestionBank() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredQuestions.map((question) => (
+                {getPaginatedData().map((question) => (
                   <tr key={question.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-4">
                       <input
@@ -744,13 +758,13 @@ export default function AdminQuestionBank() {
       </div>
 
       {/* Pagination */}
-      {!loading && totalCount > 0 && (
-        <div className="flex justify-center mt-6">
+      {!loading && filteredQuestions.length > pageSize && (
+        <div className="mt-6">
           <Pagination
             currentPage={currentPage}
-            totalCount={totalCount}
+            totalCount={filteredQuestions.length}
             pageSize={pageSize}
-            onPageChange={(page) => setCurrentPage(page)}
+            onPageChange={handlePageChange}
           />
         </div>
       )}

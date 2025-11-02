@@ -9,6 +9,7 @@ import {
 } from "~/apis/ThongBao";
 import { formatDateTime } from "~/utils/date-utils";
 import { setLightTheme } from "./_layout";
+import Pagination from "~/components/Pagination";
 
 export default function ThongBaoAdmin() {
   const [thongBaos, setThongBaos] = useState<ThongBaoNguoiNhanResponse[]>([]);
@@ -17,6 +18,11 @@ export default function ThongBaoAdmin() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+  
   const [formData, setFormData] = useState({
     tieuDe: "",
     noiDung: "",
@@ -27,10 +33,14 @@ export default function ThongBaoAdmin() {
     loadThongBaos();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   const loadThongBaos = async () => {
     setLoading(true);
     try {
-      const result = await getThongBaos(1, 100, "ngayTao", "desc");
+      const result = await getThongBaos(1, 1000, "ngayTao", "desc");
       if (result.success && result.data) {
         setThongBaos(result.data);
       }
@@ -121,6 +131,17 @@ export default function ThongBaoAdmin() {
     tb.noiDung?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const getPaginatedData = () => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredThongBaos.slice(startIndex, endIndex);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -202,7 +223,7 @@ export default function ThongBaoAdmin() {
                   </td>
                 </tr>
               ) : (
-                filteredThongBaos.map((tb, index) => (
+                getPaginatedData().map((tb, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <p className="font-semibold text-gray-900">{tb.tieuDe}</p>
@@ -222,6 +243,18 @@ export default function ThongBaoAdmin() {
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination */}
+        {!loading && filteredThongBaos.length > pageSize && (
+          <div className="mt-6">
+            <Pagination
+              currentPage={currentPage}
+              totalCount={filteredThongBaos.length}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
       </div>
 
       {/* Modal */}

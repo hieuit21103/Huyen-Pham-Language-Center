@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   BookOpen, Clock, Users, Calendar, DollarSign,
-  CheckCircle, XCircle, AlertCircle, CreditCard, FileText
+  CheckCircle, XCircle, AlertCircle, CreditCard, FileText, Receipt
 } from "lucide-react";
 import { getProfile } from "~/apis/Profile";
 import { getByTaiKhoanId } from "~/apis/HocVien";
@@ -30,7 +30,7 @@ export default function MyCoursesPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [registrations, setRegistrations] = useState<DangKy[]>([]);
-  const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [filter, setFilter] = useState<"all" | "pending" | "approved" | "paid" | "assigned" | "rejected">("all");
 
   useEffect(() => {
     loadData();
@@ -64,7 +64,7 @@ export default function MyCoursesPage() {
   const getTrangThaiText = (trangThai?: number) => {
     switch (trangThai) {
       case 0: return "Chờ duyệt";
-      case 1: return "Chờ thanh toán";
+      case 1: return "Đã duyệt";
       case 2: return "Đã thanh toán";
       case 3: return "Đã xếp lớp";
       case 4: return "Từ chối";
@@ -110,14 +110,12 @@ export default function MyCoursesPage() {
   const filteredRegistrations = registrations.filter((reg) => {
     if (filter === "all") return true;
     if (filter === "pending") return reg.trangThai === 0;
-    if (filter === "approved") return reg.trangThai === 2 || reg.trangThai === 3;
+    if (filter === "approved") return reg.trangThai === 1;
+    if (filter === "paid") return reg.trangThai === 2;
+    if (filter === "assigned") return reg.trangThai === 3;
     if (filter === "rejected") return reg.trangThai === 4;
     return true;
   });
-
-  const handlePayment = (registration: DangKy) => {
-    navigate(`/thanh-toan/${registration.id}`);
-  };
 
   if (loading) {
     return (
@@ -134,9 +132,18 @@ export default function MyCoursesPage() {
     <div className="min-h-screen bg-gray-50 py-24 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Khóa học của tôi</h1>
-          <p className="text-gray-600">Quản lý các khóa học bạn đã đăng ký</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Khóa học của tôi</h1>
+            <p className="text-gray-600">Quản lý các khóa học bạn đã đăng ký</p>
+          </div>
+          <button
+            onClick={() => navigate("/lich-su-thanh-toan")}
+            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+          >
+            <Receipt className="w-5 h-5" />
+            Lịch sử thanh toán
+          </button>
         </div>
 
         {/* Filter Tabs */}
@@ -167,7 +174,25 @@ export default function MyCoursesPage() {
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
             >
-              Đã duyệt ({registrations.filter((r) => r.trangThai === 2 || r.trangThai === 3).length})
+              Đã duyệt ({registrations.filter((r) => r.trangThai === 1).length})
+            </button>
+            <button
+              onClick={() => setFilter("paid")}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === "paid"
+                  ? "bg-gray-900 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+            >
+              Đã thanh toán ({registrations.filter((r) => r.trangThai === 2).length})
+            </button>
+            <button
+              onClick={() => setFilter("assigned")}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === "assigned"
+                  ? "bg-gray-900 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+            >
+              Đã xếp lớp ({registrations.filter((r) => r.trangThai === 3).length})
             </button>
             <button
               onClick={() => setFilter("rejected")}
@@ -247,12 +272,54 @@ export default function MyCoursesPage() {
 
                   {/* Action Buttons */}
                   <div className="flex gap-2">
-                    <Link to="/thanh-toan"
-                      className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <CreditCard className="w-4 h-4" />
-                      Đến trang thanh toán
-                    </Link>
+                    {registration.trangThai === 1 && ( // Đã duyệt, chưa thanh toán
+                      <button
+                        onClick={() => {
+                          console.log('Navigating with ID:', registration.id);
+                          navigate(`/thanh-toan?dangKyId=${registration.id}`);
+                        }}
+                        className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        Thanh toán ngay
+                      </button>
+                    )}
+                    {registration.trangThai === 2 && ( // Đã thanh toán
+                      <button
+                        disabled
+                        className="flex-1 bg-green-100 text-green-700 px-4 py-2 rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Đã thanh toán
+                      </button>
+                    )}
+                    {registration.trangThai === 0 && ( // Chờ duyệt
+                      <button
+                        disabled
+                        className="flex-1 bg-gray-100 text-gray-600 px-4 py-2 rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        Chờ duyệt
+                      </button>
+                    )}
+                    {registration.trangThai === 3 && ( // Đã xếp lớp
+                      <button
+                        disabled
+                        className="flex-1 bg-red-100 text-purple-700 px-4 py-2 rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Đã xếp lớp
+                      </button>
+                    )}
+                    {registration.trangThai === 4 && ( // Từ chối
+                      <button
+                        disabled
+                        className="flex-1 bg-red-100 text-red-700 px-4 py-2 rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        Đã từ chối
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

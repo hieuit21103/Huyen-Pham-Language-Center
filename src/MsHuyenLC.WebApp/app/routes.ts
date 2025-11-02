@@ -14,6 +14,8 @@ export default [
     route("dat-lai-mat-khau", "routes/dat-lai-mat-khau.tsx"),
     route("khoa-hoc-cua-toi", "routes/khoa-hoc-cua-toi.tsx"),
     route("thanh-toan/", "routes/thanh-toan.tsx"),
+    route("lich-su-thanh-toan", "routes/lich-su-thanh-toan.tsx"),
+    route("vnpay-return", "routes/vnpay-return.tsx"),
     route("phan-hoi", "routes/phan-hoi.tsx"),
   ]),
   route("admin", "routes/admin/_layout.tsx", [

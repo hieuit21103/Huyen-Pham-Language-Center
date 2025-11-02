@@ -15,6 +15,7 @@ using MsHuyenLC.Application.Services.Courses;
 using MsHuyenLC.Application.Services.Learnings;
 using Microsoft.OpenApi.Models;
 using MsHuyenLC.Application.Interfaces.Email;
+using MsHuyenLC.Application.Interfaces.Finance;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -127,6 +128,7 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IVnpayService, VNPayService>();
 builder.Services.AddScoped<AssignmentService>();
 builder.Services.AddScoped<ScheduleService>();
 builder.Services.AddScoped<TestService>();

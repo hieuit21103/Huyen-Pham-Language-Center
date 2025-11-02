@@ -5,6 +5,7 @@ using MsHuyenLC.Application.DTOs.Learning.CauHoi;
 using MsHuyenLC.Application.Interfaces.System;
 using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
 using MsHuyenLC.Application.Services.Learnings;
+using System.Linq.Expressions;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
@@ -44,6 +45,17 @@ public class CauHoiController : BaseController<NganHangCauHoi>
         };
     }
 
+    // protected override Expression<Func<NganHangCauHoi, bool>>? BuildFilter(string search)
+    // {
+    //     if (string.IsNullOrEmpty(search))
+    //         return null;
+    //     return c => c.LoaiCauHoi.Equals(search)
+    //     || c.KyNang.Equals(search)
+    //     || c.CapDo.Equals(search)
+    //     || c.DoKho.Equals(search);
+    // }
+
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] List<CauHoiRequest> requests)
     {
@@ -59,10 +71,10 @@ public class CauHoiController : BaseController<NganHangCauHoi>
 
         if (requests == null || !requests.Any())
         {
-            return BadRequest(new 
-            { 
-                success = false, 
-                message = "Danh sách câu hỏi rỗng" 
+            return BadRequest(new
+            {
+                success = false,
+                message = "Danh sách câu hỏi rỗng"
             });
         }
 
@@ -74,10 +86,10 @@ public class CauHoiController : BaseController<NganHangCauHoi>
             {
                 if (string.IsNullOrWhiteSpace(dapAnRequest.Nhan) || string.IsNullOrWhiteSpace(dapAnRequest.NoiDung))
                 {
-                    return BadRequest(new 
-                    { 
-                        success = false, 
-                        message = "Nhãn và nội dung đáp án không được để trống" 
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Nhãn và nội dung đáp án không được để trống"
                     });
                 }
                 dapAnCauHois.Add(new DapAnCauHoi
@@ -120,10 +132,10 @@ public class CauHoiController : BaseController<NganHangCauHoi>
             await _systemLoggerService.LogCreateAsync(GetCurrentUserId(), cauHoi, GetClientIpAddress());
             if (result == null)
             {
-                return BadRequest(new 
-                { 
-                    success = false, 
-                    message = "Không thể tạo câu hỏi" 
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Không thể tạo câu hỏi"
                 });
             }
             createdCauHois.Add(cauHoi);
@@ -137,91 +149,91 @@ public class CauHoiController : BaseController<NganHangCauHoi>
         });
     }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(string id, [FromBody] CauHoiUpdateRequest request)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(string id, [FromBody] CauHoiUpdateRequest request)
+    {
+        if (!ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
+            return BadRequest(new
             {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "Dữ liệu không hợp lệ",
-                    errors = ModelState
-                });
-            }
-
-            var existingCauHoi = await _service.GetByIdAsync(id);
-            if (existingCauHoi == null)
-            {
-                return NotFound(new 
-                { 
-                    success = false, 
-                    message = "Không tìm thấy câu hỏi" 
-                });
-            }
-
-            var oldData = new NganHangCauHoi
-            {
-                Id = existingCauHoi.Id,
-                NoiDungCauHoi = existingCauHoi.NoiDungCauHoi,
-                LoaiCauHoi = existingCauHoi.LoaiCauHoi,
-                KyNang = existingCauHoi.KyNang,
-                UrlHinhAnh = existingCauHoi.UrlHinhAnh,
-                UrlAmThanh = existingCauHoi.UrlAmThanh,
-                LoiThoai = existingCauHoi.LoiThoai,
-                DoanVan = existingCauHoi.DoanVan,
-                CapDo = existingCauHoi.CapDo,
-                DoKho = existingCauHoi.DoKho
-            };
-
-            if (request.NoiDungCauHoi != null)
-                existingCauHoi.NoiDungCauHoi = request.NoiDungCauHoi;
-            if (request.LoaiCauHoi.HasValue)
-                existingCauHoi.LoaiCauHoi = request.LoaiCauHoi.Value;
-            if (request.KyNang.HasValue)
-                existingCauHoi.KyNang = request.KyNang.Value;
-            if (request.UrlHinhAnh != null)
-                existingCauHoi.UrlHinhAnh = request.UrlHinhAnh;
-            if (request.UrlAmThanh != null)
-                existingCauHoi.UrlAmThanh = request.UrlAmThanh;
-            if (request.LoiThoai != null)
-                existingCauHoi.LoiThoai = request.LoiThoai;
-            if (request.DoanVan != null)
-                existingCauHoi.DoanVan = request.DoanVan;
-            if (request.CapDo.HasValue)
-                existingCauHoi.CapDo = request.CapDo.Value;
-            if (request.DoKho.HasValue)
-                existingCauHoi.DoKho = request.DoKho.Value;
-
-            await _service.UpdateAsync(existingCauHoi);
-            await _systemLoggerService.LogUpdateAsync(GetCurrentUserId(), oldData, existingCauHoi, GetClientIpAddress());
-            return Ok(new
-            {
-                success = true,
-                message = "Cập nhật câu hỏi thành công",
-                data = existingCauHoi
+                success = false,
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState
             });
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(string id)
+        var existingCauHoi = await _service.GetByIdAsync(id);
+        if (existingCauHoi == null)
         {
-            var existingCauHoi = await _service.GetByIdAsync(id);
-            if (existingCauHoi == null)
+            return NotFound(new
             {
-                return NotFound(new 
-                { 
-                    success = false, 
-                    message = "Không tìm thấy câu hỏi" 
-                });
-            }
-
-            await _service.DeleteAsync(existingCauHoi);
-            await _systemLoggerService.LogDeleteAsync(GetCurrentUserId(), existingCauHoi, GetClientIpAddress());
-            return Ok(new
-            {
-                success = true,
-                message = "Xóa câu hỏi thành công"
+                success = false,
+                message = "Không tìm thấy câu hỏi"
             });
         }
+
+        var oldData = new NganHangCauHoi
+        {
+            Id = existingCauHoi.Id,
+            NoiDungCauHoi = existingCauHoi.NoiDungCauHoi,
+            LoaiCauHoi = existingCauHoi.LoaiCauHoi,
+            KyNang = existingCauHoi.KyNang,
+            UrlHinhAnh = existingCauHoi.UrlHinhAnh,
+            UrlAmThanh = existingCauHoi.UrlAmThanh,
+            LoiThoai = existingCauHoi.LoiThoai,
+            DoanVan = existingCauHoi.DoanVan,
+            CapDo = existingCauHoi.CapDo,
+            DoKho = existingCauHoi.DoKho
+        };
+
+        if (request.NoiDungCauHoi != null)
+            existingCauHoi.NoiDungCauHoi = request.NoiDungCauHoi;
+        if (request.LoaiCauHoi.HasValue)
+            existingCauHoi.LoaiCauHoi = request.LoaiCauHoi.Value;
+        if (request.KyNang.HasValue)
+            existingCauHoi.KyNang = request.KyNang.Value;
+        if (request.UrlHinhAnh != null)
+            existingCauHoi.UrlHinhAnh = request.UrlHinhAnh;
+        if (request.UrlAmThanh != null)
+            existingCauHoi.UrlAmThanh = request.UrlAmThanh;
+        if (request.LoiThoai != null)
+            existingCauHoi.LoiThoai = request.LoiThoai;
+        if (request.DoanVan != null)
+            existingCauHoi.DoanVan = request.DoanVan;
+        if (request.CapDo.HasValue)
+            existingCauHoi.CapDo = request.CapDo.Value;
+        if (request.DoKho.HasValue)
+            existingCauHoi.DoKho = request.DoKho.Value;
+
+        await _service.UpdateAsync(existingCauHoi);
+        await _systemLoggerService.LogUpdateAsync(GetCurrentUserId(), oldData, existingCauHoi, GetClientIpAddress());
+        return Ok(new
+        {
+            success = true,
+            message = "Cập nhật câu hỏi thành công",
+            data = existingCauHoi
+        });
     }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(string id)
+    {
+        var existingCauHoi = await _service.GetByIdAsync(id);
+        if (existingCauHoi == null)
+        {
+            return NotFound(new
+            {
+                success = false,
+                message = "Không tìm thấy câu hỏi"
+            });
+        }
+
+        await _service.DeleteAsync(existingCauHoi);
+        await _systemLoggerService.LogDeleteAsync(GetCurrentUserId(), existingCauHoi, GetClientIpAddress());
+        return Ok(new
+        {
+            success = true,
+            message = "Xóa câu hỏi thành công"
+        });
+    }
+}

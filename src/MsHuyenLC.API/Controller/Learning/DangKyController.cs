@@ -11,10 +11,16 @@ namespace MsHuyenLC.API.Controller.Learning;
 public class DangKyController : BaseController<DangKy>
 {
     private readonly IGenericService<LopHoc> _lopHocService;
-    public DangKyController(IGenericService<DangKy> service, ISystemLoggerService logService, IGenericService<LopHoc> lopHocService)
+    private readonly IGenericService<ThanhToan> _thanhToanService;
+    public DangKyController(
+        IGenericService<DangKy> service,
+        ISystemLoggerService logService,
+        IGenericService<LopHoc> lopHocService,
+        IGenericService<ThanhToan> thanhToanService)
         : base(service, logService)
     {
         _lopHocService = lopHocService;
+        _thanhToanService = thanhToanService;
     }
 
     protected override Func<IQueryable<DangKy>, IOrderedQueryable<DangKy>>? BuildOrderBy(string sortBy, string? sortOrder)
@@ -218,6 +224,34 @@ public class DangKyController : BaseController<DangKy>
         existingDangKy.HocVienId = request.HocVienId ?? existingDangKy.HocVienId;
 
         await _service.UpdateAsync(existingDangKy);
+
+        if( existingDangKy.TrangThai == TrangThaiDangKy.daduyet)
+        {
+            var existingThanhToan = await _thanhToanService.GetAllAsync(
+                1,
+                1,
+                Filter: tt => tt.DangKyId == existingDangKy.Id
+            );
+
+            if (!existingThanhToan.Any())
+            {
+                var thanhToan = new ThanhToan
+                {
+                    DangKyId = existingDangKy.Id,
+                    SoTien = existingDangKy.KhoaHoc.HocPhi,
+                };
+
+                var result = await _thanhToanService.AddAsync(thanhToan);
+                if( result == null)
+                {
+                    return BadRequest(new 
+                    { 
+                        success = false, 
+                        message = "Tạo thanh toán thất bại" 
+                    });
+                }
+            }
+        }
 
         await LogUpdateAsync(oldData, existingDangKy);
 

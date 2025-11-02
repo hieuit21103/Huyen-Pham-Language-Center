@@ -7,6 +7,7 @@ import {
 } from "~/apis/SystemLogger";
 import { formatDateTime } from "~/utils/date-utils";
 import { setLightTheme } from "./_layout";
+import Pagination from "~/components/Pagination";
 
 interface SystemLog {
   id?: string;
@@ -38,39 +39,35 @@ export default function AdminSystemLogger() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(50);
-  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 10;
 
   useEffect(() => {
     setLightTheme();
   }, []);
 
   useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterAction, fromDate, toDate]);
+
+  useEffect(() => {
     loadLogs();
-  }, [currentPage]);
+  }, []);
 
   const loadLogs = async () => {
     setLoading(true);
     const response = await getSystemLogs({ 
-      pageNumber: currentPage, 
-      pageSize,
+      pageNumber: 1, 
+      pageSize: 1000,
       sortBy: 'createdAt',
       sortOrder: 'desc'
     });
     
     if (response.success && Array.isArray(response.data)) {
       setLogs(response.data);
-      // Tính total pages nếu API trả về
-      if (response.data.length === pageSize) {
-        // Có thể còn trang tiếp theo
-        setTotalPages(currentPage + 1);
-      }
     } else if (response.success && response.data?.items) {
       setLogs(response.data.items);
-      if (response.data.totalPages) {
-        setTotalPages(response.data.totalPages);
-      }
     }
     setLoading(false);
   };
@@ -82,7 +79,7 @@ export default function AdminSystemLogger() {
     if (fromDate && toDate) {
       const response = await getSystemLogsByDateRange(fromDate, toDate, {
         pageNumber: 1,
-        pageSize
+        pageSize: 1000
       });
       if (response.success && Array.isArray(response.data)) {
         setLogs(response.data);
@@ -92,7 +89,7 @@ export default function AdminSystemLogger() {
     } else if (filterAction) {
       const response = await searchSystemLogs("", filterAction, {
         pageNumber: 1,
-        pageSize
+        pageSize: 1000
       });
       if (response.success && Array.isArray(response.data)) {
         setLogs(response.data);
@@ -173,6 +170,17 @@ export default function AdminSystemLogger() {
     
     return matchSearch && matchAction;
   });
+
+  const getPaginatedData = () => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredLogs.slice(startIndex, endIndex);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="space-y-6">
@@ -330,7 +338,7 @@ export default function AdminSystemLogger() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredLogs.map((log) => (
+                {getPaginatedData().map((log) => (
                   <tr key={log.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-900">
@@ -394,27 +402,14 @@ export default function AdminSystemLogger() {
         )}
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-            <div className="text-sm text-gray-700">
-              Trang {currentPage} / {totalPages}
-            </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Trước
-              </button>
-              <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Sau
-              </button>
-            </div>
+        {!loading && filteredLogs.length > pageSize && (
+          <div className="mt-6">
+            <Pagination
+              currentPage={currentPage}
+              totalCount={filteredLogs.length}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+            />
           </div>
         )}
       </div>

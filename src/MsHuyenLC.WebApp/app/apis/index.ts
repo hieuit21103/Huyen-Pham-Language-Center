@@ -49,6 +49,9 @@ export * from './Profile';
 // TaiKhoan APIs
 export * from './TaiKhoan';
 
+// ThanhToan APIs
+export * from './ThanhToan';
+
 // ThongBao APIs
 export * from './ThongBao';
 

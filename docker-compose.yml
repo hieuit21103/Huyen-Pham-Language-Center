@@ -48,6 +48,11 @@ services:
       Smtp__Password: ${SMTP_PASSWORD}
       Smtp__From: ${SMTP_FROM_EMAIL}
       Smtp__FromName: ${SMTP_FROM_NAME}
+
+      # Payment Gateway Settings
+      Vnpay__TmnCode: ${VNPAY_TMN_CODE}
+      Vnpay__HashSecret: ${VNPAY_HASH_SECRET}
+      Vnpay__BaseUrl: ${VNPAY_BASE_URL}
     ports:
       - "5000:8080"
     extra_hosts:

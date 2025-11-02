@@ -11,7 +11,7 @@ public enum TrangThaiTaiKhoan
 public enum TrangThaiLopHoc
 {
     choxepgiaovien,
-    danghoc,
+    danghoc, 
     ketthuc,
     huy
 }
@@ -35,7 +35,7 @@ public enum TrangThaiDangKy
 {
     choduyet,
     daduyet,
-    choxeplop,
+    dathanhtoan,
     daxeplop,
     huy
 }

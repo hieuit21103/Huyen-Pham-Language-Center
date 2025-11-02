@@ -118,6 +118,11 @@ export function GiaoVuApiUrl(path: string = '') {
     return path ? `${BASE_API_URL}/GiaoVu/${path}` : `${BASE_API_URL}/GiaoVu`;
 }
 
+// ThanhToan URLs  
+export function ThanhToanApiUrl(path: string = '') {
+    return path ? `${BASE_API_URL}/ThanhToan/${path}` : `${BASE_API_URL}/ThanhToan`;
+}
+
 // Health check
 export function HealthApiUrl() {
     return `${BASE_API_URL.replace('/api', '')}/health`;

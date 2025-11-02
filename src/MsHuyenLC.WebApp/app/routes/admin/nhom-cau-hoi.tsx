@@ -16,6 +16,7 @@ import { getCauHois } from "~/apis/CauHoi";
 import { uploadImage, uploadAudio } from "~/apis/Upload";
 import type { CapDo, DoKho } from "~/types/index";
 import { setLightTheme } from "./_layout";
+import Pagination from "~/components/Pagination";
 
 interface NhomCauHoi {
   id?: string;
@@ -49,6 +50,11 @@ export default function AdminNhomCauHoi() {
   const [filterCapDo, setFilterCapDo] = useState<string>("");
   const [filterDoKho, setFilterDoKho] = useState<string>("");
   
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
@@ -71,6 +77,10 @@ export default function AdminNhomCauHoi() {
     loadNhomCauHois();
     loadAllCauHois();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterCapDo, filterDoKho, searchTerm]);
 
   useEffect(() => {
     loadNhomCauHois();
@@ -303,6 +313,17 @@ export default function AdminNhomCauHoi() {
     n.noiDung?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const getPaginatedData = () => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredNhoms.slice(startIndex, endIndex);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="space-y-6">
       {message && (
@@ -407,7 +428,7 @@ export default function AdminNhomCauHoi() {
             <p className="text-gray-600 text-lg">Không tìm thấy nhóm câu hỏi nào</p>
           </div>
         ) : (
-          filteredNhoms.map((nhom) => (
+          getPaginatedData().map((nhom) => (
             <div key={nhom.id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-shadow">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
@@ -484,6 +505,18 @@ export default function AdminNhomCauHoi() {
           ))
         )}
       </div>
+
+      {/* Pagination */}
+      {!loading && filteredNhoms.length > pageSize && (
+        <div className="mt-6">
+          <Pagination
+            currentPage={currentPage}
+            totalCount={filteredNhoms.length}
+            pageSize={pageSize}
+            onPageChange={handlePageChange}
+          />
+        </div>
+      )}
 
       {/* Create/Edit Modal */}
       {showModal && (

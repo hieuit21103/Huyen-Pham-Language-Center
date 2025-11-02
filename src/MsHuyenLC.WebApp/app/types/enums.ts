@@ -28,7 +28,7 @@ export enum TrangThaiKhoaHoc {
 export enum TrangThaiDangKy {
   ChoDuyet = 0,      // choduyet
   DaDuyet = 1,       // daduyet
-  ChoXepLop = 2,     // choxeplop
+  DaThanhToan = 2,   // dathanhtoan
   DaXepLop = 3,      // daxeplop
   Huy = 4            // huy
 }

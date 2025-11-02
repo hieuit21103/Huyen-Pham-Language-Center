@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { getProfile } from "~/apis/Profile";
 import { registerStudent, getDangKys } from "~/apis/DangKy";
-import type { DangKyRequest } from "~/types/index";
-import { getKhoaHocs } from "~/apis";
+import type { DangKyRequest, HocVien } from "~/types/index";
+import { getByTaiKhoanId, getKhoaHocs } from "~/apis";
 import { Asset } from "~/assets/Asset";
 
 interface DangKy {
@@ -15,7 +15,7 @@ export default function KhoaHocPage() {
     const [loading, setLoading] = useState(true);
     const [courses, setCourses] = useState<any[]>([]);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [userProfile, setUserProfile] = useState<any>(null);
+    const [studentId, setStudentId] = useState<string | undefined>("");
     const [registeredCourseIds, setRegisteredCourseIds] = useState<string[]>([]);
     const [message, setMessage] = useState("");
 
@@ -29,13 +29,17 @@ export default function KhoaHocPage() {
         const profileRes = await getProfile();
         if (profileRes.success && profileRes.data) {
             setIsLoggedIn(true);
-            setUserProfile(profileRes.data);
 
-            const dangKyRes = await getDangKys({ pageNumber: 1, pageSize: 1000, sortBy: 'id', sortOrder: 'desc' });
-            if (dangKyRes.success && Array.isArray(dangKyRes.data)) {
-                const userRegistrations = dangKyRes.data.filter((dk: DangKy) => dk.hocVienId === profileRes.data.id);
-                const courseIds = userRegistrations.map((dk: DangKy) => dk.khoaHocId).filter(Boolean) as string[];
-                setRegisteredCourseIds(courseIds);
+            const hocVienRes = await getByTaiKhoanId(profileRes.data.id);
+            if (hocVienRes.success && hocVienRes.data) {
+                setStudentId(hocVienRes.data.id);
+
+                const dangKyRes = await getDangKys({ pageNumber: 1, pageSize: 1000, sortBy: 'id', sortOrder: 'desc' });
+                if (dangKyRes.success && Array.isArray(dangKyRes.data)) {
+                    const userRegistrations = dangKyRes.data.filter((dk: DangKy) => dk.hocVienId === hocVienRes.data.id);
+                    const courseIds = userRegistrations.map((dk: DangKy) => dk.khoaHocId).filter(Boolean) as string[];
+                    setRegisteredCourseIds(courseIds);
+                }
             }
         }
 
@@ -63,25 +67,29 @@ export default function KhoaHocPage() {
 
     const handleCourseRegister = async (courseId: string, courseName: string) => {
         if (!isLoggedIn) {
-            // Chưa đăng nhập -> chuyển về #register
             window.location.href = '/#register';
             return;
         }
 
-        // Đã đăng nhập -> gọi API đăng ký
+        if (!studentId) {
+            setMessage("Lỗi: Không tìm thấy thông tin học viên. Vui lòng đăng nhập lại!");
+            setTimeout(() => setMessage(""), 5000);
+            return;
+        }
+
         const request: DangKyRequest = {
-            hocVienId: userProfile.id,
+            hocVienId: studentId,
             khoaHocId: courseId
         };
 
         const response = await registerStudent(request);
-        setMessage(response.message || "");
 
         if (response.success) {
-            // Thêm khóa học vào danh sách đã đăng ký để ẩn nút
+            setMessage(response.message || `Đăng ký khóa học "${courseName}" thành công!`);
             setRegisteredCourseIds(prev => [...prev, courseId]);
             setTimeout(() => setMessage(""), 3000);
         } else {
+            setMessage(response.message || "Lỗi: Đăng ký thất bại. Vui lòng thử lại!");
             setTimeout(() => setMessage(""), 5000);
         }
     };
@@ -89,10 +97,30 @@ export default function KhoaHocPage() {
     return (
         <div>
             {message && (
-                <div className={`mb-6 ${message.includes("thất bại") || message.includes("Lỗi") ? "bg-red-100 border-red-400 text-red-700" : "bg-green-100 border-green-400 text-green-700"} border px-4 py-3 rounded-lg`}>
-                    {message}
+                <div 
+                    className={`fixed top-24 right-6 z-50 min-w-80 max-w-md ${message.includes("thất bại") || message.includes("Lỗi") ? "bg-red-100 border-red-400 text-red-700" : "bg-green-100 border-green-400 text-green-700"} border-l-4 px-6 py-4 rounded-lg shadow-xl transition-all duration-500 ease-in-out`}
+                    style={{
+                        animation: 'slideInRight 0.5s ease-out'
+                    }}
+                >
+                    <div className="flex items-start gap-3">
+                        <p className="font-semibold flex-1">{message}</p>
+                    </div>
                 </div>
             )}
+
+            <style>{`
+                @keyframes slideInRight {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+            `}</style>
 
             <h2 className="text-4xl font-bold text-center text-gray-900 mb-4">
                 Các Khóa Học Nổi Bật

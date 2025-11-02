@@ -4,6 +4,7 @@ import { getDangKyKhachs, updateDangKyKhach, deleteDangKyKhach } from "~/apis/Da
 import { getKhoaHocs } from "~/apis/KhoaHoc";
 import { TrangThaiDangKy } from "~/types/index";
 import { setLightTheme } from "./_layout";
+import Pagination from "~/components/Pagination";
 
 interface Registration {
     id?: string;
@@ -34,10 +35,18 @@ export default function AdminRegistrations() {
     const [selectedStatus, setSelectedStatus] = useState("");
     const [message, setMessage] = useState("");
 
+    // Pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
+
     useEffect(() => {
         setLightTheme();
         loadData();
     }, []);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, selectedCourse, selectedStatus]);
 
     const loadData = async () => {
         setLoading(true);
@@ -111,7 +120,7 @@ export default function AdminRegistrations() {
                         Đã xếp lớp
                     </span>
                 );
-            case TrangThaiDangKy.ChoXepLop:
+            case TrangThaiDangKy.DaThanhToan:
                 return (
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
                         <Clock className="w-3 h-3 mr-1" />
@@ -135,10 +144,6 @@ export default function AdminRegistrations() {
         }
     };
 
-    const getStatusCount = (status: TrangThaiDangKy) => {
-        return filteredRegistrations.filter(r => r.trangThai === status).length;
-    };
-
     const filteredRegistrations = registrations.filter(reg => {
         const matchSearch =
             reg.hoTen?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -150,6 +155,21 @@ export default function AdminRegistrations() {
 
         return matchSearch && matchCourse && matchStatus;
     });
+
+    const getPaginatedData = () => {
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        return filteredRegistrations.slice(startIndex, endIndex);
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const getStatusCount = (status: TrangThaiDangKy) => {
+        return filteredRegistrations.filter(r => r.trangThai === status).length;
+    };
 
     return (
         <div className="space-y-6">
@@ -246,7 +266,7 @@ export default function AdminRegistrations() {
                         <option value={TrangThaiDangKy.ChoDuyet.toString()}>Chờ duyệt</option>
                         <option value={TrangThaiDangKy.DaDuyet.toString()}>Đã duyệt</option>
                         <option value={TrangThaiDangKy.Huy.toString()}>Từ chối</option>
-                        <option value={TrangThaiDangKy.ChoXepLop.toString()}>Chờ xếp lớp</option>
+                        <option value={TrangThaiDangKy.DaThanhToan.toString()}>Đã thanh toán</option>
                         <option value={TrangThaiDangKy.DaXepLop.toString()}>Đã xếp lớp</option>
                         <option value={TrangThaiDangKy.Huy.toString()}>Đã hủy</option>
                     </select>
@@ -291,7 +311,7 @@ export default function AdminRegistrations() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {filteredRegistrations.map((registration) => (
+                                {getPaginatedData().map((registration) => (
                                     <tr key={registration.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
@@ -357,6 +377,18 @@ export default function AdminRegistrations() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {!loading && filteredRegistrations.length > pageSize && (
+                    <div className="flex justify-center p-6 border-t border-gray-200">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalCount={filteredRegistrations.length}
+                            pageSize={pageSize}
+                            onPageChange={handlePageChange}
+                        />
                     </div>
                 )}
             </div>

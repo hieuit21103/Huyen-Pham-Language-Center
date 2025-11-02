@@ -1,10 +1,11 @@
-import { Search, CheckCircle, XCircle, Clock, Eye, AlertCircle, Users, X } from "lucide-react";
+import { Search, CheckCircle, XCircle, Clock, Eye, AlertCircle, Users, X, Trash } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getDangKys, updateDangKy } from "~/apis/DangKy";
+import { deleteDangKy, getDangKys, updateDangKy } from "~/apis/DangKy";
 import { getKhoaHocs } from "~/apis/KhoaHoc";
 import { getLopHocs } from "~/apis/LopHoc";
 import { TrangThaiDangKy, type HocVien, type KhoaHoc, type LopHoc } from "~/types/index";
 import { setLightTheme } from "./_layout";
+import Pagination from "~/components/Pagination";
 
 interface Registration {
   id?: string;
@@ -38,15 +39,25 @@ export default function AdminRegistrations() {
   const [selectedRegistration, setSelectedRegistration] = useState<Registration | null>(null);
   const [selectedClassId, setSelectedClassId] = useState("");
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
   useEffect(() => {
     setLightTheme();
     loadData();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCourse, selectedStatus]);
+
   const loadData = async () => {
     setLoading(true);
     const [registrationsRes, coursesRes, classesRes] = await Promise.all([
       getDangKys({ 
+        pageNumber: 1,
+        pageSize: 1000,
         sortBy: 'ngayDangKy', 
         sortOrder: 'desc' 
       }),
@@ -128,6 +139,17 @@ export default function AdminRegistrations() {
     }
   };
 
+  const handleDelete = async (registration: Registration) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa đăng ký này?")) return;
+
+    const response = await deleteDangKy(registration.id!);
+    setMessage(response.message || "");
+    if (response.success) {
+      loadData();
+      setTimeout(() => setMessage(""), 3000);
+    }
+  };
+
   // Lấy danh sách lớp học theo khóa học đã chọn
   const availableClasses = selectedRegistration
     ? classes.filter(cls => cls.khoaHocId === selectedRegistration.khoaHocId)
@@ -156,11 +178,11 @@ export default function AdminRegistrations() {
             Đã xếp lớp
           </span>
         );
-      case TrangThaiDangKy.ChoXepLop:
+      case TrangThaiDangKy.DaThanhToan:
         return (
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
             <Clock className="w-3 h-3 mr-1" />
-            Chờ xếp lớp
+            Đã thanh toán
           </span>
         );
       default:
@@ -185,6 +207,17 @@ export default function AdminRegistrations() {
     
     return matchSearch && matchCourse && matchStatus;
   });
+
+  const getPaginatedData = () => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredRegistrations.slice(startIndex, endIndex);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const getStatusCount = (status: TrangThaiDangKy) => {
     return filteredRegistrations.filter(r => r.trangThai === status).length;
@@ -285,7 +318,7 @@ export default function AdminRegistrations() {
             <option value={TrangThaiDangKy.ChoDuyet.toString()}>Chờ duyệt</option>
             <option value={TrangThaiDangKy.DaDuyet.toString()}>Đã duyệt</option>
             <option value={TrangThaiDangKy.Huy.toString()}>Đã hủy</option>
-            <option value={TrangThaiDangKy.ChoXepLop.toString()}>Chờ xếp lớp</option>
+            <option value={TrangThaiDangKy.DaThanhToan.toString()}>Đã thanh toán</option>
             <option value={TrangThaiDangKy.DaXepLop.toString()}>Đã xếp lớp</option>
           </select>
         </div>
@@ -327,9 +360,9 @@ export default function AdminRegistrations() {
                     Thao tác
                   </th>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredRegistrations.map((registration) => (
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+                {getPaginatedData().map((registration) => (
                   <tr key={registration.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -379,7 +412,7 @@ export default function AdminRegistrations() {
                             </button>
                           </>
                         )}
-                        {(registration.trangThai === TrangThaiDangKy.DaDuyet || registration.trangThai === TrangThaiDangKy.ChoXepLop) && (
+                        {(registration.trangThai === TrangThaiDangKy.DaDuyet || registration.trangThai === TrangThaiDangKy.DaThanhToan) && (
                           <button
                             onClick={() => handleOpenAssignModal(registration)}
                             className="text-blue-600 hover:text-blue-900 px-3 py-1 hover:bg-blue-50 rounded-lg transition-colors font-semibold inline-flex items-center"
@@ -388,6 +421,13 @@ export default function AdminRegistrations() {
                             Xếp lớp
                           </button>
                         )}
+                        <button
+                            onClick={() => handleDelete(registration)}
+                            className="text-red-600 hover:text-red-900 px-3 py-1 hover:bg-red-50 rounded-lg transition-colors font-semibold inline-flex items-center"
+                          >
+                            <Trash className="w-4 h-4 mr-1" />
+                            Xóa
+                          </button>
                         <button className="text-gray-600 hover:text-gray-900 p-2 hover:bg-gray-50 rounded-lg transition-colors">
                           <Eye className="w-4 h-4" />
                         </button>
@@ -397,6 +437,18 @@ export default function AdminRegistrations() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && filteredRegistrations.length > pageSize && (
+          <div className="flex justify-center p-6 border-t border-gray-200">
+            <Pagination
+              currentPage={currentPage}
+              totalCount={filteredRegistrations.length}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+            />
           </div>
         )}
       </div>

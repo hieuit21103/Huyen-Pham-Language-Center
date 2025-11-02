@@ -35,17 +35,24 @@ public abstract class BaseController<TEntity> : ControllerBase where TEntity : c
         [FromQuery] int pageSize = int.MaxValue,
         [FromQuery] string? sortBy = null,
         [FromQuery] string? sortOrder = "asc"
+        // [FromQuery] string? search = null
     )
     {
         Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null;
-        
+        // Expression<Func<TEntity, bool>>? filter = null;
+
         if (!string.IsNullOrEmpty(sortBy))
         {
             orderBy = BuildOrderBy(sortBy, sortOrder);
         }
+        
+        // if (!string.IsNullOrEmpty(search))
+        // {
+        //     filter = BuildFilter(search);
+        // }
 
         var entities = await _service.GetAllAsync(pageNumber, pageSize, null, orderBy);
-        var totalItems = await _service.CountAsync();
+        var totalItems = await _service.CountAsync(null);
         return Ok(new
         {
             success = true,
@@ -59,6 +66,11 @@ public abstract class BaseController<TEntity> : ControllerBase where TEntity : c
     {
         return null;
     }
+
+    // protected virtual Expression<Func<TEntity, bool>>? BuildFilter(string search)
+    // {
+    //     return null;
+    // }
 
     [HttpGet("{id}")]
     public virtual async Task<IActionResult> GetById(string id)

@@ -5,6 +5,7 @@ import { getGiaoViens } from "~/apis/GiaoVien";
 import { getLopHocs } from "~/apis/LopHoc";
 import type { PhanCong, GiaoVien, LopHoc } from "~/types/index";
 import { setLightTheme } from "./_layout";
+import Pagination from "~/components/Pagination";
 
 export default function AdminPhanCong() {
     const [searchTerm, setSearchTerm] = useState("");
@@ -14,6 +15,10 @@ export default function AdminPhanCong() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [message, setMessage] = useState("");
+
+    // Pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
 
     const [formData, setFormData] = useState({
         giaoVienId: "",
@@ -25,23 +30,27 @@ export default function AdminPhanCong() {
         loadData();
     }, []);
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
+
     const loadData = async () => {
         setLoading(true);
 
         // Load phân công
-        const pcResponse = await getPhanCongs({ pageNumber: 1, pageSize: 100 });
+        const pcResponse = await getPhanCongs({ pageNumber: 1, pageSize: 1000 });
         if (pcResponse.success && pcResponse.data) {
             setPhanCongs(pcResponse.data);
         }
 
         // Load giáo viên
-        const gvResponse = await getGiaoViens({ pageNumber: 1, pageSize: 100 });
+        const gvResponse = await getGiaoViens({ pageNumber: 1, pageSize: 1000 });
         if (gvResponse.success && gvResponse.data) {
             setGiaoViens(gvResponse.data);
         }
 
         // Load lớp học
-        const lhResponse = await getLopHocs({ pageNumber: 1, pageSize: 100 });
+        const lhResponse = await getLopHocs({ pageNumber: 1, pageSize: 1000 });
         if (lhResponse.success && lhResponse.data) {
             setLopHocs(lhResponse.data);
         }
@@ -84,6 +93,17 @@ export default function AdminPhanCong() {
         const search = searchTerm.toLowerCase();
         return giaoVienName.includes(search) || lopHocName.includes(search);
     });
+
+    const getPaginatedData = () => {
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        return filteredPhanCongs.slice(startIndex, endIndex);
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     return (
         <div className="space-y-6">
@@ -156,7 +176,7 @@ export default function AdminPhanCong() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {filteredPhanCongs.length === 0 ? (
+                                {getPaginatedData().length === 0 ? (
                                     <tr>
                                         <td colSpan={7} className="px-6 py-12 text-center">
                                             <UserCheck className="w-12 h-12 text-gray-400 mx-auto mb-3" />
@@ -164,7 +184,7 @@ export default function AdminPhanCong() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredPhanCongs.map((pc, index) => (
+                                    getPaginatedData().map((pc, index) => (
                                         <tr key={pc.id || index} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 {index + 1}
@@ -216,6 +236,18 @@ export default function AdminPhanCong() {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Pagination */}
+                    {filteredPhanCongs.length > pageSize && (
+                        <div className="flex justify-center mt-6">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalCount={filteredPhanCongs.length}
+                                pageSize={pageSize}
+                                onPageChange={handlePageChange}
+                            />
+                        </div>
+                    )}
                 </div>
             )}
 

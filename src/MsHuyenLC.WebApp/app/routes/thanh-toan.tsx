@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
-import { 
-  CreditCard, Building2, Smartphone, Check, 
+import { useNavigate, useSearchParams } from "react-router";
+import {
+  CreditCard, Building2, Smartphone, Check,
   AlertCircle, ArrowLeft, DollarSign, Calendar,
-  Clock, BookOpen, FileText
+  Clock, BookOpen
 } from "lucide-react";
 import { getProfile } from "~/apis/Profile";
 import { getDangKy, updateDangKy, getDangKys } from "~/apis/DangKy";
+import { getThanhToanByDangKyId, createThanhToan, createVNPayUrl } from "~/apis/ThanhToan";
 import { VaiTro } from "~/types/index";
-import { getJwtToken } from "~/apis";
 
 interface DangKy {
   id?: string;
@@ -25,10 +25,13 @@ interface DangKy {
 
 export default function PaymentPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const dangKyId = searchParams.get("dangKyId");
+
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [registration, setRegistration] = useState<DangKy | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"bank" | "momo" | "cash">("bank");
+  const [paymentMethod, setPaymentMethod] = useState<"vnpay" | "momo" | "cash">("vnpay");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -37,7 +40,7 @@ export default function PaymentPage() {
 
   const loadData = async () => {
     setLoading(true);
-    
+
     const profileRes = await getProfile();
     if (!profileRes.success || !profileRes.data) {
       navigate("/dang-nhap");
@@ -49,30 +52,68 @@ export default function PaymentPage() {
       return;
     }
 
-    // Lấy danh sách đăng ký của user hiện tại
-    const dangKysRes = await getDangKys({ 
-      sortBy: 'ngayDangKy', 
-      sortOrder: 'desc' 
-    });
-    
-    if (dangKysRes.success && dangKysRes.data) {
-      const dataArray = Array.isArray(dangKysRes.data) 
-        ? dangKysRes.data 
-        : dangKysRes.data.items || [];
-      
-      // Tìm đăng ký đang chờ thanh toán (trangThai = 1)
-      const pendingRegistration = dataArray.find((reg: DangKy) => reg.trangThai === 1);
-      
-      if (pendingRegistration) {
-        setRegistration(pendingRegistration);
+    if (dangKyId) {
+      const regRes = await getDangKy(dangKyId);
+
+
+      if (regRes.success && regRes.data) {
+        const reg = regRes.data as DangKy;
+
+        if (reg.trangThai === 1) {
+          const paymentRes = await getThanhToanByDangKyId(dangKyId);
+          if (paymentRes.success && paymentRes.data?.trangThai === 1) {
+            setMessage("Đăng ký này đã được thanh toán!");
+            setLoading(false);
+            setTimeout(() => navigate("/khoa-hoc-cua-toi"), 2000);
+            return;
+          }
+
+          setRegistration(reg);
+        } else {
+          setMessage(`Đăng ký này không thể thanh toán! (Trạng thái: ${reg.trangThai})`);
+          setLoading(false);
+          setTimeout(() => navigate("/khoa-hoc-cua-toi"), 2000);
+          return;
+        }
       } else {
-        // Không có đăng ký nào cần thanh toán
-        navigate("/khoa-hoc-cua-toi");
+        setMessage("Không tìm thấy đăng ký!");
+        setLoading(false);
+        setTimeout(() => navigate("/khoa-hoc-cua-toi"), 2000);
         return;
       }
     } else {
-      navigate("/khoa-hoc-cua-toi");
-      return;
+      const dangKysRes = await getDangKys({
+        sortBy: 'ngayDangKy',
+        sortOrder: 'desc'
+      });
+
+      if (dangKysRes.success && dangKysRes.data) {
+        const dataArray = Array.isArray(dangKysRes.data)
+          ? dangKysRes.data
+          : dangKysRes.data.items || [];
+
+        let foundRegistration = null;
+        for (const reg of dataArray) {
+          if (reg.trangThai === 1) {
+            const paymentRes = await getThanhToanByDangKyId(reg.id!);
+            if (!paymentRes.success || !paymentRes.data) {
+              foundRegistration = reg;
+              break;
+            }
+          }
+        }
+
+        if (foundRegistration) {
+          setRegistration(foundRegistration);
+        } else {
+          setMessage("Không có đăng ký nào cần thanh toán!");
+          setTimeout(() => navigate("/khoa-hoc-cua-toi"), 2000);
+          return;
+        }
+      } else {
+        navigate("/khoa-hoc-cua-toi");
+        return;
+      }
     }
 
     setLoading(false);
@@ -93,25 +134,35 @@ export default function PaymentPage() {
 
   const handlePayment = async () => {
     if (!registration?.id) return;
-    
+
     setProcessing(true);
     setMessage("");
 
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      if (paymentMethod === "vnpay") {
+        let paymentId = "";
+        const existingPayment = await getThanhToanByDangKyId(registration.id);
 
-    // Update registration status to paid
-    const response = await updateDangKy(registration.id, {
-      trangThai: 2, // Đã thanh toán
-    });
+        if (existingPayment.success && existingPayment.data?.id) {
+          paymentId = existingPayment.data.id;
+        } else {
+          setMessage("Lỗi khi lấy thông tin thanh toán!");
+          setProcessing(false);
+          return;
+        }
 
-    if (response.success) {
-      setMessage("Thanh toán thành công! Đang chuyển hướng...");
-      setTimeout(() => {
-        navigate("/khoa-hoc-cua-toi");
-      }, 2000);
-    } else {
-      setMessage(response.message || "Thanh toán thất bại. Vui lòng thử lại!");
+        const returnUrl = `${window.location.origin}/vnpay-return`;
+        const vnpayRes = await createVNPayUrl(paymentId, returnUrl);
+
+        if (vnpayRes.success && vnpayRes.data?.paymentUrl) {
+          window.location.href = vnpayRes.data.paymentUrl;
+        } else {
+          setMessage(vnpayRes.message || "Không thể tạo URL thanh toán VNPay!");
+          setProcessing(false);
+        }
+      }
+    } catch (error) {
+      setMessage("Có lỗi xảy ra. Vui lòng thử lại!");
       setProcessing(false);
     }
   };
@@ -161,45 +212,41 @@ export default function PaymentPage() {
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Chọn phương thức thanh toán</h2>
-              
+
               <div className="space-y-3">
-                {/* Bank Transfer */}
+                {/* VNPay */}
                 <button
-                  onClick={() => setPaymentMethod("bank")}
-                  className={`w-full flex items-center p-4 rounded-lg border-2 transition-all ${
-                    paymentMethod === "bank"
+                  onClick={() => setPaymentMethod("vnpay")}
+                  className={`w-full flex items-center p-4 rounded-lg border-2 transition-all ${paymentMethod === "vnpay"
                       ? "border-blue-600 bg-blue-50"
                       : "border-gray-200 hover:border-gray-300"
-                  }`}
+                    }`}
                 >
-                  <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${
-                    paymentMethod === "bank"
+                  <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${paymentMethod === "vnpay"
                       ? "border-blue-600 bg-blue-600"
                       : "border-gray-300"
-                  }`}>
-                    {paymentMethod === "bank" && <Check className="w-4 h-4 text-white" />}
+                    }`}>
+                    {paymentMethod === "vnpay" && <Check className="w-4 h-4 text-white" />}
                   </div>
                   <Building2 className="w-8 h-8 text-gray-600 mr-3" />
                   <div className="text-left flex-1">
-                    <p className="font-semibold text-gray-900">Chuyển khoản ngân hàng</p>
-                    <p className="text-sm text-gray-600">Chuyển khoản qua Internet Banking</p>
+                    <p className="font-semibold text-gray-900">VNPay</p>
+                    <p className="text-sm text-gray-600">Thanh toán qua cổng VNPay</p>
                   </div>
                 </button>
 
                 {/* MoMo */}
                 <button
                   onClick={() => setPaymentMethod("momo")}
-                  className={`w-full flex items-center p-4 rounded-lg border-2 transition-all ${
-                    paymentMethod === "momo"
+                  className={`w-full flex items-center p-4 rounded-lg border-2 transition-all ${paymentMethod === "momo"
                       ? "border-pink-600 bg-pink-50"
                       : "border-gray-200 hover:border-gray-300"
-                  }`}
+                    }`}
                 >
-                  <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${
-                    paymentMethod === "momo"
+                  <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${paymentMethod === "momo"
                       ? "border-pink-600 bg-pink-600"
                       : "border-gray-300"
-                  }`}>
+                    }`}>
                     {paymentMethod === "momo" && <Check className="w-4 h-4 text-white" />}
                   </div>
                   <Smartphone className="w-8 h-8 text-pink-600 mr-3" />
@@ -212,17 +259,15 @@ export default function PaymentPage() {
                 {/* Cash */}
                 <button
                   onClick={() => setPaymentMethod("cash")}
-                  className={`w-full flex items-center p-4 rounded-lg border-2 transition-all ${
-                    paymentMethod === "cash"
+                  className={`w-full flex items-center p-4 rounded-lg border-2 transition-all ${paymentMethod === "cash"
                       ? "border-green-600 bg-green-50"
                       : "border-gray-200 hover:border-gray-300"
-                  }`}
+                    }`}
                 >
-                  <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${
-                    paymentMethod === "cash"
+                  <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center ${paymentMethod === "cash"
                       ? "border-green-600 bg-green-600"
                       : "border-gray-300"
-                  }`}>
+                    }`}>
                     {paymentMethod === "cash" && <Check className="w-4 h-4 text-white" />}
                   </div>
                   <DollarSign className="w-8 h-8 text-green-600 mr-3" />
@@ -235,16 +280,15 @@ export default function PaymentPage() {
             </div>
 
             {/* Payment Instructions */}
-            {paymentMethod === "bank" && (
+            {paymentMethod === "vnpay" && (
               <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
-                <h3 className="font-bold text-gray-900 mb-4">Thông tin chuyển khoản</h3>
+                <h3 className="font-bold text-gray-900 mb-4">Thanh toán qua VNPay</h3>
                 <div className="space-y-2 text-sm">
-                  <p><strong>Ngân hàng:</strong> Vietcombank</p>
-                  <p><strong>Số tài khoản:</strong> 0123456789</p>
-                  <p><strong>Chủ tài khoản:</strong> Trung tâm Ngoại ngữ HPLC</p>
-                  <p><strong>Nội dung:</strong> DK{registration.id?.substring(0, 8)} - Họ tên</p>
+                  <p>✓ Hỗ trợ thanh toán qua ATM, Internet Banking, Visa, MasterCard</p>
+                  <p>✓ Bảo mật cao với công nghệ mã hóa SSL</p>
+                  <p>✓ Xác nhận thanh toán ngay lập tức</p>
                   <p className="text-blue-600 mt-4">
-                    * Vui lòng ghi đúng nội dung chuyển khoản để hệ thống tự động xác nhận thanh toán
+                    * Bạn sẽ được chuyển đến trang thanh toán VNPay để hoàn tất giao dịch
                   </p>
                 </div>
               </div>
@@ -282,7 +326,7 @@ export default function PaymentPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-24">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Thông tin đơn hàng</h2>
-              
+
               <div className="space-y-4 mb-6">
                 <div className="flex items-start">
                   <BookOpen className="w-5 h-5 text-gray-400 mr-3 mt-0.5" />
@@ -325,11 +369,10 @@ export default function PaymentPage() {
               </div>
 
               {message && (
-                <div className={`mb-4 p-3 rounded-lg ${
-                  message.includes("thành công")
+                <div className={`mb-4 p-3 rounded-lg ${message.includes("thành công")
                     ? "bg-green-50 text-green-800 border border-green-200"
                     : "bg-red-50 text-red-800 border border-red-200"
-                }`}>
+                  }`}>
                   <p className="text-sm">{message}</p>
                 </div>
               )}

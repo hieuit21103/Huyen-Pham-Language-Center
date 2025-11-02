@@ -8,6 +8,7 @@ import type { LopHoc } from "~/types/course.types";
 import type { PhongHoc } from "~/types/schedule.types";
 import { DayOfWeek } from "~/types/enums";
 import { setLightTheme } from "./_layout";
+import Pagination from "~/components/Pagination";
 
 export default function AdminSchedule() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,6 +19,10 @@ export default function AdminSchedule() {
   const [showModal, setShowModal] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<LichHoc | null>(null);
   const [message, setMessage] = useState("");
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
   
   const [formData, setFormData] = useState<LichHocRequest>({
     lopHocId: "",
@@ -36,9 +41,13 @@ export default function AdminSchedule() {
     loadRooms();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   const loadSchedules = async () => {
     setLoading(true);
-    const response = await getLichHocs({ pageNumber: 1, pageSize: 100 });
+    const response = await getLichHocs({ pageNumber: 1, pageSize: 1000 });
     if (response.success && response.data) {
       const dataArray = Array.isArray(response.data) ? response.data : (response.data.items || response.data.data || []);
       setSchedules(dataArray);
@@ -47,7 +56,7 @@ export default function AdminSchedule() {
   };
 
   const loadClasses = async () => {
-    const response = await getLopHocs({ pageNumber: 1, pageSize: 100 });
+    const response = await getLopHocs({ pageNumber: 1, pageSize: 1000 });
     if (response.success && response.data) {
       setClasses(response.data);
     }
@@ -250,6 +259,17 @@ export default function AdminSchedule() {
     return classNameMatch || roomNameMatch;
   });
 
+  const getPaginatedData = () => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredSchedules.slice(startIndex, endIndex);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="space-y-6">
       {message && (
@@ -324,7 +344,7 @@ export default function AdminSchedule() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredSchedules.map((schedule) => (
+                {getPaginatedData().map((schedule) => (
                   <tr key={schedule.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center">
@@ -383,7 +403,7 @@ export default function AdminSchedule() {
                     </td>
                   </tr>
                 ))}
-                {filteredSchedules.length === 0 && (
+                {getPaginatedData().length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                       <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-400" />
@@ -394,6 +414,18 @@ export default function AdminSchedule() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {filteredSchedules.length > pageSize && (
+            <div className="flex justify-center mt-6">
+              <Pagination
+                currentPage={currentPage}
+                totalCount={filteredSchedules.length}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
         </div>
       )}
 

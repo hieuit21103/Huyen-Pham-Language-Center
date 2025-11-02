@@ -6,6 +6,7 @@ import { getPhanCongByLopHoc, createPhanCong, deletePhanCong } from "~/apis/Phan
 import { getGiaoViens } from "~/apis/GiaoVien";
 import type { LopHoc, TrangThaiLopHoc, PhanCong, GiaoVien } from "~/types/index";
 import { setLightTheme } from "./_layout";
+import Pagination from "~/components/Pagination";
 
 export default function AdminClasses() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -25,6 +26,10 @@ export default function AdminClasses() {
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [message, setMessage] = useState("");
   
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+  
   const [formData, setFormData] = useState({
     tenLop: "",
     khoaHocId: "",
@@ -38,9 +43,15 @@ export default function AdminClasses() {
     loadTeachers();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   const loadClasses = async () => {
     setLoading(true);
     const response = await getLopHocs({ 
+      pageNumber: 1,
+      pageSize: 1000,
       sortBy: "tenLop",
       sortOrder: "asc"
     });
@@ -192,6 +203,17 @@ export default function AdminClasses() {
     cls.tenLop?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const getPaginatedData = () => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredClasses.slice(startIndex, endIndex);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="space-y-6">
       {message && (
@@ -236,7 +258,7 @@ export default function AdminClasses() {
       {!loading && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredClasses.map((cls) => (
+          {getPaginatedData().map((cls) => (
             <div key={cls.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
@@ -306,6 +328,18 @@ export default function AdminClasses() {
             </div>
           ))}
           </div>
+
+          {/* Pagination */}
+          {filteredClasses.length > pageSize && (
+            <div className="flex justify-center mt-6">
+              <Pagination
+                currentPage={currentPage}
+                totalCount={filteredClasses.length}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
         </>
       )}
 

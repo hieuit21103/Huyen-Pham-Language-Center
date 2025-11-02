@@ -6,6 +6,7 @@ using MsHuyenLC.Application.Interfaces.Auth;
 using MsHuyenLC.Application.Interfaces.System;
 using System.Security.Claims;
 using MsHuyenLC.Application.Interfaces.Email;
+using MsHuyenLC.Application.DTOs.Finance.ThanhToan;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
@@ -18,6 +19,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
     private readonly IPasswordHasher _passwordHasher;
     private readonly IGenericService<HocVien> _hocVienService;
     private readonly IGenericService<DangKy> _dangKyService;
+    private readonly IGenericService<ThanhToan> _thanhToanService;
     private readonly IEmailService _emailService;
 
     public DangKyKhachController(
@@ -28,6 +30,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         IPasswordHasher passwordHasher,
         IGenericService<HocVien> hocVienService,
         IGenericService<DangKy> dangKyService,
+        IGenericService<ThanhToan> thanhToanService,
         IEmailService emailService) : base(service, logService)
     {
         _khoaHocService = khoaHocService;
@@ -35,6 +38,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         _passwordHasher = passwordHasher;
         _hocVienService = hocVienService;
         _dangKyService = dangKyService;
+        _thanhToanService = thanhToanService;
         _emailService = emailService;
     }
 
@@ -60,7 +64,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         };
     }
 
-    
+
     [HttpPost("register")]
     [AllowAnonymous]
     public async Task<IActionResult> GuestRegister([FromBody] DangKyKhachRequest request)
@@ -75,26 +79,26 @@ public class DangKyKhachController : BaseController<DangKyKhach>
 
         var khoaHoc = await _khoaHocService.GetByIdAsync(request.KhoaHocId.ToString());
         if (khoaHoc == null)
-            return BadRequest(new 
-            { 
-                success = false, 
-                message = "Khóa học không tồn tại" 
+            return BadRequest(new
+            {
+                success = false,
+                message = "Khóa học không tồn tại"
             });
 
         var existingRegistrations = await _service.GetAllAsync(
             PageNumber: 1,
             PageSize: 1,
-            Filter: d => d.Email == request.Email && 
-                        d.SoDienThoai == request.SoDienThoai && 
+            Filter: d => d.Email == request.Email &&
+                        d.SoDienThoai == request.SoDienThoai &&
                         d.KhoaHocId == request.KhoaHocId &&
                         (d.TrangThai == TrangThaiDangKy.choduyet || d.TrangThai == TrangThaiDangKy.daduyet)
         );
 
         if (existingRegistrations.Any())
-            return BadRequest(new 
-            { 
-                success = false, 
-                message = "Bạn đã đăng ký khóa học này rồi. Vui lòng chờ xử lý" 
+            return BadRequest(new
+            {
+                success = false,
+                message = "Bạn đã đăng ký khóa học này rồi. Vui lòng chờ xử lý"
             });
 
         var dangKy = new DangKyKhach
@@ -112,10 +116,10 @@ public class DangKyKhachController : BaseController<DangKyKhach>
 
         var result = await _service.AddAsync(dangKy);
         if (result == null)
-            return BadRequest(new 
-            { 
-                success = false, 
-                message = "Đăng ký thất bại" 
+            return BadRequest(new
+            {
+                success = false,
+                message = "Đăng ký thất bại"
             });
 
         var response = new DangKyKhachResponse
@@ -133,15 +137,15 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             TenKhoaHoc = khoaHoc.TenKhoaHoc
         };
 
-        return Ok(new 
-        { 
+        return Ok(new
+        {
             success = true,
             message = "Đăng ký thành công. Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất",
-            data = response 
+            data = response
         });
     }
 
-    
+
     [HttpPost("create")]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> CreateByAdmin([FromBody] DangKyKhachCreateRequest request)
@@ -154,13 +158,13 @@ public class DangKyKhachController : BaseController<DangKyKhach>
                 errors = ModelState
             });
 
-        
+
         var khoaHoc = await _khoaHocService.GetByIdAsync(request.KhoaHocId.ToString());
         if (khoaHoc == null)
-            return BadRequest(new 
-            { 
-                success = false, 
-                message = "Khóa học không tồn tại" 
+            return BadRequest(new
+            {
+                success = false,
+                message = "Khóa học không tồn tại"
             });
 
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -181,10 +185,10 @@ public class DangKyKhachController : BaseController<DangKyKhach>
 
         var result = await _service.AddAsync(dangKy);
         if (result == null)
-            return BadRequest(new 
-            { 
-                success = false, 
-                message = "Tạo đăng ký thất bại" 
+            return BadRequest(new
+            {
+                success = false,
+                message = "Tạo đăng ký thất bại"
             });
 
         await LogCreateAsync(result);
@@ -213,7 +217,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         });
     }
 
-    
+
     [HttpPut("{id}")]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> Update(string id, [FromBody] DangKyKhachUpdateRequest request)
@@ -227,11 +231,13 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             });
 
         var existing = await _service.GetByIdAsync(id);
+        var khoaHoc = await _khoaHocService.GetByIdAsync(existing.KhoaHocId.ToString());
+
         if (existing == null)
-            return NotFound(new 
-            { 
-                success = false, 
-                message = "Không tìm thấy đăng ký" 
+            return NotFound(new
+            {
+                success = false,
+                message = "Không tìm thấy đăng ký"
             });
 
         var oldData = new DangKyKhach
@@ -250,7 +256,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             TaiKhoanXuLyId = existing.TaiKhoanXuLyId
         };
 
-        
+
         if (!string.IsNullOrWhiteSpace(request.HoTen))
             existing.HoTen = request.HoTen;
 
@@ -263,24 +269,23 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         if (request.NoiDung != null)
             existing.NoiDung = request.NoiDung;
 
-        
+
         if (request.KhoaHocId.HasValue)
         {
-            var khoaHoc = await _khoaHocService.GetByIdAsync(request.KhoaHocId.Value.ToString());
             if (khoaHoc == null)
-                return BadRequest(new 
-                { 
-                    success = false, 
-                    message = "Khóa học không tồn tại" 
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Khóa học không tồn tại"
                 });
 
             existing.KhoaHocId = request.KhoaHocId.Value;
         }
 
-        
+
         var previousTrangThai = existing.TrangThai;
 
-        
+
         if (request.TrangThai.HasValue)
             existing.TrangThai = request.TrangThai.Value;
 
@@ -289,8 +294,8 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             var previousKetQua = existing.KetQua;
             existing.KetQua = request.KetQua.Value;
 
-            
-            if (previousKetQua != request.KetQua.Value && 
+
+            if (previousKetQua != request.KetQua.Value &&
                 request.KetQua.Value != KetQuaDangKy.chuaxuly)
             {
                 existing.NgayXuLy = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -300,16 +305,15 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             }
         }
 
-        
-        if (previousTrangThai != TrangThaiDangKy.daduyet && 
+
+        if (previousTrangThai != TrangThaiDangKy.daduyet &&
             existing.TrangThai == TrangThaiDangKy.daduyet)
         {
-            
             var existingAccount = await _userRepository.GetByEmailAsync(existing.Email);
-            
+
             if (existingAccount == null)
             {
-                
+
                 var taiKhoan = new TaiKhoan
                 {
                     TenDangNhap = existing.Email,
@@ -343,11 +347,11 @@ public class DangKyKhachController : BaseController<DangKyKhach>
                             HocVienId = createdHocVien.Id,
                             KhoaHocId = existing.KhoaHocId,
                             NgayDangKy = DateOnly.FromDateTime(DateTime.UtcNow),
-                            TrangThai = TrangThaiDangKy.choxeplop,
+                            TrangThai = TrangThaiDangKy.daduyet,
                         };
 
                         var createdDangKy = await _dangKyService.AddAsync(dangKyHocVien);
-                        
+
                         await _emailService.SendAccountCreationEmailAsync(
                             to: createdAccount.Email,
                             fullName: createdHocVien.HoTen,
@@ -364,22 +368,37 @@ public class DangKyKhachController : BaseController<DangKyKhach>
 
                         if (createdDangKy == null)
                         {
-                            return BadRequest(new 
-                            { 
-                                success = false, 
-                                message = "Tạo đăng ký học viên thất bại" 
+                            return BadRequest(new
+                            {
+                                success = false,
+                                message = "Tạo đăng ký học viên thất bại"
                             });
                         }
+
+                        var createdThanhToan = new ThanhToan
+                        {
+                            DangKyId = createdDangKy.Id,
+                            SoTien = khoaHoc.HocPhi,
+                        };
+                        var thanhToanResult = await _thanhToanService.AddAsync(createdThanhToan);
+                        if (thanhToanResult == null)
+                        {
+                            return BadRequest(new
+                            {
+                                success = false,
+                                message = "Tạo thanh toán thất bại"
+                            });
+                        }
+
                     }
 
                     existing.KetQua = KetQuaDangKy.daxuly;
                 }
-                
+
 
             }
             else
             {
-                
                 existing.KetQua = KetQuaDangKy.daxuly;
             }
         }
@@ -391,37 +410,37 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             ? "Đã duyệt và tạo tài khoản thành công. Thông tin đăng nhập: Email = " + existing.Email + ", Mật khẩu = Số điện thoại"
             : "Cập nhật đăng ký thành công";
 
-        return Ok(new 
-        { 
-            success = true, 
-            message 
+        return Ok(new
+        {
+            success = true,
+            message
         });
     }
 
-    
+
     [HttpDelete("{id}")]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> Delete(string id)
     {
         var existing = await _service.GetByIdAsync(id);
         if (existing == null)
-            return NotFound(new 
-            { 
-                success = false, 
-                message = "Không tìm thấy đăng ký" 
+            return NotFound(new
+            {
+                success = false,
+                message = "Không tìm thấy đăng ký"
             });
 
         await _service.DeleteAsync(existing);
         await LogDeleteAsync(existing);
 
-        return Ok(new 
-        { 
-            success = true, 
-            message = "Xóa đăng ký thành công" 
+        return Ok(new
+        {
+            success = true,
+            message = "Xóa đăng ký thành công"
         });
     }
 
-    
+
     [HttpGet("statistics")]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> GetStatistics()
@@ -442,7 +461,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
             DaXuLy = allRegistrations.Count(d => d.KetQua == KetQuaDangKy.daxuly),
             DaTuChoi = allRegistrations.Count(d => d.KetQua == KetQuaDangKy.datuchoi),
             DaHuy = allRegistrations.Count(d => d.KetQua == KetQuaDangKy.dahuy),
-            DangKyTrongThang = allRegistrations.Count(d => d.NgayDangKy.Month == DateTime.UtcNow.Month && 
+            DangKyTrongThang = allRegistrations.Count(d => d.NgayDangKy.Month == DateTime.UtcNow.Month &&
                                                            d.NgayDangKy.Year == DateTime.UtcNow.Year)
         };
 
@@ -454,7 +473,7 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         });
     }
 
-    
+
     [HttpGet("search")]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> Search(
@@ -463,17 +482,17 @@ public class DangKyKhachController : BaseController<DangKyKhach>
         [FromQuery] int pageSize = 10)
     {
         if (string.IsNullOrWhiteSpace(query))
-            return BadRequest(new 
-            { 
-                success = false, 
-                message = "Từ khóa tìm kiếm không hợp lệ" 
+            return BadRequest(new
+            {
+                success = false,
+                message = "Từ khóa tìm kiếm không hợp lệ"
             });
 
         var registrations = await _service.GetAllAsync(
             PageNumber: pageNumber,
             PageSize: pageSize,
-            Filter: d => d.HoTen.Contains(query) || 
-                        d.Email.Contains(query) || 
+            Filter: d => d.HoTen.Contains(query) ||
+                        d.Email.Contains(query) ||
                         d.SoDienThoai.Contains(query),
             OrderBy: q => q.OrderByDescending(d => d.NgayDangKy),
             Includes: d => d.KhoaHoc
