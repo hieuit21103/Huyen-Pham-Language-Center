@@ -4,8 +4,14 @@
 # ============================================
 # Stage 1: Build
 # ============================================
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 WORKDIR /src
+
+# Install required packages for .NET SDK
+RUN apk add --no-cache icu-libs
+
+# Set environment variables for .NET
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
 # Copy solution file
 COPY ["MsHuyenLC.sln", "./"]
@@ -35,12 +41,18 @@ RUN dotnet publish "MsHuyenLC.API.csproj" -c Release -o /app/publish /p:UseAppHo
 # ============================================
 # Stage 3: Runtime
 # ============================================
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS final
 WORKDIR /app
 
+# Install required packages
+RUN apk add --no-cache icu-libs curl
+
+# Set environment variables
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+
 # Tạo non-root user để chạy app (security best practice)
-RUN addgroup --system --gid 1001 appgroup && \
-    adduser --system --uid 1001 --ingroup appgroup appuser
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
 
 # Copy published files từ publish stage
 COPY --from=publish /app/publish .
