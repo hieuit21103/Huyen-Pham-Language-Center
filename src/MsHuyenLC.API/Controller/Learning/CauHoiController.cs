@@ -15,12 +15,15 @@ namespace MsHuyenLC.API.Controller.Learning;
 public class CauHoiController : BaseController<NganHangCauHoi>
 {
     private readonly ISystemLoggerService _systemLoggerService;
+    private readonly IGenericService<DapAnCauHoi> _dapAnService;
     public CauHoiController(
         QuestionService service,
-        ISystemLoggerService systemLoggerService
+        ISystemLoggerService systemLoggerService,
+        IGenericService<DapAnCauHoi> dapAnService
         ) : base(service)
     {
         _systemLoggerService = systemLoggerService;
+        _dapAnService = dapAnService;
     }
 
     protected override Func<IQueryable<NganHangCauHoi>, IOrderedQueryable<NganHangCauHoi>>? BuildOrderBy(string sortBy, string? sortOrder)
@@ -44,18 +47,6 @@ public class CauHoiController : BaseController<NganHangCauHoi>
                 : (q => q.OrderBy(k => k.Id)),
         };
     }
-
-    // protected override Expression<Func<NganHangCauHoi, bool>>? BuildFilter(string search)
-    // {
-    //     if (string.IsNullOrEmpty(search))
-    //         return null;
-    //     return c => c.LoaiCauHoi.Equals(search)
-    //     || c.KyNang.Equals(search)
-    //     || c.CapDo.Equals(search)
-    //     || c.DoKho.Equals(search);
-    // }
-
-
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] List<CauHoiRequest> requests)
     {
@@ -125,7 +116,6 @@ public class CauHoiController : BaseController<NganHangCauHoi>
                 CapDo = request.CapDo,
                 DoKho = request.DoKho,
                 LoiThoai = request.LoiThoai,
-                DoanVan = request.DoanVan,
                 CacDapAn = dapAnCauHois
             };
             var result = await _service.AddAsync(cauHoi);
@@ -181,7 +171,6 @@ public class CauHoiController : BaseController<NganHangCauHoi>
             UrlHinhAnh = existingCauHoi.UrlHinhAnh,
             UrlAmThanh = existingCauHoi.UrlAmThanh,
             LoiThoai = existingCauHoi.LoiThoai,
-            DoanVan = existingCauHoi.DoanVan,
             CapDo = existingCauHoi.CapDo,
             DoKho = existingCauHoi.DoKho
         };
@@ -198,13 +187,24 @@ public class CauHoiController : BaseController<NganHangCauHoi>
             existingCauHoi.UrlAmThanh = request.UrlAmThanh;
         if (request.LoiThoai != null)
             existingCauHoi.LoiThoai = request.LoiThoai;
-        if (request.DoanVan != null)
-            existingCauHoi.DoanVan = request.DoanVan;
         if (request.CapDo.HasValue)
             existingCauHoi.CapDo = request.CapDo.Value;
         if (request.DoKho.HasValue)
             existingCauHoi.DoKho = request.DoKho.Value;
-
+        if (request.CacDapAn?.Count > 0)
+        {
+            existingCauHoi.CacDapAn.Clear();
+            foreach (var dapAnRequest in request.CacDapAn)
+            {
+                existingCauHoi.CacDapAn.Add(new DapAnCauHoi
+                {
+                    Nhan = dapAnRequest.Nhan,
+                    NoiDung = dapAnRequest.NoiDung,
+                    Dung = dapAnRequest.Dung,
+                    GiaiThich = dapAnRequest.GiaiThich
+                });
+            }
+        }
         await _service.UpdateAsync(existingCauHoi);
         await _systemLoggerService.LogUpdateAsync(GetCurrentUserId(), oldData, existingCauHoi, GetClientIpAddress());
         return Ok(new

@@ -11,7 +11,6 @@ public class CauHoiResponse
     public string? UrlHinhAnh { get; set; }
     public string? UrlAmThanh { get; set; }
     public string? LoiThoai { get; set; }
-    public string? DoanVan { get; set; }
     public CapDo CapDo { get; set; } = CapDo.A1;
     public DoKho DoKho { get; set; } = DoKho.de;
     public ICollection<DapAnResponse>? DapAnCauHois { get; set; }

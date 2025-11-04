@@ -49,9 +49,15 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<NganHangCauHoi>()
             .Navigation(n => n.CacDapAn)
             .AutoInclude();
+        modelBuilder.Entity<NganHangCauHoi>()
+            .Navigation(n => n.CacNhom)
+            .AutoInclude();
         modelBuilder.Entity<DapAnCauHoi>().ToTable("DapAnCauHoi");
         modelBuilder.Entity<CauHoiDeThi>().ToTable("CauHoiDeThi");
         modelBuilder.Entity<NhomCauHoi>().ToTable("NhomCauHoi");
+        modelBuilder.Entity<NhomCauHoi>()
+            .Navigation(nc => nc.CacChiTiet)
+            .AutoInclude();
         modelBuilder.Entity<NhomCauHoiChiTiet>().ToTable("NhomCauHoiChiTiet");
         modelBuilder.Entity<DeThi>().ToTable("DeThi");
         modelBuilder.Entity<DeThi>()

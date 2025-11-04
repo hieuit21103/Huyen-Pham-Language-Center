@@ -6,7 +6,7 @@ import { getHocViens } from "~/apis/HocVien";
 import { getGiaoViens } from "~/apis/GiaoVien";
 import { getKhoaHocs } from "~/apis/KhoaHoc";
 import { getDangKys } from "~/apis/DangKy";
-import { VaiTro, TrangThaiDangKy, type HocVien, type KhoaHoc, type LopHoc } from "~/types/index";
+import { VaiTro, TrangThaiDangKy, type HocVien, type KhoaHoc, type LopHoc, type DangKy } from "~/types/index";
 import { setLightTheme } from "./_layout";
 
 interface DashboardStats {
@@ -15,19 +15,6 @@ interface DashboardStats {
   value: string;
   color: string;
   loading?: boolean;
-}
-
-interface Registration {
-  id?: string;
-  hocVienId?: string;
-  hocVien?: HocVien
-  khoaHocId?: string;
-  khoaHoc?: KhoaHoc;
-  lopHocId?: string;
-  lopHoc?: LopHoc;
-  ngayDangKy?: string;
-  ngayXepLop?: string;
-  trangThai?: TrangThaiDangKy;
 }
 
 export default function AdminDashboard() {
@@ -40,7 +27,7 @@ export default function AdminDashboard() {
     { icon: BookOpen, label: "Khóa học", value: "0", color: "purple", loading: true },
     { icon: FileText, label: "Đăng ký mới", value: "0", color: "orange", loading: true },
   ]);
-  const [recentRegistrations, setRecentRegistrations] = useState<Registration[]>([]);
+  const [recentRegistrations, setRecentRegistrations] = useState<DangKy[]>([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -95,7 +82,7 @@ export default function AdminDashboard() {
     switch(status) {
       case TrangThaiDangKy.ChoDuyet: return "Chờ duyệt";
       case TrangThaiDangKy.DaDuyet: return "Đã duyệt";
-      case TrangThaiDangKy.ChoXepLop: return "Chờ xếp lớp";
+      case TrangThaiDangKy.DaThanhToan: return "Đã thanh toán";
       case TrangThaiDangKy.DaXepLop: return "Đã xếp lớp";
       case TrangThaiDangKy.Huy: return "Đã hủy";
       default: return "Không xác định";
@@ -108,7 +95,7 @@ export default function AdminDashboard() {
       case TrangThaiDangKy.DaXepLop:
         return "bg-green-100 text-green-800";
       case TrangThaiDangKy.ChoDuyet:
-      case TrangThaiDangKy.ChoXepLop:
+      case TrangThaiDangKy.DaThanhToan:
         return "bg-yellow-100 text-yellow-800";
       case TrangThaiDangKy.Huy:
         return "bg-red-100 text-red-800";

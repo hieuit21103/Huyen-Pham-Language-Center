@@ -4,7 +4,7 @@ import { getLopHocs, createLopHoc, updateLopHoc, deleteLopHoc, getLopHocStudents
 import { getKhoaHocs } from "~/apis/KhoaHoc";
 import { getPhanCongByLopHoc, createPhanCong, deletePhanCong } from "~/apis/PhanCong";
 import { getGiaoViens } from "~/apis/GiaoVien";
-import type { LopHoc, TrangThaiLopHoc, PhanCong, GiaoVien } from "~/types/index";
+import type { LopHoc, TrangThaiLopHoc, PhanCong, GiaoVien, PhanCongResponse } from "~/types/index";
 import { setLightTheme } from "./_layout";
 import Pagination from "~/components/Pagination";
 
@@ -21,12 +21,11 @@ export default function AdminClasses() {
   const [students, setStudents] = useState<any[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [teachers, setTeachers] = useState<GiaoVien[]>([]);
-  const [assignedTeachers, setAssignedTeachers] = useState<PhanCong[]>([]);
+  const [assignedTeachers, setAssignedTeachers] = useState<PhanCongResponse[]>([]);
   const [loadingTeachers, setLoadingTeachers] = useState(false);
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [message, setMessage] = useState("");
   
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   
@@ -132,7 +131,8 @@ export default function AdminClasses() {
     
     const response = await getLopHocStudents(cls.id!);
     if (response.success && response.data) {
-      setStudents(Array.isArray(response.data) ? response.data : []);
+      const danhSach = response.data.danhSachHocVien || [];
+      setStudents(Array.isArray(danhSach) ? danhSach : []);
     } else {
       setStudents([]);
     }
@@ -147,7 +147,8 @@ export default function AdminClasses() {
     
     const response = await getPhanCongByLopHoc(cls.id!);
     if (response.success && response.data) {
-      setAssignedTeachers(Array.isArray(response.data) ? response.data : []);
+      const dataArray = Array.isArray(response.data) ? response.data : [response.data];
+      setAssignedTeachers(dataArray);
     } else {
       setAssignedTeachers([]);
     }
@@ -469,7 +470,7 @@ export default function AdminClasses() {
                           Số điện thoại
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                          Ngày sinh
+                          Giới tính
                         </th>
                       </tr>
                     </thead>
@@ -495,12 +496,14 @@ export default function AdminClasses() {
                             {student.email || "—"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {student.soDienThoai || "—"}
+                            {student.sdt || "—"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {student.ngaySinh 
-                              ? new Date(student.ngaySinh).toLocaleDateString('vi-VN')
-                              : "—"}
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              student.gioiTinh === 0 ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'
+                            }`}>
+                              {student.gioiTinh === 0 ? 'Nam' : 'Nữ'}
+                            </span>
                           </td>
                         </tr>
                       ))}
@@ -563,7 +566,7 @@ export default function AdminClasses() {
                       .filter(t => !assignedTeachers.some(at => at.giaoVienId === t.id))
                       .map((teacher) => (
                         <option key={teacher.id} value={teacher.id}>
-                          {teacher.hoTen} - {teacher.taiKhoan?.email || teacher.chuyenMon}
+                          {teacher.hoTen}
                         </option>
                       ))}
                   </select>
@@ -601,10 +604,7 @@ export default function AdminClasses() {
                           Họ tên
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                          Email
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                          Số điện thoại
+                          Ngày phân công
                         </th>
                         <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                           Thao tác
@@ -620,20 +620,19 @@ export default function AdminClasses() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white font-semibold">
-                                {assignment.giaoVien?.hoTen?.charAt(0) || "?"}
+                                {assignment.tenGiaoVien?.charAt(0) || "?"}
                               </div>
                               <div className="ml-3">
                                 <p className="text-sm font-medium text-gray-900">
-                                  {assignment.giaoVien?.hoTen || "Chưa có tên"}
+                                  {assignment.tenGiaoVien || "Chưa có tên"}
                                 </p>
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {assignment.giaoVien?.taiKhoan?.email || "—"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {assignment.giaoVien?.taiKhoan?.sdt || "—"}
+                            {assignment.ngayPhanCong 
+                              ? new Date(assignment.ngayPhanCong).toLocaleDateString('vi-VN')
+                              : "—"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <button

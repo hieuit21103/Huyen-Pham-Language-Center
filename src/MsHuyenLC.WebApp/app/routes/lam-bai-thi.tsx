@@ -15,25 +15,12 @@ import {
   LogOut,
   LayoutDashboard
 } from "lucide-react";
-import { getDeThi, getDeThiQuestions } from "~/apis/DeThi";
+import { getDeThi, getDeThiQuestionsGrouped } from "~/apis/DeThi";
 import { submitBaiThi } from "~/apis/PhienLamBai";
+import type { DapAnCauHoi, CauHoi, NhomCauHoi as BaseNhomCauHoi } from "~/types";
 
-interface DapAn {
-  nhan?: string;
-  noiDung?: string;
-  dung?: boolean;
-}
-
-interface CauHoi {
-  id?: string;
-  noiDungCauHoi?: string;
-  urlHinhAnh?: string;
-  urlAmThanh?: string;
-  doanVan?: string;
-  loiThoai?: string;
-  dapAnCauHois?: DapAn[];
-  dapAns?: DapAn[];
-  cacDapAn?: DapAn[]; // Actual field name from API
+interface NhomCauHoi extends Omit<BaseNhomCauHoi, 'cacChiTiet'> {
+  cauHois?: CauHoi[];
 }
 
 interface CauTraLoi {
@@ -50,8 +37,9 @@ export default function LamBaiThi() {
   const [loading, setLoading] = useState(true);
   const [tenDe, setTenDe] = useState("");
   const [thoiGianLamBai, setThoiGianLamBai] = useState(0); // phút
+  const [nhomCauHois, setNhomCauHois] = useState<NhomCauHoi[]>([]);
   const [cauHois, setCauHois] = useState<CauHoi[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentNhomIndex, setCurrentNhomIndex] = useState(0);
   const [answers, setAnswers] = useState<Map<string, CauTraLoi>>(new Map());
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(new Set());
   const [phienLamBaiId, setPhienLamBaiId] = useState<string>("");
@@ -131,31 +119,24 @@ export default function LamBaiThi() {
         }
       }
 
-      const cauHoiRes = await getDeThiQuestions(deThiId!);
+      const cauHoiRes = await getDeThiQuestionsGrouped(deThiId!);
       if (cauHoiRes.success && cauHoiRes.data) {
-        const actualData = (cauHoiRes.data as any).data || cauHoiRes.data;
-
-        let questionsData: CauHoi[] = [];
-        if (Array.isArray(actualData)) {
-          questionsData = actualData;
-        } else if (typeof actualData === 'object' && actualData !== null) {
-          const possibleArrays = [
-            actualData.items,
-            actualData.questions,
-            actualData.cauHois,
-            Object.values(actualData)
-          ];
-
-          for (const possibleArray of possibleArrays) {
-            if (Array.isArray(possibleArray) && possibleArray.length > 0) {
-              questionsData = possibleArray;
-              break;
+        const responseData = cauHoiRes.data;
+        
+        if (responseData.nhomCauHois && Array.isArray(responseData.nhomCauHois)) {
+          setNhomCauHois(responseData.nhomCauHois);
+          
+          const allQuestions: CauHoi[] = [];
+          responseData.nhomCauHois.forEach((nhom: NhomCauHoi) => {
+            if (nhom.cauHois) {
+              allQuestions.push(...nhom.cauHois);
             }
-          }
+          });
+          setCauHois(allQuestions);
+          
+          console.log("Loaded grouped questions:", responseData.nhomCauHois);
+          console.log("Total questions:", allQuestions.length);
         }
-
-        console.log("Loaded questions:", questionsData);
-        setCauHois(questionsData);
       }
     } catch (error) {
       console.error("Error loading exam:", error);
@@ -275,7 +256,7 @@ export default function LamBaiThi() {
     return "text-red-600";
   };
 
-  const currentQuestion = cauHois[currentIndex];
+  const currentNhom = nhomCauHois[currentNhomIndex];
   const totalAnswered = answers.size;
   const totalFlagged = flaggedQuestions.size;
 
@@ -290,7 +271,7 @@ export default function LamBaiThi() {
     );
   }
 
-  if (!currentQuestion) {
+  if (!currentNhom || nhomCauHois.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -313,12 +294,6 @@ export default function LamBaiThi() {
       <div className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h1 className="text-xl font-bold text-gray-900">{tenDe}</h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Câu {currentIndex + 1} / {cauHois.length}
-              </p>
-            </div>
             {/* Timer */}
             <div className="flex items-center space-x-6">
               <div className={`flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg ${getTimeColor()}`}>
@@ -343,146 +318,172 @@ export default function LamBaiThi() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Question Content */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              {/* Question Header */}
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center space-x-3">
-                  <span className="flex items-center justify-center w-10 h-10 bg-gray-900 text-white rounded-full font-bold">
-                    {currentIndex + 1}
-                  </span>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Câu hỏi {currentIndex + 1}
-                  </h2>
-                </div>
-
-                <button
-                  onClick={() => toggleFlag(currentQuestion.id!)}
-                  className={`p-2 rounded-lg transition-colors ${flaggedQuestions.has(currentQuestion.id!)
-                      ? 'bg-yellow-100 text-yellow-600'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  title="Đánh dấu câu hỏi"
-                >
-                  <Flag className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Question Content */}
-              <div className="space-y-6">
-                {/* Đoạn văn (nếu có) */}
-                {currentQuestion.doanVan && (
+          <div className="lg:col-span-3 space-y-6">
+            {/* Nội dung chung của nhóm (đoạn văn, audio, hình ảnh) */}
+            {(currentNhom.noiDung || currentNhom.urlAmThanh || currentNhom.urlHinhAnh) && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4">
+                <h2 className="text-xl font-bold text-gray-900">{currentNhom.tieuDe}</h2>
+                
+                {/* Đoạn văn */}
+                {currentNhom.noiDung && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <h3 className="font-semibold text-blue-900 mb-2">Đoạn văn:</h3>
-                    <p className="text-gray-800 whitespace-pre-wrap">{currentQuestion.doanVan}</p>
+                    <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">{currentNhom.noiDung}</p>
                   </div>
                 )}
 
-                {/* Audio (nếu có) */}
-                {currentQuestion.urlAmThanh && (
+                {/* Audio */}
+                {currentNhom.urlAmThanh && (
                   <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                     <div className="flex items-center space-x-3 mb-2">
                       <Volume2 className="w-5 h-5 text-purple-600" />
                       <h3 className="font-semibold text-purple-900">Nghe audio:</h3>
                     </div>
                     <audio controls className="w-full">
-                      <source src={currentQuestion.urlAmThanh} type="audio/mpeg" />
+                      <source src={currentNhom.urlAmThanh} type="audio/mpeg" />
                     </audio>
                   </div>
                 )}
 
-                {/* Image (nếu có) */}
-                {currentQuestion.urlHinhAnh && (
+                {/* Image */}
+                {currentNhom.urlHinhAnh && (
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                     <img
-                      src={currentQuestion.urlHinhAnh}
-                      alt="Question illustration"
-                      className="max-w-full h-auto rounded-lg"
+                      src={currentNhom.urlHinhAnh}
+                      alt="Nhóm câu hỏi"
+                      className="max-w-full h-auto rounded-lg mx-auto"
                     />
                   </div>
                 )}
+              </div>
+            )}
 
-                {/* Question Text */}
-                <div className="text-lg text-gray-900 font-medium">
-                  {currentQuestion.noiDungCauHoi}
+            {/* Danh sách câu hỏi trong nhóm */}
+            {currentNhom.cauHois?.map((cauHoi, idx) => (
+              <div 
+                key={cauHoi.id} 
+                id={`question-${cauHoi.id}`}
+                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 scroll-mt-24"
+              >
+                {/* Question Header */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <span className="flex items-center justify-center w-10 h-10 bg-gray-900 text-white rounded-full font-bold text-sm">
+                      {cauHois.findIndex(q => q.id === cauHoi.id) + 1}
+                    </span>
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      Câu hỏi {cauHois.findIndex(q => q.id === cauHoi.id) + 1}
+                    </h2>
+                  </div>
+
+                  <button
+                    onClick={() => toggleFlag(cauHoi.id!)}
+                    className={`p-2 rounded-lg transition-colors ${
+                      flaggedQuestions.has(cauHoi.id!)
+                        ? 'bg-yellow-100 text-yellow-600'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                    title="Đánh dấu câu hỏi"
+                  >
+                    <Flag className="w-5 h-5" />
+                  </button>
                 </div>
 
-                {/* Answers */}
-                <div className="space-y-3">
-                  {(currentQuestion.cacDapAn || currentQuestion.dapAnCauHois || currentQuestion.dapAns || []).map((dapAn, index) => {
-                    const isSelected = answers.get(currentQuestion.id!)?.cauTraLoi === dapAn.nhan;
+                {/* Question Content */}
+                <div className="space-y-4">
+                  {/* Question Text */}
+                  <div className="text-base text-gray-900 font-medium">
+                    {cauHoi.noiDungCauHoi}
+                  </div>
 
-                    return (
-                      <label
-                        key={index}
-                        className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${isSelected
-                            ? 'border-gray-900 bg-gray-50'
-                            : 'border-gray-200 hover:border-gray-300 bg-white'
-                          }`}
-                      >
-                        <input
-                          type="radio"
-                          name={`question-${currentQuestion.id}`}
-                          value={dapAn.nhan}
-                          checked={isSelected}
-                          onChange={(e) => handleAnswer(currentQuestion.id!, e.target.value)}
-                          className="mt-1 mr-4 w-5 h-5 text-gray-900 focus:ring-gray-900"
-                        />
-                        <div className="flex-1">
-                          <span className="font-bold text-gray-900 mr-2">{dapAn.nhan}.</span>
-                          <span className="text-gray-800">{dapAn.noiDung}</span>
-                        </div>
+                  {/* Answers - Trắc nghiệm */}
+                  {cauHoi.loaiCauHoi === 0 && (
+                    <div className="space-y-2">
+                      {(cauHoi.cacDapAn || []).map((dapAn: DapAnCauHoi, index: number) => {
+                        const isSelected = answers.get(cauHoi.id!)?.cauTraLoi === dapAn.nhan;
+
+                        return (
+                          <label
+                            key={index}
+                            className={`flex items-start p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                              isSelected
+                                ? 'border-gray-900 bg-gray-50'
+                                : 'border-gray-200 hover:border-gray-300 bg-white'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name={`question-${cauHoi.id}`}
+                              value={dapAn.nhan}
+                              checked={isSelected}
+                              onChange={(e) => handleAnswer(cauHoi.id!, e.target.value)}
+                              className="mt-1 mr-3 w-4 h-4 text-gray-900 focus:ring-gray-900"
+                            />
+                            <div className="flex-1">
+                              <span className="font-bold text-gray-900 mr-2">{dapAn.nhan}.</span>
+                              <span className="text-gray-800">{dapAn.noiDung}</span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Answers - Tự luận */}
+                  {cauHoi.loaiCauHoi === 1 && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Câu trả lời của bạn:
                       </label>
-                    );
-                  })}
-
-                  {/* Debug info */}
-                  {!(currentQuestion.cacDapAn || currentQuestion.dapAnCauHois || currentQuestion.dapAns) && (
-                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-yellow-800 text-sm">
-                        ⚠️ Không tìm thấy đáp án cho câu hỏi này
+                      <textarea
+                        value={answers.get(cauHoi.id!)?.cauTraLoi || ''}
+                        onChange={(e) => handleAnswer(cauHoi.id!, e.target.value)}
+                        rows={6}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-gray-900 focus:ring-gray-900 resize-none"
+                        placeholder="Nhập câu trả lời của bạn..."
+                      />
+                      <p className="text-xs text-gray-500">
+                        {answers.get(cauHoi.id!)?.cauTraLoi?.length || 0} ký tự
                       </p>
-                      <details className="mt-2">
-                        <summary className="text-xs text-yellow-700 cursor-pointer">Xem dữ liệu câu hỏi</summary>
-                        <pre className="mt-2 text-xs bg-white p-2 rounded overflow-auto max-h-40">
-                          {JSON.stringify(currentQuestion, null, 2)}
-                        </pre>
-                      </details>
                     </div>
                   )}
                 </div>
               </div>
+            ))}
 
-              {/* Navigation */}
-              <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
-                <button
-                  onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
-                  disabled={currentIndex === 0}
-                  className="flex items-center space-x-2 px-6 py-3 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                  <span className="font-medium">Câu trước</span>
-                </button>
+            {/* Navigation */}
+            <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <button
+                onClick={() => setCurrentNhomIndex(Math.max(0, currentNhomIndex - 1))}
+                disabled={currentNhomIndex === 0}
+                className="flex items-center space-x-2 px-6 py-3 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5" />
+                <span className="font-medium">Trang trước</span>
+              </button>
 
-                <button
-                  onClick={() => setCurrentIndex(Math.min(cauHois.length - 1, currentIndex + 1))}
-                  disabled={currentIndex === cauHois.length - 1}
-                  className="flex items-center space-x-2 px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <span className="font-medium">Câu tiếp</span>
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
+              <span className="text-sm text-gray-600">
+                Trang {currentNhomIndex + 1} / {nhomCauHois.length}
+              </span>
+
+              <button
+                onClick={() => setCurrentNhomIndex(Math.min(nhomCauHois.length - 1, currentNhomIndex + 1))}
+                disabled={currentNhomIndex === nhomCauHois.length - 1}
+                className="flex items-center space-x-2 px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <span className="font-medium">Trang tiếp</span>
+                <ChevronRight className="w-5 h-5" />
+              </button>
             </div>
           </div>
 
           {/* Question Navigator Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sticky top-24">
-              <h3 className="font-bold text-gray-900 mb-4">Danh sách câu hỏi</h3>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sticky top-24 space-y-4">
+              <h3 className="font-bold text-gray-900">Danh sách câu hỏi</h3>
 
               {/* Stats */}
-              <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="grid grid-cols-2 gap-2">
                 <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-center">
                   <p className="text-xs text-green-700 font-medium">Đã trả lời</p>
                   <p className="text-lg font-bold text-green-900">{totalAnswered}</p>
@@ -493,31 +494,39 @@ export default function LamBaiThi() {
                 </div>
               </div>
 
-              {/* Question Grid */}
-              <div className="grid grid-cols-5 gap-2 max-h-96 overflow-y-auto">
-                {cauHois.map((cq, idx) => {
-                  const isAnswered = answers.has(cq.id!);
-                  const isFlagged = flaggedQuestions.has(cq.id!);
-                  const isCurrent = idx === currentIndex;
+              {/* Question Grid cho nhóm hiện tại */}
+              <div className="border-t border-gray-200 pt-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                  Câu hỏi trong nhóm {currentNhomIndex + 1}
+                </h4>
+                <div className="grid grid-cols-5 gap-2 max-h-64 overflow-y-auto">
+                  {currentNhom.cauHois?.map((cq, localIdx) => {
+                    const globalIdx = cauHois.findIndex(q => q.id === cq.id);
+                    const isAnswered = answers.has(cq.id!);
+                    const isFlagged = flaggedQuestions.has(cq.id!);
 
-                  return (
-                    <button
-                      key={cq.id}
-                      onClick={() => setCurrentIndex(idx)}
-                      className={`relative aspect-square rounded-lg font-bold text-sm transition-all ${isCurrent
-                          ? 'bg-gray-900 text-white ring-2 ring-gray-900 ring-offset-2'
-                          : isAnswered
+                    return (
+                      <button
+                        key={cq.id}
+                        onClick={() => {
+                          // Scroll đến câu hỏi
+                          const element = document.getElementById(`question-${cq.id}`);
+                          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }}
+                        className={`relative aspect-square rounded-lg font-bold text-sm transition-all ${
+                          isAnswered
                             ? 'bg-green-100 text-green-900 hover:bg-green-200'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
-                    >
-                      {idx + 1}
-                      {isFlagged && (
-                        <Flag className="w-3 h-3 absolute -top-1 -right-1 text-yellow-600 fill-yellow-600" />
-                      )}
-                    </button>
-                  );
-                })}
+                      >
+                        {globalIdx + 1}
+                        {isFlagged && (
+                          <Flag className="w-3 h-3 absolute -top-1 -right-1 text-yellow-600 fill-yellow-600" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>

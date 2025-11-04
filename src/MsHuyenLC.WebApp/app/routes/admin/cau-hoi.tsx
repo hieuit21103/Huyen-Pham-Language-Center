@@ -12,35 +12,18 @@ import {
   // downloadImportTemplate,
   deleteBulkCauHois 
 } from "~/apis/CauHoi";
+import { getNhomCauHois } from "~/apis/NhomCauHoi";
 import { uploadImage, uploadAudio } from "~/apis/Upload";
 import Pagination from "~/components/Pagination";
-import type { LoaiCauHoi, KyNang, CapDo, DoKho } from "~/types/index";
+import type { LoaiCauHoi, KyNang, CapDo, DoKho, NhomCauHoiChiTiet } from "~/types/index";
 import { setLightTheme } from "./_layout";
-
-interface DapAn {
-  nhan?: string;
-  noiDung?: string;
-  dung?: boolean;
-  giaiThich?: string;
-}
-
-interface CauHoi {
-  id?: string;
-  noiDungCauHoi?: string;
-  loaiCauHoi?: LoaiCauHoi;
-  kyNang?: KyNang;
-  urlHinhAnh?: string;
-  urlAmThanh?: string;
-  loiThoai?: string;
-  doanVan?: string;
-  capDo?: CapDo;
-  doKho?: DoKho;
-  dapAnCauHois?: DapAn[];
-}
+import type { NhomCauHoi, CauHoi } from "~/types/index";
+import type { DapAnCauHoi } from "~/types/exam.types";
 
 export default function AdminQuestionBank() {
   const [searchTerm, setSearchTerm] = useState("");
   const [questions, setQuestions] = useState<CauHoi[]>([]);
+  const [nhomCauHois, setNhomCauHois] = useState<NhomCauHoi[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
@@ -51,7 +34,6 @@ export default function AdminQuestionBank() {
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
   const [importFile, setImportFile] = useState<File | null>(null);
   
-  // Pagination states 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   
@@ -79,12 +61,11 @@ export default function AdminQuestionBank() {
     urlHinhAnh: "",
     urlAmThanh: "",
     loiThoai: "",
-    doanVan: "",
     capDo: 0 as CapDo,
     doKho: 0 as DoKho,
   });
-  
-  const [dapAns, setDapAns] = useState<DapAn[]>([
+
+  const [dapAns, setDapAns] = useState<DapAnCauHoi[]>([
     { nhan: "A", noiDung: "", dung: false, giaiThich: "" },
     { nhan: "B", noiDung: "", dung: false, giaiThich: "" },
     { nhan: "C", noiDung: "", dung: false, giaiThich: "" },
@@ -101,6 +82,7 @@ export default function AdminQuestionBank() {
 
   useEffect(() => {
     loadQuestions();
+    loadNhomCauHois();
   }, []);
 
   const loadQuestions = async () => {
@@ -117,6 +99,18 @@ export default function AdminQuestionBank() {
     setLoading(false);
   };
 
+  const loadNhomCauHois = async () => {
+    const response = await getNhomCauHois({ 
+      pageNumber: 1,
+      pageSize: 1000,
+      sortBy: 'id', 
+      sortOrder: 'desc' 
+    });
+    if (response.success && Array.isArray(response.data)) {
+      setNhomCauHois(response.data);
+    }
+  };
+
   const handleCreate = () => {
     setEditingQuestion(null);
     setFormData({
@@ -126,7 +120,6 @@ export default function AdminQuestionBank() {
       urlHinhAnh: "",
       urlAmThanh: "",
       loiThoai: "",
-      doanVan: "",
       capDo: 0,
       doKho: 0,
     });
@@ -149,14 +142,13 @@ export default function AdminQuestionBank() {
       noiDungCauHoi: question.noiDungCauHoi || "",
       loaiCauHoi: question.loaiCauHoi ?? 0,
       kyNang: question.kyNang ?? 0,
-      urlHinhAnh: question.urlHinhAnh || "",
+      urlHinhAnh: question.urlHinh || "",
       urlAmThanh: question.urlAmThanh || "",
       loiThoai: question.loiThoai || "",
-      doanVan: question.doanVan || "",
       capDo: question.capDo ?? 0,
       doKho: question.doKho ?? 0,
     });
-    setDapAns(question.dapAnCauHois || [
+    setDapAns(question.cacDapAn || [
       { nhan: "A", noiDung: "", dung: false, giaiThich: "" },
       { nhan: "B", noiDung: "", dung: false, giaiThich: "" },
       { nhan: "C", noiDung: "", dung: false, giaiThich: "" },
@@ -164,7 +156,7 @@ export default function AdminQuestionBank() {
     ]);
     setImageFile(null);
     setAudioFile(null);
-    setImagePreview(question.urlHinhAnh || "");
+    setImagePreview(question.urlHinh || "");
     setAudioPreview(question.urlAmThanh || "");
     setShowModal(true);
   };
@@ -202,7 +194,7 @@ export default function AdminQuestionBank() {
       ...formData,
       urlHinhAnh: imageUrl,
       urlAmThanh: audioUrl,
-      dapAnCauHois: dapAns.filter(d => d.noiDung?.trim()),
+      cacDapAn: dapAns.filter(d => d.noiDung?.trim()),
     };
     
     if (editingQuestion) {
@@ -704,9 +696,9 @@ export default function AdminQuestionBank() {
                     </td>
                     <td className="px-6 py-4">
                       <p className="text-sm text-gray-900 line-clamp-2">{question.noiDungCauHoi || "—"}</p>
-                      {question.dapAnCauHois && question.dapAnCauHois.length > 0 && (
+                      {question.cacDapAn && question.cacDapAn.length > 0 && (
                         <p className="text-xs text-gray-500 mt-1">
-                          {question.dapAnCauHois.filter(d => d.dung).map(d => d.nhan).join(", ")} đúng
+                          {question.cacDapAn.filter(d => d.dung).map(d => d.nhan).join(", ")} đúng
                         </p>
                       )}
                     </td>
@@ -910,18 +902,8 @@ export default function AdminQuestionBank() {
                   </div>
                 </div>
 
-                {/* Đoạn văn / Lời thoại */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Đoạn văn (cho Reading)</label>
-                    <textarea
-                      value={formData.doanVan}
-                      onChange={(e) => setFormData({ ...formData, doanVan: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
-                      rows={3}
-                      placeholder="Nhập đoạn văn đọc hiểu..."
-                    />
-                  </div>
+                {/* Lời thoại */}
+                <div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Lời thoại (cho Listening)</label>
                     <textarea

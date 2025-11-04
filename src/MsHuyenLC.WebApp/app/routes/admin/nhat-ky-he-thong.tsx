@@ -8,29 +8,11 @@ import {
 import { formatDateTime } from "~/utils/date-utils";
 import { setLightTheme } from "./_layout";
 import Pagination from "~/components/Pagination";
+import type { NhatKyHeThong } from "~/types/system.types";
 
-interface SystemLog {
-  id?: string;
-  taiKhoanId?: string;
-  taiKhoan?: any;
-  thoiGian?: string;
-  hanhDong?: string;
-  chiTiet?: string;
-  duLieuCu?: string;
-  duLieuMoi?: string;
-  ip?: string;
-  // Old format support
-  tenTaiKhoan?: string;
-  action?: string;
-  description?: string;
-  ipAddress?: string;
-  createdAt?: string;
-  module?: string;
-  statusCode?: number;
-}
 
 export default function AdminSystemLogger() {
-  const [logs, setLogs] = useState<SystemLog[]>([]);
+  const [logs, setLogs] = useState<NhatKyHeThong[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   
@@ -116,11 +98,11 @@ export default function AdminSystemLogger() {
     const csv = [
       ["Thời gian", "Tài khoản", "Hành động", "Chi tiết", "IP Address", "Dữ liệu cũ", "Dữ liệu mới"].join(","),
       ...logs.map(log => [
-        log.thoiGian || log.createdAt || "",
-        log.taiKhoan?.tenDangNhap || log.tenTaiKhoan || "",
-        log.hanhDong || log.action || "",
-        `"${(log.chiTiet || log.description || "").replace(/"/g, '""')}"`,
-        log.ip || log.ipAddress || "",
+        log.thoiGian || "",
+        log.taiKhoan?.tenDangNhap || "",
+        log.hanhDong || "",
+        `"${(log.chiTiet || "").replace(/"/g, '""')}"`,
+        log.ip || "",
         `"${(log.duLieuCu || "").replace(/"/g, '""')}"`,
         `"${(log.duLieuMoi || "").replace(/"/g, '""')}"`
       ].join(","))
@@ -157,16 +139,15 @@ export default function AdminSystemLogger() {
     return "text-gray-500";
   };
 
-  const uniqueActions = Array.from(new Set(logs.map(l => l.hanhDong || l.action).filter(Boolean)));
+  const uniqueActions = Array.from(new Set(logs.map(l => l.hanhDong).filter(Boolean)));
 
   const filteredLogs = logs.filter(log => {
     const matchSearch = !searchTerm || 
-      (log.chiTiet || log.description || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (log.hanhDong || log.action || "").toLowerCase().includes(searchTerm.toLowerCase());
+      (log.chiTiet || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (log.hanhDong || "").toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchAction = !filterAction || 
-      (log.hanhDong === filterAction) || 
-      (log.action === filterAction);
+      (log.hanhDong === filterAction);
     
     return matchSearch && matchAction;
   });
@@ -219,18 +200,6 @@ export default function AdminSystemLogger() {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-blue-700 text-xs font-medium mb-1">Tổng số log</p>
           <p className="text-2xl font-bold text-blue-900">{filteredLogs.length}</p>
-        </div>
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <p className="text-green-700 text-xs font-medium mb-1">Thành công</p>
-          <p className="text-2xl font-bold text-green-900">
-            {filteredLogs.filter(l => l.statusCode && l.statusCode >= 200 && l.statusCode < 300).length}
-          </p>
-        </div>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-700 text-xs font-medium mb-1">Lỗi</p>
-          <p className="text-2xl font-bold text-red-900">
-            {filteredLogs.filter(l => l.statusCode && l.statusCode >= 400).length}
-          </p>
         </div>
         <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
           <p className="text-purple-700 text-xs font-medium mb-1">Người dùng</p>
@@ -343,29 +312,29 @@ export default function AdminSystemLogger() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-900">
                         <Clock className="w-4 h-4 mr-2 text-gray-400" />
-                        {log.thoiGian || log.createdAt ? formatDateTime(log.thoiGian || log.createdAt!) : "—"}
+                        {log.thoiGian ? formatDateTime(log.thoiGian) : "—"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <User className="w-4 h-4 mr-2 text-gray-400" />
                         <span className="text-sm font-medium text-gray-900">
-                          {log.taiKhoan?.tenDangNhap || log.tenTaiKhoan || "System"}
+                          {log.taiKhoan?.tenDangNhap || "System"}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getActionColor(log.hanhDong || log.action)}`}>
-                        {log.hanhDong || log.action || "Unknown"}
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getActionColor(log.hanhDong)}`}>
+                        {log.hanhDong || "Unknown"}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 max-w-md" title={log.chiTiet || log.description}>
-                        {log.chiTiet || log.description || "—"}
+                      <div className="text-sm text-gray-900 max-w-md" title={log.chiTiet}>
+                        {log.chiTiet || "—"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {log.ip || log.ipAddress || "—"}
+                      {log.ip || "—"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       {(log.duLieuCu || log.duLieuMoi) && (

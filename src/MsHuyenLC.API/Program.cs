@@ -133,6 +133,7 @@ builder.Services.AddScoped<AssignmentService>();
 builder.Services.AddScoped<ScheduleService>();
 builder.Services.AddScoped<TestService>();
 builder.Services.AddScoped<QuestionService>();
+builder.Services.AddScoped<GroupQuestionService>();
 builder.Services.AddScoped<IGenericService<DeThi>, TestService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped(typeof(IGenericService<>), typeof(GenericService<>));

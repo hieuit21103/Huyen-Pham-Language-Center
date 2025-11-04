@@ -6,6 +6,7 @@ using MsHuyenLC.Application.Interfaces.System;
 using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
 using MsHuyenLC.Application.Services.Learnings;
 using MsHuyenLC.Application.DTOs.Learning.NhomCauHoi;
+using System.Text.RegularExpressions;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
@@ -15,12 +16,15 @@ namespace MsHuyenLC.API.Controller.Learning;
 public class NhomCauHoiController : BaseController<NhomCauHoi>
 {
     private readonly ISystemLoggerService _systemLoggerService;
+    private readonly GroupQuestionService _groupQuestionService;
     public NhomCauHoiController(
         IGenericService<NhomCauHoi> service,
-        ISystemLoggerService systemLoggerService
+        ISystemLoggerService systemLoggerService,
+        GroupQuestionService groupQuestionService
         ) : base(service)
     {
         _systemLoggerService = systemLoggerService;
+        _groupQuestionService = groupQuestionService;
     }
 
     protected override Func<IQueryable<NhomCauHoi>, IOrderedQueryable<NhomCauHoi>>? BuildOrderBy(string sortBy, string? sortOrder)
@@ -37,6 +41,26 @@ public class NhomCauHoiController : BaseController<NhomCauHoi>
                 ? (q => q.OrderByDescending(k => k.Id))
                 : (q => q.OrderBy(k => k.Id)),
         };
+    }
+
+    [HttpGet("{id}/questions")]
+    public async Task<IActionResult> GetQuestions(string id)
+    {
+        var questions = await _groupQuestionService.GetQuestionsByGroupId(id);
+        if (questions == null)
+        {
+            return NotFound(new
+            {
+                success = false,
+                message = "Không tìm thấy câu hỏi nào trong nhóm"
+            });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            data = questions
+        });
     }
 
     [HttpPost]
@@ -65,10 +89,10 @@ public class NhomCauHoiController : BaseController<NhomCauHoi>
         await _systemLoggerService.LogCreateAsync(GetCurrentUserId(), nhomCauHoi, GetClientIpAddress());
         if (result == null)
         {
-            return BadRequest(new 
-            { 
-                success = false, 
-                message = "Không thể tạo nhóm câu hỏi" 
+            return BadRequest(new
+            {
+                success = false,
+                message = "Không thể tạo nhóm câu hỏi"
             });
         }
         return Ok(new
@@ -76,6 +100,37 @@ public class NhomCauHoiController : BaseController<NhomCauHoi>
             success = true,
             message = "Tạo nhóm câu hỏi thành công",
             data = nhomCauHoi
+        });
+    }
+
+    [HttpPost("{id}/add-question")]
+    public async Task<IActionResult> AddQuestion(string id,[FromBody] ThemCauHoiRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState
+            });
+        }
+    
+        var result = await _groupQuestionService.AddQuestionToGroup(id, request.cauHoiId, request.thuTu);
+        if (result == null)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Không thể thêm câu hỏi vào nhóm"
+            });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            message = "Thêm câu hỏi vào nhóm thành công",
+            data = result
         });
     }
 

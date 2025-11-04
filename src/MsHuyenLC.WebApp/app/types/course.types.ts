@@ -6,6 +6,7 @@ import type {
   TrangThaiDangKy, 
   KetQuaDangKy 
 } from './enums';
+import type { HocVien } from './user.types';
 
 // Khóa học
 export interface KhoaHocRequest {
@@ -85,11 +86,14 @@ export interface DangKyUpdateRequest {
 export interface DangKy {
   id?: string;
   hocVienId?: string;
+  hocVien?: HocVien;
   khoaHocId?: string;
-  ngayDangKy?: string;
-  trangThai?: TrangThaiDangKy;
-  hocVien?: any;
   khoaHoc?: KhoaHoc;
+  lopHocId?: string;
+  lopHoc?: LopHoc;
+  ngayDangKy?: string;
+  ngayXepLop?: string;
+  trangThai?: TrangThaiDangKy;
 }
 
 // Đăng ký khách
@@ -118,4 +122,19 @@ export interface DangKyKhachRequest {
   khoaHocId?: string;
   noiDung?: string;
   gioiTinh?: number;
+}
+
+export interface DangKyKhach {
+    id?: string;
+    hoTen?: string;
+    email?: string;
+    soDienThoai?: string;
+    khoaHocId?: string;
+    ngayDangKy?: string;
+    trangThai?: TrangThaiDangKy;
+    ghiChu?: string;
+    khoaHoc?: {
+        id?: string;
+        tenKhoaHoc?: string;
+    };
 }

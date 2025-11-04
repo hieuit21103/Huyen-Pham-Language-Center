@@ -10,7 +10,7 @@ public class CauHoiUpdateRequest
     public string? UrlHinhAnh { get; set; }
     public string? UrlAmThanh { get; set; }
     public string? LoiThoai { get; set; }
-    public string? DoanVan { get; set; }
     public CapDo? CapDo { get; set; }
     public DoKho? DoKho { get; set; }
+    public List<DapAnRequest>? CacDapAn { get; set; }
 }

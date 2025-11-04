@@ -269,7 +269,7 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
                         id = phienLamBai.Id,
                         tongCauHoi = phienLamBai.TongCauHoi,
                         soCauDung = phienLamBai.SoCauDung,
-                        tongDiem = phienLamBai.Diem,
+                        diem = phienLamBai.Diem,
                         thoiGianLam = phienLamBai.ThoiGianLam,
                         ngayLam = phienLamBai.NgayLam,
                         deThiId = phienLamBai.DeThiId,
@@ -337,8 +337,8 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
                     id = plb.Id,
                     deThiId = plb.DeThiId,
                     deThi = plb.DeThi,
-                    tongDiem = plb.Diem,
-                    ngayNop = plb.NgayLam,
+                    diem = plb.Diem,
+                    ngayLam = plb.NgayLam,
                 }),
                 count = phienLamBai.Count()
             });
@@ -379,9 +379,9 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
                 {
                     id = plb.Id,
                     hocVienId = plb.HocVienId,
-                    tongDiem = plb.Diem,
-                    ngayNop = plb.NgayLam,
-                    nhanXet = plb.SoCauDung
+                    diem = plb.Diem,
+                    ngayLam = plb.NgayLam,
+                    soCauDung = plb.SoCauDung
                 }),
                 total = phienLamBai.Count()
             });

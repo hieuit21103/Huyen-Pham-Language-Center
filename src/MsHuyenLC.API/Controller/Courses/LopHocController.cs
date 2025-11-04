@@ -203,7 +203,27 @@ public class LopHocController : BaseController<LopHoc>
             Filter: dk => dk.LopHocId.ToString() == id,
             Includes: dk => dk.HocVien
         );
+        var DanhSachHocVien = hocViens
+            .Select(dk => new HocVienLopResponse
+            {
+                Id = dk.HocVien.Id.ToString(),
+                HoTen = dk.HocVien.HoTen,
+                Email = dk.HocVien.TaiKhoan.Email ?? "",
+                Sdt = dk.HocVien.TaiKhoan.Sdt ?? "",
+                GioiTinh = dk.HocVien.GioiTinh ?? 0
+            })
+            .ToList();
+        var response = new DanhSachLopResponse
+        {
+            Id = lopHoc.Id.ToString(),
+            TenLop = lopHoc.TenLop,
+            DanhSachHocVien = DanhSachHocVien
+        };
 
-        return Ok(hocViens);
+        return Ok(new {
+            success = true,
+            message = "Lấy danh sách học viên thành công",
+            data = response
+        });
     }
 }

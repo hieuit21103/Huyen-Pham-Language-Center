@@ -1,15 +1,17 @@
-import { Search, Plus, Edit, Trash2, FileText, X, Clock, Eye, CheckSquare, Square } from "lucide-react";
+import { Search, Plus, Edit, Trash2, FileText, X, Clock, Eye, CheckSquare, Square, List } from "lucide-react";
 import { useState, useEffect } from "react";
 import { 
   getCauHois,
   getKyThis,
   getDeThis, 
-  createDeThi, 
+  createDeThi,
+  createMixedDeThi,
   updateDeThi, 
   deleteDeThi, 
   generateDeThi, 
-  getDeThiQuestions } from "~/apis/index";
-import type { LoaiDeThi, LoaiCauHoi, KyNang, CapDo, DoKho, CauHoi, DeThi, KyThi } from "~/types/index";
+  getDeThiQuestions,
+  getNhomCauHois } from "~/apis/index";
+import type { LoaiDeThi, LoaiCauHoi, KyNang, CapDo, DoKho, CauHoi, DeThi, KyThi, NhomCauHoi } from "~/types/index";
 import { setLightTheme } from "./_layout";
 
 export default function AdminExams() {
@@ -17,6 +19,7 @@ export default function AdminExams() {
   const [exams, setExams] = useState<DeThi[]>([]);
   const [examPeriods, setExamPeriods] = useState<KyThi[]>([]);
   const [questions, setQuestions] = useState<CauHoi[]>([]);
+  const [nhomCauHois, setNhomCauHois] = useState<NhomCauHoi[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -26,7 +29,9 @@ export default function AdminExams() {
   const [viewingExam, setViewingExam] = useState<DeThi | null>(null);
   const [examQuestions, setExamQuestions] = useState<CauHoi[]>([]);
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
+  const [selectedNhomCauHois, setSelectedNhomCauHois] = useState<string[]>([]);
   const [message, setMessage] = useState("");
+  const [activeTab, setActiveTab] = useState<'questions' | 'groups'>('questions');
   
   // Modal filters
   const [modalSearchTerm, setModalSearchTerm] = useState("");
@@ -60,6 +65,7 @@ export default function AdminExams() {
     loadExams();
     loadQuestions();
     loadExamPeriods();
+    loadNhomCauHois();
   }, []);
 
   const loadExams = async () => {
@@ -85,9 +91,18 @@ export default function AdminExams() {
     }
   };
 
+  const loadNhomCauHois = async () => {
+    const response = await getNhomCauHois({ pageNumber: 1, pageSize: 1000 });
+    if (response.success && response.data) {
+      setNhomCauHois(response.data);
+    }
+  };
+
   const handleCreate = () => {
     setEditingExam(null);
     setSelectedQuestions([]);
+    setSelectedNhomCauHois([]);
+    setActiveTab('questions');
     setModalSearchTerm("");
     setFilterLoaiCauHoi("");
     setFilterKyNang("");
@@ -117,6 +132,8 @@ export default function AdminExams() {
   const handleEdit = async (exam: DeThi) => {
     setEditingExam(exam);
     setSelectedQuestions([]);
+    setSelectedNhomCauHois([]);
+    setActiveTab('questions');
     setModalSearchTerm("");
     setFilterLoaiCauHoi("");
     setFilterKyNang("");
@@ -248,17 +265,27 @@ export default function AdminExams() {
     });
   };
 
+  const toggleNhomCauHoiSelection = (nhomId: string) => {
+    setSelectedNhomCauHois(prev => {
+      if (prev.includes(nhomId)) {
+        return prev.filter(id => id !== nhomId);
+      } else {
+        return [...prev, nhomId];
+      }
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const submitData = {
-      ...formData,
-      kyThiId: formData.kyThiId,
-      cauHoiIds: selectedQuestions,
-      tongCauHoi: selectedQuestions.length,
-    };
-
     if (editingExam) {
+      // Update - only use old method with individual questions
+      const submitData = {
+        ...formData,
+        kyThiId: formData.kyThiId,
+        cauHoiIds: selectedQuestions,
+        tongCauHoi: selectedQuestions.length,
+      };
       console.log("Submitting update with data:", submitData);
       const response = await updateDeThi(editingExam.id!, submitData);
       setMessage(response.message || "");
@@ -266,18 +293,52 @@ export default function AdminExams() {
         loadExams();
         setShowModal(false);
         setSelectedQuestions([]);
+        setSelectedNhomCauHois([]);
       }
     } else {
-      if (selectedQuestions.length === 0) {
-        setMessage("Vui lòng chọn ít nhất một câu hỏi");
+      // Create - check if mixed mode (có cả nhóm và câu hỏi độc lập)
+      const hasGroups = selectedNhomCauHois.length > 0;
+      const hasIndividualQuestions = selectedQuestions.length > 0;
+      
+      if (!hasGroups && !hasIndividualQuestions) {
+        setMessage("Vui lòng chọn ít nhất một nhóm câu hỏi hoặc một câu hỏi");
         return;
       }
-      const response = await createDeThi(submitData);
-      setMessage(response.message || "");
-      if (response.success) {
-        loadExams();
-        setShowModal(false);
-        setSelectedQuestions([]);
+
+      if (hasGroups) {
+        // Use create-mixed API when groups are selected
+        const mixedData = {
+          tenDe: formData.tenDe,
+          thoiGianLamBai: formData.thoiGianLamBai,
+          loaiDeThi: formData.loaiDeThi,
+          kyThiId: formData.kyThiId,
+          nhomCauHoiIds: selectedNhomCauHois,
+          cauHoiDocLapIds: selectedQuestions,
+        };
+        const response = await createMixedDeThi(mixedData);
+        setMessage(response.message || "");
+        if (response.success) {
+          loadExams();
+          setShowModal(false);
+          setSelectedQuestions([]);
+          setSelectedNhomCauHois([]);
+        }
+      } else {
+        // Use old API when only individual questions selected
+        const submitData = {
+          ...formData,
+          kyThiId: formData.kyThiId,
+          cauHoiIds: selectedQuestions,
+          tongCauHoi: selectedQuestions.length,
+        };
+        const response = await createDeThi(submitData);
+        setMessage(response.message || "");
+        if (response.success) {
+          loadExams();
+          setShowModal(false);
+          setSelectedQuestions([]);
+          setSelectedNhomCauHois([]);
+        }
       }
     }
   };
@@ -533,95 +594,119 @@ export default function AdminExams() {
                 )}
 
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Chọn câu hỏi ({selectedQuestions.length}/{filteredModalQuestions.length} câu)
-                      {editingExam && loadingQuestions && (
-                        <span className="ml-2 text-xs text-blue-600">Đang tải câu hỏi hiện tại...</span>
-                      )}
-                    </label>
-                    <button
-                      type="button"
-                      onClick={clearFilters}
-                      className="text-xs text-blue-600 hover:text-blue-700 underline"
-                    >
-                      Xóa bộ lọc
-                    </button>
+                  {/* Tabs */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex border-b border-gray-200">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('questions')}
+                        className={`px-4 py-2 font-medium text-sm transition-colors ${
+                          activeTab === 'questions'
+                            ? 'text-blue-600 border-b-2 border-blue-600'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        Câu hỏi độc lập ({selectedQuestions.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('groups')}
+                        className={`px-4 py-2 font-medium text-sm transition-colors ${
+                          activeTab === 'groups'
+                            ? 'text-blue-600 border-b-2 border-blue-600'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        Nhóm câu hỏi ({selectedNhomCauHois.length})
+                      </button>
+                    </div>
+                    {activeTab === 'questions' && (
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        className="text-xs text-blue-600 hover:text-blue-700 underline"
+                      >
+                        Xóa bộ lọc
+                      </button>
+                    )}
                   </div>
 
-                  {/* Search and Filters */}
-                  <div className="mb-4 space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="Tìm kiếm câu hỏi..."
-                        value={modalSearchTerm}
-                        onChange={(e) => setModalSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                      />
-                    </div>
+                  {/* Tab Content - Câu hỏi độc lập */}
+                  {activeTab === 'questions' && (
+                    <>
+                      {/* Search and Filters */}
+                      <div className="mb-4 space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input
+                            type="text"
+                            placeholder="Tìm kiếm câu hỏi..."
+                            value={modalSearchTerm}
+                            onChange={(e) => setModalSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
 
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                      <select
-                        value={filterLoaiCauHoi}
-                        onChange={(e) => setFilterLoaiCauHoi(e.target.value === "" ? "" : Number(e.target.value))}
-                        className="text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                      >
-                        <option value="">Tất cả loại</option>
-                        <option value="0">Trắc nghiệm</option>
-                        <option value="1">Tự luận</option>
-                      </select>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                          <select
+                            value={filterLoaiCauHoi}
+                            onChange={(e) => setFilterLoaiCauHoi(e.target.value === "" ? "" : Number(e.target.value))}
+                            className="text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="">Tất cả loại</option>
+                            <option value="0">Trắc nghiệm</option>
+                            <option value="1">Tự luận</option>
+                          </select>
 
-                      <select
-                        value={filterKyNang}
-                        onChange={(e) => setFilterKyNang(e.target.value === "" ? "" : Number(e.target.value))}
-                        className="text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                      >
-                        <option value="">Tất cả kỹ năng</option>
-                        <option value="0">Reading</option>
-                        <option value="1">Writing</option>
-                        <option value="2">Listening</option>
-                      </select>
+                          <select
+                            value={filterKyNang}
+                            onChange={(e) => setFilterKyNang(e.target.value === "" ? "" : Number(e.target.value))}
+                            className="text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="">Tất cả kỹ năng</option>
+                            <option value="0">Reading</option>
+                            <option value="1">Writing</option>
+                            <option value="2">Listening</option>
+                          </select>
 
-                      <select
-                        value={filterCapDo}
-                        onChange={(e) => setFilterCapDo(e.target.value === "" ? "" : Number(e.target.value))}
-                        className="text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                      >
-                        <option value="">Tất cả cấp độ</option>
-                        <option value="0">A1</option>
-                        <option value="1">A2</option>
-                        <option value="2">B1</option>
-                        <option value="3">B2</option>
-                        <option value="4">C1</option>
-                        <option value="5">C2</option>
-                      </select>
+                          <select
+                            value={filterCapDo}
+                            onChange={(e) => setFilterCapDo(e.target.value === "" ? "" : Number(e.target.value))}
+                            className="text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="">Tất cả cấp độ</option>
+                            <option value="0">A1</option>
+                            <option value="1">A2</option>
+                            <option value="2">B1</option>
+                            <option value="3">B2</option>
+                            <option value="4">C1</option>
+                            <option value="5">C2</option>
+                          </select>
 
-                      <select
-                        value={filterDoKho}
-                        onChange={(e) => setFilterDoKho(e.target.value === "" ? "" : Number(e.target.value))}
-                        className="text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                      >
-                        <option value="">Tất cả độ khó</option>
-                        <option value="0">Dễ</option>
-                        <option value="1">Trung bình</option>
-                        <option value="2">Khó</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="border border-gray-300 rounded-lg max-h-96 overflow-y-auto">
-                    {filteredModalQuestions.length === 0 ? (
-                      <div className="p-8 text-center text-gray-500">
-                        <p>Không tìm thấy câu hỏi phù hợp</p>
+                          <select
+                            value={filterDoKho}
+                            onChange={(e) => setFilterDoKho(e.target.value === "" ? "" : Number(e.target.value))}
+                            className="text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="">Tất cả độ khó</option>
+                            <option value="0">Dễ</option>
+                            <option value="1">Trung bình</option>
+                            <option value="2">Khó</option>
+                          </select>
+                        </div>
                       </div>
-                    ) : (
-                      filteredModalQuestions.map((question) => {
-                      const questionData = question as any;
-                      const isSelected = selectedQuestions.includes(question.id!);
-                      
-                      return (
+
+                      <div className="border border-gray-300 rounded-lg max-h-96 overflow-y-auto">
+                        {filteredModalQuestions.length === 0 ? (
+                          <div className="p-8 text-center text-gray-500">
+                            <p>Không tìm thấy câu hỏi phù hợp</p>
+                          </div>
+                        ) : (
+                          filteredModalQuestions.map((question) => {
+                          const questionData = question as any;
+                          const isSelected = selectedQuestions.includes(question.id!);
+                          
+                          return (
                         <div
                           key={question.id}
                           onClick={() => toggleQuestionSelection(question.id!)}
@@ -657,14 +742,6 @@ export default function AdminExams() {
                                   {getDoKhoText(question.doKho)}
                                 </span>
                               </div>
-
-                              {/* Đoạn văn */}
-                              {questionData.doanVan && (
-                                <div className="mt-2 p-2 bg-blue-50 border-l-2 border-blue-400 rounded text-xs">
-                                  <p className="font-medium text-blue-800 mb-1">Đoạn văn:</p>
-                                  <p className="text-gray-700 line-clamp-3">{questionData.doanVan}</p>
-                                </div>
-                              )}
 
                               {/* Hình ảnh */}
                               {(questionData.urlHinhAnh || questionData.urlHinh) && (
@@ -721,7 +798,83 @@ export default function AdminExams() {
                         </div>
                       );
                     }))}
-                  </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Tab Content - Nhóm câu hỏi */}
+                  {activeTab === 'groups' && (
+                    <div className="border border-gray-300 rounded-lg max-h-96 overflow-y-auto">
+                      {nhomCauHois.length === 0 ? (
+                        <div className="p-8 text-center text-gray-500">
+                          <p>Không có nhóm câu hỏi nào</p>
+                        </div>
+                      ) : (
+                        nhomCauHois.map((nhom) => {
+                          const isSelected = selectedNhomCauHois.includes(nhom.id!);
+                          
+                          return (
+                            <div
+                              key={nhom.id}
+                              onClick={() => toggleNhomCauHoiSelection(nhom.id!)}
+                              className={`p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 ${
+                                isSelected ? 'bg-blue-50 border-blue-200' : ''
+                              }`}
+                            >
+                              <div className="flex items-start space-x-3">
+                                <div className="mt-1 flex-shrink-0">
+                                  {isSelected ? (
+                                    <CheckSquare className="w-5 h-5 text-blue-600" />
+                                  ) : (
+                                    <Square className="w-5 h-5 text-gray-400" />
+                                  )}
+                                </div>
+                                
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <List className="w-4 h-4 text-gray-600" />
+                                    <p className="text-sm font-medium text-gray-900">
+                                      {nhom.tieuDe || 'Không có tiêu đề'}
+                                    </p>
+                                  </div>
+                                  
+                                  {nhom.noiDung && (
+                                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                                      {nhom.noiDung}
+                                    </p>
+                                  )}
+                                  
+                                  <div className="flex gap-2 flex-wrap">
+                                    <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                                      {nhom.soLuongCauHoi || 0} câu hỏi
+                                    </span>
+                                    {nhom.capDo !== undefined && (
+                                      <span className="text-xs px-2 py-1 bg-green-200 text-green-700 rounded">
+                                        {getCapDoText(nhom.capDo)}
+                                      </span>
+                                    )}
+                                    {nhom.doKho !== undefined && (
+                                      <span className="text-xs px-2 py-1 bg-purple-200 text-purple-700 rounded">
+                                        {getDoKhoText(nhom.doKho)}
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  {nhom.urlHinhAnh && (
+                                    <img 
+                                      src={nhom.urlHinhAnh} 
+                                      alt={nhom.tieuDe}
+                                      className="mt-2 max-w-xs rounded border shadow-sm" 
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex space-x-4 pt-4">
@@ -829,13 +982,6 @@ export default function AdminExams() {
                                 </div>
 
                                 {/* Đoạn văn đọc hiểu */}
-                                {questionData.doanVan && (
-                                  <div className="mt-3 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
-                                    <p className="text-sm font-medium text-blue-800 mb-2">Đoạn văn:</p>
-                                    <p className="text-gray-700 whitespace-pre-wrap">{questionData.doanVan}</p>
-                                  </div>
-                                )}
-
                                 {/* Hình ảnh */}
                                 {(questionData.urlHinhAnh || questionData.urlHinh) && (
                                   <img 

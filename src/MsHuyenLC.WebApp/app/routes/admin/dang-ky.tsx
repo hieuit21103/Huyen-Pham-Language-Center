@@ -3,22 +3,10 @@ import { useState, useEffect } from "react";
 import { deleteDangKy, getDangKys, updateDangKy } from "~/apis/DangKy";
 import { getKhoaHocs } from "~/apis/KhoaHoc";
 import { getLopHocs } from "~/apis/LopHoc";
-import { TrangThaiDangKy, type HocVien, type KhoaHoc, type LopHoc } from "~/types/index";
+import { TrangThaiDangKy, type DangKy, type HocVien, type KhoaHoc, type LopHoc } from "~/types/index";
 import { setLightTheme } from "./_layout";
 import Pagination from "~/components/Pagination";
 
-interface Registration {
-  id?: string;
-  hocVienId?: string;
-  hocVien?: HocVien | null;
-  khoaHocId?: string;
-  khoaHoc?: KhoaHoc | null;
-  lopHocId?: string;
-  lopHoc?: LopHoc | null;
-  ngayDangKy?: string;
-  ngayXepLop?: string;
-  trangThai?: TrangThaiDangKy;
-}
 
 interface Course {
   id?: string;
@@ -28,7 +16,7 @@ interface Course {
 
 export default function AdminRegistrations() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [registrations, setRegistrations] = useState<DangKy[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [classes, setClasses] = useState<LopHoc[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +24,7 @@ export default function AdminRegistrations() {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [message, setMessage] = useState("");
   const [showAssignModal, setShowAssignModal] = useState(false);
-  const [selectedRegistration, setSelectedRegistration] = useState<Registration | null>(null);
+  const [selectedRegistration, setSelectedRegistration] = useState<DangKy | null>(null);
   const [selectedClassId, setSelectedClassId] = useState("");
 
   // Pagination
@@ -112,7 +100,7 @@ export default function AdminRegistrations() {
     }
   };
 
-  const handleOpenAssignModal = (registration: Registration) => {
+  const handleOpenAssignModal = (registration: DangKy) => {
     setSelectedRegistration(registration);
     setSelectedClassId("");
     setShowAssignModal(true);
@@ -139,7 +127,7 @@ export default function AdminRegistrations() {
     }
   };
 
-  const handleDelete = async (registration: Registration) => {
+  const handleDelete = async (registration: DangKy) => {
     if (!confirm("Bạn có chắc chắn muốn xóa đăng ký này?")) return;
 
     const response = await deleteDangKy(registration.id!);

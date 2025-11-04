@@ -11,7 +11,6 @@ public class NganHangCauHoi
     public string? UrlAmThanh { get; set; }
     public string? UrlHinhAnh { get; set; }
     public string? LoiThoai { get; set; }
-    public string? DoanVan { get; set; }
     public virtual ICollection<DapAnCauHoi> CacDapAn { get; set; } = new List<DapAnCauHoi>();
     public virtual ICollection<NhomCauHoiChiTiet> CacNhom { get; set; } = new List<NhomCauHoiChiTiet>();
 }

@@ -1,9 +1,6 @@
-// User Types - Giáo viên và Học viên
-
-import type { GioiTinh, TrangThaiHocVien } from './enums';
+import type { GioiTinh, TrangThaiHocVien, TrangThaiTaiKhoan, VaiTro } from './enums';
 import type { TaiKhoan } from './auth.types';
 
-// Giáo viên
 export interface GiaoVienRequest {
   hoTen?: string;
   chuyenMon?: string;
@@ -29,7 +26,6 @@ export interface GiaoVien {
   taiKhoan?: TaiKhoan;
 }
 
-// Học viên
 export interface HocVienUpdateRequest {
   hoTen?: string;
   ngaySinh?: string;
@@ -44,27 +40,34 @@ export interface HocVien {
   ngaySinh?: string;
   gioiTinh?: GioiTinh;
   diaChi?: string;
+  ngayDangKy?: string;
   taiKhoanId?: string;
   taiKhoan?: TaiKhoan;
-  dangKys?: any[];
+  trangThai?: TrangThaiTaiKhoan;
 }
 
-/**
- * Interface cho request tạo/cập nhật giáo vụ
- */
 export interface GiaoVuRequest {
     hoTen: string;
     boPhan?: string;
     taiKhoanId?: string;
 }
 
-/**
- * Interface cho giáo vụ
- */
 export interface GiaoVu {
     id: string;
     hoTen: string;
     boPhan?: string;
     taiKhoanId?: string;
     taiKhoan?: any;
+}
+
+export interface Profile {
+  id?: string;
+  tenDangNhap?: string;
+  matkhau?: string;
+  email?: string;
+  sdt?: string;
+  vaiTro?: VaiTro;
+  trangThai?: TrangThaiTaiKhoan;
+  avatar?: string;
+  ngaytao?: string;
 }

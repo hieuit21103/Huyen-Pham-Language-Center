@@ -76,6 +76,35 @@ export async function createDeThi(request: DeThiRequest): Promise<ApiResponse> {
 }
 
 /**
+ * Tạo đề thi hỗn hợp với cả nhóm câu hỏi và câu hỏi độc lập
+ */
+export async function createMixedDeThi(request: {
+    tenDe: string;
+    thoiGianLamBai: number;
+    loaiDeThi: number;
+    kyThiId?: string;
+    nhomCauHoiIds: string[];
+    cauHoiDocLapIds: string[];
+}): Promise<ApiResponse> {
+    try {
+        const token = getJwtToken();
+        const response = await fetch(DeThiApiUrl('create-mixed'), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+            body: JSON.stringify(request),
+        });
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        return { success: false, message: `Lỗi: ${error}` };
+    }
+}
+
+/**
  * Cập nhật đề thi
  */
 export async function updateDeThi(id: string, request: DeThiUpdateRequest): Promise<ApiResponse> {
@@ -169,12 +198,32 @@ export async function getDeThis(params?: PaginationParams): Promise<ApiResponse>
 }
 
 /**
- * Lấy câu hỏi của đề thi
+ * Lấy câu hỏi của đề thi (flat list - deprecated)
  */
 export async function getDeThiQuestions(deThiId: string): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
         const response = await fetch(DeThiApiUrl(`${deThiId}/questions`), {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+        });
+
+        return await response.json();
+    } catch (error) {
+        return { success: false, message: `Lỗi: ${error}` };
+    }
+}
+
+/**
+ * Lấy câu hỏi của đề thi theo nhóm (RECOMMENDED)
+ */
+export async function getDeThiQuestionsGrouped(deThiId: string): Promise<ApiResponse> {
+    try {
+        const token = getJwtToken();
+        const response = await fetch(DeThiApiUrl(`${deThiId}/questions-grouped`), {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

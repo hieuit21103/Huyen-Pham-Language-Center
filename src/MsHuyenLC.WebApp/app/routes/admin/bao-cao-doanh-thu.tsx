@@ -5,32 +5,7 @@ import { getDangKys } from "~/apis/DangKy";
 import { setLightTheme } from "./_layout";
 import type { ThanhToan } from "~/apis/ThanhToan";
 import type { DangKy } from "~/types/course.types";
-
-interface DoanhThuStats {
-  tongDoanhThu: number;
-  tongDaThanhToan: number;
-  tongChuaThanhToan: number;
-  soLuongGiaoDich: number;
-  soLuongDaThanhToan: number;
-  soLuongChuaThanhToan: number;
-}
-
-interface DoanhThuTheoNgay {
-  ngay: string;
-  soLuong: number;
-  tongTien: number;
-  daThanhToan: number;
-  chuaThanhToan: number;
-}
-
-interface DoanhThuTheoKhoaHoc {
-  khoaHocId: string;
-  tenKhoaHoc: string;
-  soLuong: number;
-  tongTien: number;
-  daThanhToan: number;
-  chuaThanhToan: number;
-}
+import type { DoanhThuStats, DoanhThuTheoNgay, DoanhThuTheoKhoaHoc } from "~/types/finance.types";
 
 export default function BaoCaoDoanhThu() {
   const [loading, setLoading] = useState(true);
@@ -72,7 +47,7 @@ export default function BaoCaoDoanhThu() {
     if (!dangKyId) return { tenHocVien: "—", tenKhoaHoc: "—", khoaHocId: "" };
     const dangKy = dangKys.find(dk => dk.id === dangKyId);
     return {
-      tenHocVien: dangKy?.hocVien?.hoTen || dangKy?.hocVien?.ten || "—",
+      tenHocVien: dangKy?.hocVien?.hoTen || dangKy?.hocVien?.hoTen || "—",
       tenKhoaHoc: dangKy?.khoaHoc?.tenKhoaHoc || "—",
       khoaHocId: dangKy?.khoaHocId || "",
     };

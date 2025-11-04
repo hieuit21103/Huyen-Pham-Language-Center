@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { getProfile, updateProfile } from "~/apis/Profile";
 import { getByTaiKhoanId, updateHocVien } from "~/apis/HocVien";
-import { GioiTinh, TrangThaiTaiKhoan, VaiTro, type DeThi, type HocVien, type TaiKhoan, type KyThi } from "~/types/index";
+import { GioiTinh, TrangThaiTaiKhoan, VaiTro, type DeThi, type HocVien, type Profile, type TaiKhoan, type KyThi, type LichHoc, type PhienLamBai} from "~/types/index";
 import { getLichHocByStudent, getLichHocByTeacher } from "~/apis/LichHoc";
 import { getPhanCongByLopHoc } from "~/apis/PhanCong";
 import { getPhienLamBaiByHocVien } from "~/apis/PhienLamBai";
@@ -17,71 +17,11 @@ import {
   TextCursor, Bell, Send, FileText
 } from "lucide-react";
 
-interface Profile {
-  id?: string;
-  tenDangNhap?: string;
-  matkhau?: string;
-  email?: string;
-  sdt?: string;
-  vaiTro?: VaiTro;
-  trangThai?: TrangThaiTaiKhoan;
-  avatar?: string;
-  ngaytao?: string;
-}
-
-interface Student {
-  id?: string;
-  hoTen?: string;
-  ngaySinh?: string;
-  gioiTinh?: GioiTinh;
-  diaChi?: string;
-  ngayDangKy?: string;
-  taiKhoanId?: string;
-  taiKhoan?: TaiKhoan;
-  trangThai?: TrangThaiTaiKhoan;
-}
-
-interface LichHoc {
-  id?: string;
-  ngayHoc?: string;
-  thoiGianBatDau?: string;
-  thoiGianKetThuc?: string;
-  tenLopHoc?: string;
-  tenPhongHoc?: string;
-  tenGiaoVien?: string;
-  thu?: number; 
-  gioBatDau?: string;
-  gioKetThuc?: string;
-  tuNgay?: string;
-  denNgay?: string;
-  coHieuLuc?: boolean;
-  lopHoc?: {
-    id?: string;
-    tenLop?: string;
-    tenLopHoc?: string;
-    khoaHoc?: {
-      tenKhoaHoc?: string;
-    };
-  };
-  phongHoc?: {
-    id?: string;
-    tenPhong?: string;
-    tenPhongHoc?: string;
-  };
-}
-
-interface PhienLamBai {
-  id?: string;
-  tongDiem?: number;
-  ngayNop?: string;
-  deThi?: DeThi;
-}
-
 export default function Dashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Profile>();
-  const [student, setStudent] = useState<Student>();
+  const [student, setStudent] = useState<HocVien>();
   const [lichHocs, setLichHocs] = useState<LichHoc[]>([]);
   const [phienLamBais, setPhienLamBais] = useState<PhienLamBai[]>([]);
   const [kyThis, setKyThis] = useState<KyThi[]>([]);
@@ -428,7 +368,7 @@ export default function Dashboard() {
   // Thống kê bài thi (cho học sinh)
   const completedExams = phienLamBais.length;
   const averageScore = phienLamBais.length > 0
-    ? phienLamBais.reduce((sum, bt) => sum + (bt.tongDiem || 0), 0) / phienLamBais.length
+    ? phienLamBais.reduce((sum, bt) => sum + (bt.diem || 0), 0) / phienLamBais.length
     : 0;
 
   return (
@@ -771,10 +711,10 @@ export default function Dashboard() {
                       {phienLamBais.slice(0, 10).map((plb, index) => (
                         <tr key={plb.id || index} className="hover:bg-gray-50">
                           <td className="px-4 py-3 text-sm text-gray-900">{plb.deThi?.tenDe || "—"}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{formatDate(plb.ngayNop)}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{formatDate(plb.ngayLam)}</td>
                           <td className="px-4 py-3 text-sm">
-                            {plb.tongDiem !== undefined && plb.tongDiem !== null ? (
-                              <span className="font-semibold text-gray-900">{plb.tongDiem.toFixed(1)}</span>
+                            {plb.diem !== undefined && plb.diem !== null ? (
+                              <span className="font-semibold text-gray-900">{plb.diem.toFixed(1)}</span>
                             ) : (
                               <span className="text-gray-400">—</span>
                             )}

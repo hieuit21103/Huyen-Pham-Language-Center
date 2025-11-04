@@ -8,23 +8,7 @@ import { getProfile } from "~/apis/Profile";
 import { getByTaiKhoanId } from "~/apis/HocVien";
 import { getDangKysByHocVien } from "~/apis/DangKy";
 import { VaiTro } from "~/types/index";
-
-interface DangKy {
-  id?: string;
-  ngayDangKy?: string;
-  trangThai?: number;
-  khoaHoc?: {
-    tenKhoaHoc?: string;
-    hocPhi?: number;
-    thoiLuong?: number;
-    ngayKhaiGiang?: string;
-  };
-  lopHoc?: {
-    tenLop?: string;
-    siSoHienTai?: number;
-    siSoToiDa?: number;
-  };
-}
+import type { DangKy } from "~/types/index";
 
 export default function MyCoursesPage() {
   const navigate = useNavigate();

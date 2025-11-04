@@ -5,27 +5,20 @@ import { getHocViens } from "~/apis/HocVien";
 import Pagination from "~/components/Pagination";
 import type { PhienLamBai } from "~/types/exam.types";
 import { setLightTheme } from "./_layout";
-
-interface HocVien {
-  id: string;
-  hoTen: string;
-  email?: string;
-}
+import type { HocVien } from "~/types/user.types";
 
 export default function AdminBaoCaoKetQua() {
   const [phienLamBais, setPhienLamBais] = useState<PhienLamBai[]>([]);
   const [hocViens, setHocViens] = useState<HocVien[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-  
-  // Filters
+
   const [selectedHocVien, setSelectedHocVien] = useState("");
   const [searchHocVien, setSearchHocVien] = useState("");
   const [tuNgay, setTuNgay] = useState("");
   const [denNgay, setDenNgay] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [pageSize] = useState(10);
@@ -100,7 +93,7 @@ export default function AdminBaoCaoKetQua() {
 
   const getDiemColor = (diem?: number, tongCauHoi?: number) => {
     if (!diem || !tongCauHoi) return "text-gray-600";
-    const percent = (diem / (tongCauHoi * 10)) * 100; // Assuming 10 points per question max
+    const percent = (diem / (tongCauHoi * 10)) * 100;
     if (percent >= 80) return "text-green-600 font-bold";
     if (percent >= 50) return "text-yellow-600 font-semibold";
     return "text-red-600 font-semibold";

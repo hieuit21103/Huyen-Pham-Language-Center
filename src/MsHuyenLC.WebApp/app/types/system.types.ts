@@ -26,3 +26,15 @@ export interface CauHinhHeThong {
     createdAt?: string;
     updatedAt?: string;
 }
+
+export interface NhatKyHeThong {
+  id?: string;
+  taiKhoanId?: string;
+  taiKhoan?: any;
+  thoiGian?: string;
+  hanhDong?: string;
+  chiTiet?: string;
+  duLieuCu?: string;
+  duLieuMoi?: string;
+  ip?: string;
+}

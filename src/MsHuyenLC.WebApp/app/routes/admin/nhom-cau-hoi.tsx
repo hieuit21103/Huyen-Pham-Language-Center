@@ -17,26 +17,12 @@ import { uploadImage, uploadAudio } from "~/apis/Upload";
 import type { CapDo, DoKho } from "~/types/index";
 import { setLightTheme } from "./_layout";
 import Pagination from "~/components/Pagination";
+import type { NhomCauHoi, CauHoi } from "~/types/exam.types";
 
-interface NhomCauHoi {
-  id?: string;
-  urlAmThanh?: string;
-  urlHinhAnh?: string;
-  noiDung?: string;
-  tieuDe?: string;
-  soLuongCauHoi?: number;
-  doKho?: DoKho;
-  capDo?: CapDo;
-}
-
-interface CauHoi {
-  id?: string;
-  noiDung?: string;
-  dapAnDung?: string;
-}
 
 export default function AdminNhomCauHoi() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchQuestionTerm, setSearchQuestionTerm] = useState("");
   const [nhomCauHois, setNhomCauHois] = useState<NhomCauHoi[]>([]);
   const [allCauHois, setAllCauHois] = useState<CauHoi[]>([]);
   const [loading, setLoading] = useState(true);
@@ -231,6 +217,7 @@ export default function AdminNhomCauHoi() {
 
   const handleViewQuestions = async (nhom: NhomCauHoi) => {
     setSelectedNhom(nhom);
+    setSearchQuestionTerm("");
     const response = await getCauHoisInNhom(nhom.id!);
     if (response.success && Array.isArray(response.data)) {
       setNhomQuestions(response.data);
@@ -737,12 +724,12 @@ export default function AdminNhomCauHoi() {
                                 </span>
                                 <div className="flex-1">
                                   <p className="text-sm font-medium text-gray-900 mb-2">
-                                    {q.noiDung}
+                                    {q.noiDungCauHoi}
                                   </p>
-                                  {q.dapAnDung && (
+                                  {q.cacDapAn && (
                                     <div className="bg-green-50 border border-green-200 rounded px-3 py-1.5 inline-block">
                                       <span className="text-xs font-semibold text-green-700">Đáp án: </span>
-                                      <span className="text-xs text-green-900">{q.dapAnDung}</span>
+                                      <span className="text-xs text-green-900">{q.cacDapAn.find(d => d.dung)?.noiDung}</span>
                                     </div>
                                   )}
                                 </div>
@@ -766,33 +753,53 @@ export default function AdminNhomCauHoi() {
               {/* Right side - Available questions to add */}
               <div className="w-1/2 flex flex-col">
                 <div className="p-6 border-b border-gray-200 bg-blue-50">
-                  <h3 className="font-bold text-gray-900 text-lg flex items-center">
+                  <h3 className="font-bold text-gray-900 text-lg flex items-center mb-3">
                     <Plus className="w-5 h-5 mr-2 text-blue-600" />
                     Thêm câu hỏi vào nhóm
                   </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {allCauHois.filter(cq => !nhomQuestions.some(nq => nq.id === cq.id)).length} câu hỏi có sẵn
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Tìm kiếm câu hỏi..."
+                      value={searchQuestionTerm}
+                      onChange={(e) => setSearchQuestionTerm(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+                    />
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">
+                    {allCauHois.filter(cq => !nhomQuestions.some(nq => nq.id === cq.id) && 
+                      (searchQuestionTerm === "" || 
+                       cq.noiDungCauHoi?.toLowerCase().includes(searchQuestionTerm.toLowerCase()))).length} câu hỏi có sẵn
                   </p>
                 </div>
                 
                 <div className="flex-1 overflow-y-auto p-6">
-                  {allCauHois.filter(cq => !nhomQuestions.some(nq => nq.id === cq.id)).length === 0 ? (
+                  {allCauHois.filter(cq => !nhomQuestions.some(nq => nq.id === cq.id) && 
+                    (searchQuestionTerm === "" || 
+                     cq.noiDungCauHoi?.toLowerCase().includes(searchQuestionTerm.toLowerCase()))).length === 0 ? (
                     <div className="text-center py-12">
                       <FileQuestion className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500">Không còn câu hỏi nào để thêm</p>
-                      <p className="text-sm text-gray-400 mt-2">Tất cả câu hỏi đã được thêm vào nhóm</p>
+                      <p className="text-gray-500">
+                        {searchQuestionTerm ? "Không tìm thấy câu hỏi phù hợp" : "Không còn câu hỏi nào để thêm"}
+                      </p>
+                      <p className="text-sm text-gray-400 mt-2">
+                        {searchQuestionTerm ? "Thử tìm kiếm với từ khóa khác" : "Tất cả câu hỏi đã được thêm vào nhóm"}
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {allCauHois
-                        .filter(cq => !nhomQuestions.some(nq => nq.id === cq.id))
+                        .filter(cq => !nhomQuestions.some(nq => nq.id === cq.id) && 
+                          (searchQuestionTerm === "" || 
+                           cq.noiDungCauHoi?.toLowerCase().includes(searchQuestionTerm.toLowerCase())))
                         .map((cq) => (
                           <div key={cq.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all">
                             <div className="flex items-start justify-between">
                               <div className="flex-1 pr-4">
-                                <p className="text-sm text-gray-900 mb-2 line-clamp-2">{cq.noiDung}</p>
-                                {cq.dapAnDung && (
-                                  <p className="text-xs text-gray-500">✓ {cq.dapAnDung}</p>
+                                <p className="text-sm text-gray-900 mb-2 line-clamp-2">{cq.noiDungCauHoi}</p>
+                                {cq.cacDapAn?.find(d => d.dung)?.noiDung && (
+                                  <p className="text-xs text-gray-500">✓ {cq.cacDapAn.find(d => d.dung)?.noiDung}</p>
                                 )}
                               </div>
                               <button

@@ -19,5 +19,8 @@ export * from './exam.types';
 // Schedule
 export * from './schedule.types';
 
+// Finance
+export * from './finance.types';
+
 // System
 export * from './system.types';

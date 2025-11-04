@@ -39,25 +39,32 @@ export interface LichHocUpdateRequest {
 
 export interface LichHoc {
   id?: string;
-  lopHocId?: string;
-  phongHocId?: string;
-  thu?: DayOfWeek;
   ngayHoc?: string;
-  gioBatDau?: string;
-  gioKetThuc?: string;
   tuNgay?: string;
   denNgay?: string;
-  noiDung?: string;
+  thu?: number; 
+  gioBatDau?: string;
+  gioKetThuc?: string;
   coHieuLuc?: boolean;
+  lopHocId?: string;
+  phongHocId?: string;
   lopHoc?: LopHoc;
   phongHoc?: PhongHoc;
-  giaoVien?: GiaoVien;
 }
 
 // Phân công
 export interface PhanCongRequest {
   giaoVienId?: string;
   lopHocId?: string;
+}
+
+export interface PhanCongResponse {
+  id?: string;
+  giaoVienId?: string;
+  lopHocId?: string;
+  tenGiaoVien?: string;
+  tenLop?: string;
+  ngayPhanCong?: string;
 }
 
 export interface PhanCong {

@@ -35,7 +35,6 @@ export default function AdminSettings() {
       });
       setConfigs(configMap);
       
-      // Set form data from configs
       setFormData({
         tenTrungTam: configMap['tenTrungTam']?.giaTri || "",
         slogan: configMap['slogan']?.giaTri || "",

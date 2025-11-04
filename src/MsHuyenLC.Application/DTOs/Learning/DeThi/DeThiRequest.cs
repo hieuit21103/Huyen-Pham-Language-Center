@@ -8,8 +8,7 @@ public class DeThiRequest
     public string TenDe { get; set; } = null!;
     public int TongCauHoi { get; set; }
     public LoaiDeThi LoaiDeThi { get; set; } = LoaiDeThi.LuyenTap;
-    public Guid? KyThiId { get; set; }
-    public KyThi? KyThi { get; set; }
+    public string? KyThiId { get; set; }
     public int ThoiGianLamBai { get; set; }
     public List<string> CauHoiIds { get; set; } = new List<string>();  
 }

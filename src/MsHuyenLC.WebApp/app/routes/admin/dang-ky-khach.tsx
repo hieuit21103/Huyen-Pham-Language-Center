@@ -2,34 +2,17 @@ import { Search, CheckCircle, XCircle, Clock, Eye, AlertCircle, Trash2 } from "l
 import { useState, useEffect } from "react";
 import { getDangKyKhachs, updateDangKyKhach, deleteDangKyKhach } from "~/apis/DangKy";
 import { getKhoaHocs } from "~/apis/KhoaHoc";
-import { TrangThaiDangKy } from "~/types/index";
+import { TrangThaiDangKy } from "~/types/enums";
 import { setLightTheme } from "./_layout";
 import Pagination from "~/components/Pagination";
+import type { DangKyKhach } from "~/types/course.types";
+import type { KhoaHoc } from "~/types/course.types";
 
-interface Registration {
-    id?: string;
-    hoTen?: string;
-    email?: string;
-    soDienThoai?: string;
-    khoaHocId?: string;
-    ngayDangKy?: string;
-    trangThai?: TrangThaiDangKy;
-    ghiChu?: string;
-    khoaHoc?: {
-        id?: string;
-        tenKhoaHoc?: string;
-    };
-}
-
-interface Course {
-    id?: string;
-    tenKhoaHoc?: string;
-}
 
 export default function AdminRegistrations() {
     const [searchTerm, setSearchTerm] = useState("");
-    const [registrations, setRegistrations] = useState<Registration[]>([]);
-    const [courses, setCourses] = useState<Course[]>([]);
+    const [registrations, setRegistrations] = useState<DangKyKhach[]>([]);
+    const [courses, setCourses] = useState<KhoaHoc[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedCourse, setSelectedCourse] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("");

@@ -26,7 +26,6 @@ export interface CauHoiRequest {
   urlHinhAnh?: string;
   urlAmThanh?: string;
   loiThoai?: string;
-  doanVan?: string;
   capDo?: CapDo;
   doKho?: DoKho;
   dapAnCauHois?: DapAnRequest[];
@@ -40,7 +39,6 @@ export interface CauHoiUpdateRequest {
   urlHinhAnh?: string;
   urlAmThanh?: string;
   loiThoai?: string;
-  doanVan?: string;
   capDo?: CapDo;
   doKho?: DoKho;
 }
@@ -55,17 +53,25 @@ export interface CauHoiFilterParams extends PaginationParams {
 
 export interface CauHoi {
   id?: string;
-  noiDung?: string;
+  noiDungCauHoi?: string;
   loaiCauHoi?: LoaiCauHoi;
   kyNang?: KyNang;
   urlHinh?: string;
   urlAmThanh?: string;
-  dapAnDung?: string;
-  giaiThich?: string;
   capDo?: CapDo;
   doKho?: DoKho;
-  docHieuId?: string;
-  docHieu?: any;
+  loiThoai?: string;
+  cacDapAn?: DapAnCauHoi[];
+  cacNhom?: NhomCauHoiChiTiet[];
+}
+
+export interface DapAnCauHoi {
+  id?: string;
+  cauHoiId?: string; 
+  nhan?: string;
+  noiDung?: string;
+  dung?: boolean;
+  giaiThich?: string;
 }
 
 // Nhóm câu hỏi (Reading Comprehension)
@@ -115,14 +121,6 @@ export interface NhomCauHoiChiTiet {
   thuTu?: number;
   nhom?: NhomCauHoi;
   cauHoi?: CauHoi;
-}
-
-export interface DocHieu {
-  id?: string;
-  noiDung?: string;
-  capDo?: CapDo;
-  doKho?: DoKho;
-  cauHois?: CauHoi[];
 }
 
 // Đề thi

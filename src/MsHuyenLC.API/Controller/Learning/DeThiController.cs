@@ -203,8 +203,7 @@ public class DeThiController : BaseController<DeThi>
                 return BadRequest(ModelState);
             }
 
-            // Validation
-            if (request.LoaiDeThi == LoaiDeThi.ChinhThuc && request.KyThiId == null)
+            if (request.LoaiDeThi == LoaiDeThi.ChinhThuc && request.KyThiId == "")
             {
                 return BadRequest(new
                 {
@@ -238,20 +237,18 @@ public class DeThiController : BaseController<DeThi>
                 cauHoi.Add(ch);
             }
 
-            // Tạo đề thi
             var deThi = new DeThi
             {
                 TenDe = request.TenDe,
                 TongCauHoi = request.TongCauHoi,
                 ThoiLuongPhut = request.ThoiGianLamBai,
                 LoaiDeThi = request.LoaiDeThi,
-                KyThiId = request.KyThiId,
+                KyThiId = string.IsNullOrEmpty(request.KyThiId) ? null : Guid.Parse(request.KyThiId),
                 NguoiTaoId = GetCurrentUserId()
             };
 
             var createdDeThi = await _testService.AddAsync(deThi);
 
-            // Thêm câu hỏi vào đề thi
             foreach (var ch in cauHoi)
             {
                 var cauHoiDeThi = new CauHoiDeThi
@@ -275,6 +272,91 @@ public class DeThiController : BaseController<DeThi>
                     loaiDeThi = createdDeThi.LoaiDeThi,
                     kyThiId = createdDeThi.KyThiId
                 }
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                success = false,
+                message = "Có lỗi xảy ra khi tạo đề thi",
+                error = ex.Message
+            });
+        }
+    }
+
+    /// <summary>
+    /// Tạo đề thi hỗn hợp với cả nhóm câu hỏi và câu hỏi độc lập
+    /// </summary>
+    /// <param name="request">Thông tin đề thi, danh sách ID nhóm câu hỏi và câu hỏi độc lập</param>
+    /// <returns>Đề thi đã tạo</returns>
+    /// <response code="200">Tạo đề thi thành công</response>
+    /// <response code="400">Dữ liệu không hợp lệ</response>
+    /// <response code="500">Lỗi server</response>
+    /// <remarks>
+    /// Tạo đề thi từ cả nhóm câu hỏi (lấy tất cả câu hỏi trong nhóm) và câu hỏi độc lập.
+    /// Câu hỏi độc lập không được thuộc bất kỳ nhóm nào.
+    /// </remarks>
+    [HttpPost("create-mixed")]
+    public async Task<ActionResult> CreateMixed([FromBody] CreateMixedTestRequest request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (request.LoaiDeThi == LoaiDeThi.ChinhThuc && string.IsNullOrEmpty(request.KyThiId))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "KyThiId không được để trống khi tạo đề thi chính thức"
+                });
+            }
+
+            Guid? kyThiId = string.IsNullOrEmpty(request.KyThiId) ? null : Guid.Parse(request.KyThiId);
+
+            var deThi = await _testService.CreateMixedTestAsync(
+                request.TenDe,
+                request.ThoiGianLamBai,
+                request.LoaiDeThi,
+                kyThiId,
+                request.NhomCauHoiIds ?? new List<string>(),
+                request.CauHoiDocLapIds ?? new List<string>(),
+                GetCurrentUserId()
+            );
+
+            return Ok(new
+            {
+                success = true,
+                message = "Tạo đề thi hỗn hợp thành công",
+                data = new
+                {
+                    id = deThi.Id,
+                    tenDe = deThi.TenDe,
+                    soCauHoi = deThi.TongCauHoi,
+                    thoiGianLamBai = deThi.ThoiLuongPhut,
+                    loaiDeThi = deThi.LoaiDeThi,
+                    kyThiId = deThi.KyThiId
+                }
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = ex.Message
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = ex.Message
             });
         }
         catch (Exception ex)
@@ -456,7 +538,7 @@ public class DeThiController : BaseController<DeThi>
     }
 
     /// <summary>
-    /// Lấy danh sách câu hỏi trong đề thi
+    /// Lấy danh sách câu hỏi trong đề thi (flat list - deprecated, dùng /questions-grouped thay thế)
     /// </summary>
     /// <param name="id">ID đề thi</param>
     /// <returns>Danh sách câu hỏi và tổng số câu</returns>
@@ -486,6 +568,47 @@ public class DeThiController : BaseController<DeThi>
                 success = true,
                 data = questions,
                 totalQuestions = _testService.GetNumberOfQuestions(deThi)
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                success = false,
+                message = "Có lỗi xảy ra khi lấy danh sách câu hỏi",
+                error = ex.Message
+            });
+        }
+    }
+
+    /// <summary>
+    /// Lấy danh sách câu hỏi được nhóm theo NhomCauHoi (RECOMMENDED cho làm bài thi)
+    /// </summary>
+    /// <param name="id">ID đề thi</param>
+    /// <returns>Danh sách nhóm câu hỏi với cấu trúc phân cấp</returns>
+    /// <response code="200">Lấy danh sách thành công</response>
+    /// <response code="404">Không tìm thấy đề thi</response>
+    /// <response code="500">Lỗi server</response>
+    [HttpGet("{id}/questions-grouped")]
+    public async Task<ActionResult> GetQuestionsGrouped(string id)
+    {
+        try
+        {
+            var result = await _testService.GetTestWithQuestionsGroupedAsync(id);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Không tìm thấy đề thi"
+                });
+            }
+
+            return Ok(new
+            {
+                success = true,
+                data = result
             });
         }
         catch (Exception ex)

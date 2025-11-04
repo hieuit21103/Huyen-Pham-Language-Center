@@ -15,7 +15,7 @@ export default function KetQuaThi() {
   const phienId = searchParams.get("phienId");
 
   const [loading, setLoading] = useState(true);
-  const [result, setResult] = useState<PhienLamBai>();
+  const [result, setResult] = useState<PhienLamBai | any>(null);
   const [answers, setAnswers] = useState<CauTraLoi[]>([]);
   const [showReview, setShowReview] = useState(false);
 
@@ -31,10 +31,11 @@ export default function KetQuaThi() {
 
     setLoading(true);
     const response = await getPhienLamBaiDetails(phienId);
-    if (response.success && response.data) {
-      const data = response.data.data as PhienLamBaiResponse;
+    console.log("PhienLamBaiDetails Response:", response);
+    if (response.success) {
+      const data  = response.data as PhienLamBaiResponse;
       setResult(data.phienLamBai);
-      setAnswers(data.cauTraLoi);
+      setAnswers(data.cauTraLoi || []);
     }
     setLoading(false);
   };
@@ -147,7 +148,7 @@ export default function KetQuaThi() {
             <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6 text-center">
               <Clock className="w-8 h-8 text-purple-600 mx-auto mb-2" />
               <div className="text-4xl font-bold text-purple-600 mb-1">
-                {formatTime(timeSpent)}
+                {timeSpent}
               </div>
               <div className="text-sm text-gray-600">Thời gian</div>
             </div>
