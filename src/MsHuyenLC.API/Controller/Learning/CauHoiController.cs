@@ -78,7 +78,7 @@ public class CauHoiController : BaseController
                 message = "Danh sách câu hỏi rỗng"
             });
         }
-        var createdCauHois = new List<NganHangCauHoi>();
+        var createdCauHois = new List<CauHoi>();
         foreach (var request in requests)
         {
             var result = await _service.CreateAsync(request);
@@ -125,7 +125,7 @@ public class CauHoiController : BaseController
             });
         }
 
-        var oldData = new NganHangCauHoi
+        var oldData = new CauHoi
         {
             Id = existingCauHoi.Id,
             NoiDungCauHoi = existingCauHoi.NoiDungCauHoi,

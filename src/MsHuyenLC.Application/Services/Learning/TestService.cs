@@ -282,13 +282,13 @@ public class TestService : ITestService
     }
 
     // Các method cũ - giữ lại để tương thích ngược
-    public void AddQuestionToTest(DeThi deThi, NganHangCauHoi cauHoi)
+    public void AddQuestionToTest(DeThi deThi, CauHoi cauHoi)
     {
         deThi.CacCauHoi.Add(new CauHoiDeThi { DeThi = deThi, CauHoi = cauHoi });
         _unitOfWork.SaveChangesAsync();
     }
 
-    public void RemoveQuestionFromTest(DeThi deThi, NganHangCauHoi cauHoi)
+    public void RemoveQuestionFromTest(DeThi deThi, CauHoi cauHoi)
     {
         var cauHoiDeThi = deThi.CacCauHoi.FirstOrDefault(chdt => chdt.CauHoiId == cauHoi.Id);
         if (cauHoiDeThi != null)
@@ -322,7 +322,7 @@ public class TestService : ITestService
         return deThi;
     }
 
-    public IEnumerable<NganHangCauHoi> GetQuestionsInTest(DeThi deThi)
+    public IEnumerable<CauHoi> GetQuestionsInTest(DeThi deThi)
     {
         return deThi.CacCauHoi
             .Where(chdt => chdt.CauHoi != null)
@@ -347,7 +347,7 @@ public class TestService : ITestService
             includes: nct => nct.Nhom
         );
 
-        var grouped = new Dictionary<string, List<NganHangCauHoi>>();
+        var grouped = new Dictionary<string, List<CauHoi>>();
         var nhomDict = new Dictionary<string, NhomCauHoi>();
 
         foreach (var question in allQuestions)
@@ -359,7 +359,7 @@ public class TestService : ITestService
                 var nhomKey = chiTiet.NhomId.ToString();
                 if (!grouped.ContainsKey(nhomKey))
                 {
-                    grouped[nhomKey] = new List<NganHangCauHoi>();
+                    grouped[nhomKey] = new List<CauHoi>();
                     nhomDict[nhomKey] = chiTiet.Nhom;
                 }
                 grouped[nhomKey].Add(question);
@@ -369,7 +369,7 @@ public class TestService : ITestService
                 const string independentKey = "independent";
                 if (!grouped.ContainsKey(independentKey))
                 {
-                    grouped[independentKey] = new List<NganHangCauHoi>();
+                    grouped[independentKey] = new List<CauHoi>();
                 }
                 grouped[independentKey].Add(question);
             }
@@ -455,7 +455,7 @@ public class TestService : ITestService
         _unitOfWork.SaveChangesAsync();
     }
 
-    public bool ContainsQuestion(DeThi deThi, NganHangCauHoi cauHoi)
+    public bool ContainsQuestion(DeThi deThi, CauHoi cauHoi)
     {
         return deThi.CacCauHoi.Any(chdt => chdt.CauHoiId == cauHoi.Id);
     }
@@ -477,7 +477,7 @@ public class TestService : ITestService
             kyThiId = parsedKyThiId;
         }
 
-        var allCauHois = new List<NganHangCauHoi>();
+        var allCauHois = new List<CauHoi>();
 
         // 1. Lấy tất cả câu hỏi từ các nhóm được chọn
         foreach (var nhomId in request.NhomCauHoiIds)
@@ -567,7 +567,7 @@ public class TestService : ITestService
         return deThi;
     }
 
-    private List<NganHangCauHoi> SelectRandomQuestions(List<NganHangCauHoi> questions, int count)
+    private List<CauHoi> SelectRandomQuestions(List<CauHoi> questions, int count)
     {
         var random = new Random();
         var shuffled = questions.OrderBy(x => random.Next()).ToList();
@@ -671,7 +671,7 @@ public class TestService : ITestService
         return deThi;
     }
 
-    private async Task<List<NganHangCauHoi>> GetQuestionsByDifficulty(
+    private async Task<List<CauHoi>> GetQuestionsByDifficulty(
         LoaiCauHoi loaiCauHoi,
         KyNang kyNang,
         CapDo capDo,
@@ -716,7 +716,7 @@ public class TestService : ITestService
         if (nhomCauHoiIds.Count == 0 && cauHoiDocLapIds.Count == 0)
             throw new ArgumentException("Phải chọn ít nhất một nhóm câu hỏi hoặc câu hỏi độc lập");
 
-        var allCauHois = new List<NganHangCauHoi>();
+        var allCauHois = new List<CauHoi>();
 
         // 1. Lấy tất cả câu hỏi từ các nhóm được chọn
         foreach (var nhomId in nhomCauHoiIds)

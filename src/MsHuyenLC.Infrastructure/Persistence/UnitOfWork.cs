@@ -12,7 +12,7 @@ public class UnitOfWork : IUnitOfWork
 {
     private readonly ApplicationDbContext _context;
     private IDbContextTransaction? _currentTransaction;
-    private IGenericRepository<NganHangCauHoi>? _cauHois;
+    private IGenericRepository<CauHoi>? _cauHois;
     private IGenericRepository<DapAnCauHoi>? _dapAnCauHois;
     private IGenericRepository<NhomCauHoi>? _nhomCauHois;
     private IGenericRepository<NhomCauHoiChiTiet>? _nhomCauHoiChiTiets;
@@ -21,8 +21,8 @@ public class UnitOfWork : IUnitOfWork
     private IGenericRepository<KyThi>? _kyThis;
     private IGenericRepository<PhienLamBai>? _phienLamBais;
     private IGenericRepository<CauTraLoi>? _cauTraLois;
-    private IGenericRepository<DangKy>? _dangKys;
-    private IGenericRepository<DangKyKhach>? _dangKyKhachs;
+    private IGenericRepository<DangKyKhoaHoc>? _dangKyKhoaHocs;
+    private IGenericRepository<DangKyTuVan>? _dangKyTuVans;
     private IGenericRepository<ThongBao>? _thongBaos;
     private IGenericRepository<PhanHoi>? _phanHois;
     private IGenericRepository<KhoaHoc>? _khoaHocs;
@@ -50,8 +50,8 @@ public class UnitOfWork : IUnitOfWork
     }
 
     // ========== Learning - Online Exam ==========
-    public IGenericRepository<NganHangCauHoi> CauHois => 
-        _cauHois ??= GetRepository<NganHangCauHoi>();
+    public IGenericRepository<CauHoi> CauHois => 
+        _cauHois ??= GetRepository<CauHoi>();
     
     public IGenericRepository<DapAnCauHoi> DapAnCauHois => 
         _dapAnCauHois ??= GetRepository<DapAnCauHoi>();
@@ -78,11 +78,11 @@ public class UnitOfWork : IUnitOfWork
         _cauTraLois ??= GetRepository<CauTraLoi>();
 
     // ========== Learning - Registration & Notification ==========
-    public IGenericRepository<DangKy> DangKys => 
-        _dangKys ??= GetRepository<DangKy>();
+    public IGenericRepository<DangKyKhoaHoc> DangKyKhoaHocs => 
+        _dangKyKhoaHocs ??= GetRepository<DangKyKhoaHoc>();
 
-    public IGenericRepository<DangKyKhach> DangKyKhachs => 
-        _dangKyKhachs ??= GetRepository<DangKyKhach>();
+    public IGenericRepository<DangKyTuVan> DangKyTuVans => 
+        _dangKyTuVans ??= GetRepository<DangKyTuVan>();
 
     public IGenericRepository<ThongBao> ThongBaos => 
         _thongBaos ??= GetRepository<ThongBao>();

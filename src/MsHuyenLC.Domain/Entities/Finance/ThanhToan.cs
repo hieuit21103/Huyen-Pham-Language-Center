@@ -24,6 +24,6 @@ public class ThanhToan
     
     // Relationships - Liên kết với DangKy
     public Guid DangKyId { get; set; }
-    public DangKy DangKy { get; set; } = null!;
+    public DangKyKhoaHoc DangKy { get; set; } = null!;
     
 }

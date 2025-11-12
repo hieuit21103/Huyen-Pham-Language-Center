@@ -1,6 +1,6 @@
 using FluentValidation;
 using MsHuyenLC.Application.DTOs.Finance.ThanhToan;
-using MsHuyenLC.Application.DTOs.Learning.DangKy;
+using MsHuyenLC.Application.DTOs.Learning.DangKyKhoaHoc;
 using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.Interfaces.Services.Learning;
 using MsHuyenLC.Domain.Entities.Courses;
@@ -13,15 +13,15 @@ namespace MsHuyenLC.Application.Services.Learning;
 public class RegistrationService : IRegistrationService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IValidator<DangKyRequest> _createValidator;
-    private readonly IValidator<DangKyCreateRequest> _createFullValidator;
-    private readonly IValidator<DangKyUpdateRequest> _updateValidator;
+    private readonly IValidator<DangKyKhoaHocRequest> _createValidator;
+    private readonly IValidator<DangKyKhoaHocCreateRequest> _createFullValidator;
+    private readonly IValidator<DangKyKhoaHocUpdateRequest> _updateValidator;
 
     public RegistrationService(
         IUnitOfWork unitOfWork,
-        IValidator<DangKyRequest> createValidator,
-        IValidator<DangKyCreateRequest> createFullValidator,
-        IValidator<DangKyUpdateRequest> updateValidator)
+        IValidator<DangKyKhoaHocRequest> createValidator,
+        IValidator<DangKyKhoaHocCreateRequest> createFullValidator,
+        IValidator<DangKyKhoaHocUpdateRequest> updateValidator)
     {
         _unitOfWork = unitOfWork;
         _createValidator = createValidator;
@@ -29,21 +29,21 @@ public class RegistrationService : IRegistrationService
         _updateValidator = updateValidator;
     }
 
-    public async Task<DangKy?> GetByIdAsync(string id)
+    public async Task<DangKyKhoaHoc?> GetByIdAsync(string id)
     {
-        return await _unitOfWork.DangKys.GetByIdAsync(id);
+        return await _unitOfWork.DangKyKhoaHocs.GetByIdAsync(id);
     }
 
-    public async Task<IEnumerable<DangKy>> GetAllAsync()
+    public async Task<IEnumerable<DangKyKhoaHoc>> GetAllAsync()
     {
-        return await _unitOfWork.DangKys.GetAllAsync();
+        return await _unitOfWork.DangKyKhoaHocs.GetAllAsync();
     }
 
-    public async Task<DangKy> CreateAsync(DangKyRequest request)
+    public async Task<DangKyKhoaHoc> CreateAsync(DangKyKhoaHocRequest request)
     {
         await _createValidator.ValidateAndThrowAsync(request);
 
-        var dangKy = new DangKy
+        var dangKy = new DangKyKhoaHoc
         {
             HocVienId = request.HocVienId,
             KhoaHocId = request.KhoaHocId,
@@ -51,16 +51,16 @@ public class RegistrationService : IRegistrationService
             TrangThai = TrangThaiDangKy.choduyet
         };
 
-        var result = await _unitOfWork.DangKys.AddAsync(dangKy);
+        var result = await _unitOfWork.DangKyKhoaHocs.AddAsync(dangKy);
         await _unitOfWork.SaveChangesAsync();
         return result;
     }
 
-    public async Task<DangKy> CreateFullAsync(DangKyCreateRequest request)
+    public async Task<DangKyKhoaHoc> CreateFullAsync(DangKyKhoaHocCreateRequest request)
     {
         await _createFullValidator.ValidateAndThrowAsync(request);
 
-        var dangKy = new DangKy
+        var dangKy = new DangKyKhoaHoc
         {
             HocVienId = request.HocVienId,
             KhoaHocId = request.KhoaHocId,
@@ -70,16 +70,16 @@ public class RegistrationService : IRegistrationService
             NgayXepLop = request.NgayXepLop
         };
 
-        var result = await _unitOfWork.DangKys.AddAsync(dangKy);
+        var result = await _unitOfWork.DangKyKhoaHocs.AddAsync(dangKy);
         await _unitOfWork.SaveChangesAsync();
         return result;
     }
 
-    public async Task<DangKy?> UpdateAsync(string id, DangKyUpdateRequest request)
+    public async Task<DangKyKhoaHoc?> UpdateAsync(string id, DangKyKhoaHocUpdateRequest request)
     {
         await _updateValidator.ValidateAndThrowAsync(request);
 
-        var dangKy = await _unitOfWork.DangKys.GetByIdAsync(id);
+        var dangKy = await _unitOfWork.DangKyKhoaHocs.GetByIdAsync(id);
         if (dangKy == null)
             throw new KeyNotFoundException($"Không tìm thấy đăng ký với ID: {id}");
 
@@ -148,7 +148,7 @@ public class RegistrationService : IRegistrationService
 
     public async Task<bool> DeleteAsync(string id)
     {
-        var dangKy = await _unitOfWork.DangKys.GetByIdAsync(id);
+        var dangKy = await _unitOfWork.DangKyKhoaHocs.GetByIdAsync(id);
         if (dangKy == null)
             return false;
         var lopHoc = await _unitOfWork.LopHocs.GetByIdAsync(dangKy.LopHocId.ToString() ?? "");
@@ -157,29 +157,29 @@ public class RegistrationService : IRegistrationService
             lopHoc.CapNhatSiSo(-1);
             await _unitOfWork.LopHocs.UpdateAsync(lopHoc);
         }
-        await _unitOfWork.DangKys.DeleteAsync(dangKy);
+        await _unitOfWork.DangKyKhoaHocs.DeleteAsync(dangKy);
         await _unitOfWork.SaveChangesAsync();
         return true;
     }
 
-    public async Task<IEnumerable<DangKy>> GetByStudentIdAsync(string studentId)
+    public async Task<IEnumerable<DangKyKhoaHoc>> GetByStudentIdAsync(string studentId)
     {
         if (!Guid.TryParse(studentId, out var id))
-            return Enumerable.Empty<DangKy>();
+            return Enumerable.Empty<DangKyKhoaHoc>();
 
-        return await _unitOfWork.DangKys.GetAllAsync(x => x.HocVienId == id);
+        return await _unitOfWork.DangKyKhoaHocs.GetAllAsync(x => x.HocVienId == id);
     }
 
-    public async Task<IEnumerable<DangKy>> GetByCourseIdAsync(string courseId)
+    public async Task<IEnumerable<DangKyKhoaHoc>> GetByCourseIdAsync(string courseId)
     {
         if (!Guid.TryParse(courseId, out var id))
-            return Enumerable.Empty<DangKy>();
+            return Enumerable.Empty<DangKyKhoaHoc>();
 
-        return await _unitOfWork.DangKys.GetAllAsync(x => x.KhoaHocId == id);
+        return await _unitOfWork.DangKyKhoaHocs.GetAllAsync(x => x.KhoaHocId == id);
     }
 
     public async Task<int> CountAsync()
     {
-        return await _unitOfWork.DangKys.CountAsync();
+        return await _unitOfWork.DangKyKhoaHocs.CountAsync();
     }
 }

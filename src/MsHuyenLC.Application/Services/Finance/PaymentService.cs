@@ -123,7 +123,7 @@ public class PaymentService : IPaymentService
             if (dangKy != null)
             {
                 dangKy.TrangThai = TrangThaiDangKy.dathanhtoan;
-                await _registrationService.UpdateAsync(dangKy.Id.ToString(), new MsHuyenLC.Application.DTOs.Learning.DangKy.DangKyUpdateRequest
+                await _registrationService.UpdateAsync(dangKy.Id.ToString(), new DTOs.Learning.DangKyKhoaHoc.DangKyKhoaHocUpdateRequest
                 {
                     TrangThai = TrangThaiDangKy.dathanhtoan
                 });

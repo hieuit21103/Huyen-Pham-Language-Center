@@ -158,7 +158,7 @@ public class GroupQuestionService : IGroupQuestionService
         };
     }
 
-    private static CauHoiResponse MapCauHoiToResponse(NganHangCauHoi entity)
+    private static CauHoiResponse MapCauHoiToResponse(CauHoi entity)
     {
         return new CauHoiResponse
         {

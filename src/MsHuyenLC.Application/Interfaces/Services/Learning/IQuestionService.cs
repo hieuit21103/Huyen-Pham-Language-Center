@@ -6,16 +6,16 @@ namespace MsHuyenLC.Application.Interfaces.Services.Learning;
 
 public interface IQuestionService
 {
-    Task<NganHangCauHoi?> GetByIdAsync(string id);
-    Task<IEnumerable<NganHangCauHoi>> GetAllAsync();
-    Task<NganHangCauHoi> CreateAsync(CauHoiRequest request);
-    Task<NganHangCauHoi?> UpdateAsync(string id, CauHoiUpdateRequest request);
+    Task<CauHoi?> GetByIdAsync(string id);
+    Task<IEnumerable<CauHoi>> GetAllAsync();
+    Task<CauHoi> CreateAsync(CauHoiRequest request);
+    Task<CauHoi?> UpdateAsync(string id, CauHoiUpdateRequest request);
     Task<bool> DeleteAsync(string id);
     Task<int> CountAsync();
-    Task<IEnumerable<NganHangCauHoi>> GetBySkillAsync(KyNang skill);
-    Task<IEnumerable<NganHangCauHoi>> GetByDifficultyAsync(DoKho difficulty);
-    Task<IEnumerable<NganHangCauHoi>> GetByLevelAsync(CapDo level);
-    Task<IEnumerable<NganHangCauHoi>> GetByTypeAsync(LoaiCauHoi type);
-    Task<NganHangCauHoi> AddAnswerToQuestionAsync(string questionId, DapAnRequest answerRequest);
-    Task<NganHangCauHoi?> GetQuestionWithAnswersAsync(string id);
+    Task<IEnumerable<CauHoi>> GetBySkillAsync(KyNang skill);
+    Task<IEnumerable<CauHoi>> GetByDifficultyAsync(DoKho difficulty);
+    Task<IEnumerable<CauHoi>> GetByLevelAsync(CapDo level);
+    Task<IEnumerable<CauHoi>> GetByTypeAsync(LoaiCauHoi type);
+    Task<CauHoi> AddAnswerToQuestionAsync(string questionId, DapAnRequest answerRequest);
+    Task<CauHoi?> GetQuestionWithAnswersAsync(string id);
 }

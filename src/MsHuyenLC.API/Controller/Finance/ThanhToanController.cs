@@ -10,7 +10,7 @@ using MsHuyenLC.Application.DTOs.Finance.VNPay;
 using MsHuyenLC.Domain.Enums;
 using Microsoft.Extensions.Logging;
 using MsHuyenLC.Application.Interfaces.Services.Learning;
-using MsHuyenLC.Application.DTOs.Learning.DangKy;
+using MsHuyenLC.Application.DTOs.Learning.DangKyKhoaHoc;
 using MsHuyenLC.Application.DTOs.Finance.ThanhToan;
 
 namespace MsHuyenLC.API.Controller.Finance;

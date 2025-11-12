@@ -57,7 +57,7 @@ public class ScheduleService : IScheduleService
 
     public async Task<IEnumerable<LichHoc>> GetStudentSchedulesAsync(string studentId)
     {
-        var enrollments = await _unitOfWork.DangKys.GetAllAsync(
+        var enrollments = await _unitOfWork.DangKyKhoaHocs.GetAllAsync(
             filter: gd => gd.HocVienId.ToString() == studentId,
             includes: gd => gd.LopHoc!
         );

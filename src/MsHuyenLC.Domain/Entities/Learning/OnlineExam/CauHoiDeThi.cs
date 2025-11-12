@@ -10,5 +10,5 @@ public class CauHoiDeThi
     public int ThuTuCauHoi { get; set; }
     public decimal Diem { get; set; } = 1;
     public virtual DeThi DeThi { get; set; } = null!;
-    public virtual NganHangCauHoi CauHoi { get; set; } = null!;
+    public virtual CauHoi CauHoi { get; set; } = null!;
 }

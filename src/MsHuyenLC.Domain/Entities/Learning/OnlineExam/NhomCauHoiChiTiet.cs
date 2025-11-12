@@ -7,6 +7,6 @@ public class NhomCauHoiChiTiet
     public Guid CauHoiId { get; set; }
     public int ThuTu { get; set; }
     public virtual NhomCauHoi Nhom { get; set; } = null!;
-    public virtual NganHangCauHoi CauHoi { get; set; } = null!;
+    public virtual CauHoi CauHoi { get; set; } = null!;
 }
 

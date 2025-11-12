@@ -8,6 +8,6 @@ public class DapAnCauHoi
     public string NoiDung { get; set; } = string.Empty;
     public bool Dung { get; set; }
     public string? GiaiThich { get; set; }
-    public virtual NganHangCauHoi CauHoi { get; set; } = null!;
+    public virtual CauHoi CauHoi { get; set; } = null!;
 }
 

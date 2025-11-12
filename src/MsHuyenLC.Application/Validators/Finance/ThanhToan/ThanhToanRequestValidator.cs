@@ -23,6 +23,6 @@ public class ThanhToanRequestValidator : AbstractValidator<ThanhToanRequest>
 
     private async Task<bool> DangKyExists(Guid dangKyId, CancellationToken cancellationToken)
     {
-        return await _unitOfWork.DangKys.ExistsAsync(x => x.Id == dangKyId);
+        return await _unitOfWork.DangKyKhoaHocs.ExistsAsync(x => x.Id == dangKyId);
     }
 }

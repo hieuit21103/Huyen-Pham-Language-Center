@@ -1,5 +1,5 @@
 using FluentValidation;
-using MsHuyenLC.Application.DTOs.Learning.DangKyKhach;
+using MsHuyenLC.Application.DTOs.Learning.DangKyTuVan;
 using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.Interfaces.Services.Learning;
 using MsHuyenLC.Application.Interfaces.Services.Auth;
@@ -17,9 +17,9 @@ namespace MsHuyenLC.Application.Services.Learning;
 public class GuestRegistrationService : IGuestRegistrationService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IValidator<DangKyKhachRequest> _createValidator;
-    private readonly IValidator<DangKyKhachCreateRequest> _createFullValidator;
-    private readonly IValidator<DangKyKhachUpdateRequest> _updateValidator;
+    private readonly IValidator<DangKyTuVanRequest> _createValidator;
+    private readonly IValidator<DangKyTuVanCreateRequest> _createFullValidator;
+    private readonly IValidator<DangKyTuVanUpdateRequest> _updateValidator;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IEmailService _emailService;
     private readonly IStudentService _studentService;
@@ -29,9 +29,9 @@ public class GuestRegistrationService : IGuestRegistrationService
 
     public GuestRegistrationService(
         IUnitOfWork unitOfWork,
-        IValidator<DangKyKhachRequest> createValidator,
-        IValidator<DangKyKhachCreateRequest> createFullValidator,
-        IValidator<DangKyKhachUpdateRequest> updateValidator,
+        IValidator<DangKyTuVanRequest> createValidator,
+        IValidator<DangKyTuVanCreateRequest> createFullValidator,
+        IValidator<DangKyTuVanUpdateRequest> updateValidator,
         IPasswordHasher passwordHasher,
         IEmailService emailService,
         IStudentService studentService,
@@ -51,21 +51,21 @@ public class GuestRegistrationService : IGuestRegistrationService
         _paymentService = paymentService;
     }
 
-    public async Task<DangKyKhach?> GetByIdAsync(string id)
+    public async Task<DangKyTuVan?> GetByIdAsync(string id)
     {
-        return await _unitOfWork.DangKyKhachs.GetByIdAsync(id);
+        return await _unitOfWork.DangKyTuVans.GetByIdAsync(id);
     }
 
-    public async Task<IEnumerable<DangKyKhach>> GetAllAsync()
+    public async Task<IEnumerable<DangKyTuVan>> GetAllAsync()
     {
-        return await _unitOfWork.DangKyKhachs.GetAllAsync();
+        return await _unitOfWork.DangKyTuVans.GetAllAsync();
     }
 
-    public async Task<DangKyKhach> CreateAsync(DangKyKhachRequest request)
+    public async Task<DangKyTuVan> CreateAsync(DangKyTuVanRequest request)
     {
         await _createValidator.ValidateAndThrowAsync(request);
 
-        var dangKyKhach = new DangKyKhach
+        var dangKyTuVan = new DangKyTuVan
         {
             HoTen = request.HoTen,
             GioiTinh = request.GioiTinh,
@@ -78,16 +78,16 @@ public class GuestRegistrationService : IGuestRegistrationService
             KetQua = KetQuaDangKy.chuaxuly
         };
 
-        var result = await _unitOfWork.DangKyKhachs.AddAsync(dangKyKhach);
+        var result = await _unitOfWork.DangKyTuVans.AddAsync(dangKyTuVan);
         await _unitOfWork.SaveChangesAsync();
         return result;
     }
 
-    public async Task<DangKyKhach?> CreateFullAsync(DangKyKhachCreateRequest request)
+    public async Task<DangKyTuVan?> CreateFullAsync(DangKyTuVanCreateRequest request)
     {
         await _createFullValidator.ValidateAndThrowAsync(request);
 
-        var dangKyKhach = new DangKyKhach
+        var dangKyTuVan = new DangKyTuVan
         {
             HoTen = request.HoTen,
             GioiTinh = request.GioiTinh,
@@ -100,56 +100,56 @@ public class GuestRegistrationService : IGuestRegistrationService
             KetQua = KetQuaDangKy.chuaxuly
         };
 
-        var result = await _unitOfWork.DangKyKhachs.AddAsync(dangKyKhach);
+        var result = await _unitOfWork.DangKyTuVans.AddAsync(dangKyTuVan);
         await _unitOfWork.SaveChangesAsync();
         return result;
     }
 
-    public async Task<DangKyKhach?> UpdateAsync(string id, DangKyKhachUpdateRequest request)
+    public async Task<DangKyTuVan?> UpdateAsync(string id, DangKyTuVanUpdateRequest request)
     {
         await _updateValidator.ValidateAndThrowAsync(request);
 
-        var dangKyKhach = await _unitOfWork.DangKyKhachs.GetByIdAsync(id);
-        if (dangKyKhach == null)
-            throw new KeyNotFoundException($"Không tìm thấy đăng ký khách với ID: {id}");
+        var dangKyTuVan = await _unitOfWork.DangKyTuVans.GetByIdAsync(id);
+        if (dangKyTuVan == null)
+            throw new KeyNotFoundException($"Không tìm thấy đăng ký tư vấn với ID: {id}");
 
-        var previousTrangThai = dangKyKhach.TrangThai;
+        var previousTrangThai = dangKyTuVan.TrangThai;
         if (request.HoTen != null)
-            dangKyKhach.HoTen = request.HoTen;
+            dangKyTuVan.HoTen = request.HoTen;
 
-        dangKyKhach.GioiTinh = request.GioiTinh;
+        dangKyTuVan.GioiTinh = request.GioiTinh;
 
         if (request.Email != null)
-            dangKyKhach.Email = request.Email;
+            dangKyTuVan.Email = request.Email;
 
         if (request.SoDienThoai != null)
-            dangKyKhach.SoDienThoai = request.SoDienThoai;
+            dangKyTuVan.SoDienThoai = request.SoDienThoai;
 
-        dangKyKhach.NoiDung = request.NoiDung;
+        dangKyTuVan.NoiDung = request.NoiDung;
 
         if (request.KhoaHocId.HasValue)
-            dangKyKhach.KhoaHocId = request.KhoaHocId.Value;
+            dangKyTuVan.KhoaHocId = request.KhoaHocId.Value;
 
         if (request.TrangThai.HasValue)
-            dangKyKhach.TrangThai = request.TrangThai.Value;
+            dangKyTuVan.TrangThai = request.TrangThai.Value;
 
         if (request.KetQua.HasValue)
-            dangKyKhach.KetQua = request.KetQua.Value;
+            dangKyTuVan.KetQua = request.KetQua.Value;
 
         if (previousTrangThai != TrangThaiDangKy.daduyet &&
-            dangKyKhach.TrangThai == TrangThaiDangKy.daduyet)
+            dangKyTuVan.TrangThai == TrangThaiDangKy.daduyet)
         {
-            await ProcessApprovedRegistrationAsync(dangKyKhach);
+            await ProcessApprovedRegistrationAsync(dangKyTuVan);
         }
 
         await _unitOfWork.SaveChangesAsync();
-        return dangKyKhach;
+        return dangKyTuVan;
     }
 
     /// <summary>
     /// Xử lý logic khi đăng ký được duyệt: tạo tài khoản, học viên, đăng ký và thanh toán
     /// </summary>
-    private async Task ProcessApprovedRegistrationAsync(DangKyKhach dangKyKhach)
+    private async Task ProcessApprovedRegistrationAsync(DangKyTuVan dangKyKhach)
     {
         var existingAccount = await _unitOfWork.TaiKhoans.GetByEmailAsync(dangKyKhach.Email);
         
@@ -203,7 +203,7 @@ public class GuestRegistrationService : IGuestRegistrationService
         }
 
         // 3. Tạo đăng ký học viên
-        var dangKyHocVien = new DangKy
+        var dangKyHocVien = new DangKyKhoaHoc
         {
             HocVienId = createdHocVien.Id,
             KhoaHocId = dangKyKhach.KhoaHocId,
@@ -211,7 +211,7 @@ public class GuestRegistrationService : IGuestRegistrationService
             TrangThai = TrangThaiDangKy.daduyet,
         };
 
-        var createdDangKy = await _unitOfWork.DangKys.AddAsync(dangKyHocVien);
+        var createdDangKy = await _unitOfWork.DangKyKhoaHocs.AddAsync(dangKyHocVien);
         await _unitOfWork.SaveChangesAsync();
 
         if (createdDangKy == null)
@@ -265,25 +265,25 @@ public class GuestRegistrationService : IGuestRegistrationService
 
     public async Task<bool> DeleteAsync(string id)
     {
-        var dangKyKhach = await _unitOfWork.DangKyKhachs.GetByIdAsync(id);
+        var dangKyKhach = await _unitOfWork.DangKyTuVans.GetByIdAsync(id);
         if (dangKyKhach == null)
             return false;
 
-        await _unitOfWork.DangKyKhachs.DeleteAsync(dangKyKhach);
+        await _unitOfWork.DangKyTuVans.DeleteAsync(dangKyKhach);
         await _unitOfWork.SaveChangesAsync();
         return true;
     }
 
-    public async Task<IEnumerable<DangKyKhach>> GetByCourseIdAsync(string courseId)
+    public async Task<IEnumerable<DangKyTuVan>> GetByCourseIdAsync(string courseId)
     {
         if (!Guid.TryParse(courseId, out var id))
-            return Enumerable.Empty<DangKyKhach>();
+            return Enumerable.Empty<DangKyTuVan>();
 
-        return await _unitOfWork.DangKyKhachs.GetAllAsync(dk => dk.KhoaHocId == id);
+        return await _unitOfWork.DangKyTuVans.GetAllAsync(dk => dk.KhoaHocId == id);
     }
 
     public async Task<int> CountAsync()
     {
-        return await _unitOfWork.DangKyKhachs.CountAsync();
+        return await _unitOfWork.DangKyTuVans.CountAsync();
     }
 }

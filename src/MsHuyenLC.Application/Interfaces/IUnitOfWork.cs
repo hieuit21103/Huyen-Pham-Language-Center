@@ -19,7 +19,7 @@ public interface IUnitOfWork : IDisposable
 {
     IGenericRepository<T> GetRepository<T>() where T : class;
     // ========== Learning - Online Exam ==========
-    IGenericRepository<NganHangCauHoi> CauHois { get; }
+    IGenericRepository<CauHoi> CauHois { get; }
     IGenericRepository<DapAnCauHoi> DapAnCauHois { get; }
     IGenericRepository<NhomCauHoi> NhomCauHois { get; }
     IGenericRepository<NhomCauHoiChiTiet> NhomCauHoiChiTiets { get; }
@@ -30,8 +30,8 @@ public interface IUnitOfWork : IDisposable
     IGenericRepository<CauTraLoi> CauTraLois { get; }
     
     // ========== Learning - Registration & Notification ==========
-    IGenericRepository<DangKy> DangKys { get; }
-    IGenericRepository<DangKyKhach> DangKyKhachs { get; }
+    IGenericRepository<DangKyKhoaHoc> DangKyKhoaHocs { get; }
+    IGenericRepository<DangKyTuVan> DangKyTuVans { get; }
     IGenericRepository<ThongBao> ThongBaos { get; }
     IGenericRepository<PhanHoi> PhanHois { get; }
 

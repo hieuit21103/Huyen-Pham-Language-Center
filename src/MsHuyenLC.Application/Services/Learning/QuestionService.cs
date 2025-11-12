@@ -24,20 +24,20 @@ public class QuestionService : IQuestionService
         _updateValidator = updateValidator;
     }
 
-    public async Task<NganHangCauHoi?> GetByIdAsync(string id)
+    public async Task<CauHoi?> GetByIdAsync(string id)
     {
         return await _unitOfWork.CauHois.GetByIdAsync(id);
     }
 
-    public async Task<IEnumerable<NganHangCauHoi>> GetAllAsync()
+    public async Task<IEnumerable<CauHoi>> GetAllAsync()
     {
         return await _unitOfWork.CauHois.GetAllAsync();
     }
 
-    public async Task<NganHangCauHoi> CreateAsync(CauHoiRequest request)
+    public async Task<CauHoi> CreateAsync(CauHoiRequest request)
     {
         await _createValidator.ValidateAndThrowAsync(request);
-        var cauHoi = new NganHangCauHoi
+        var cauHoi = new CauHoi
         {
             NoiDungCauHoi = request.NoiDungCauHoi,
             LoaiCauHoi = request.LoaiCauHoi,
@@ -61,7 +61,7 @@ public class QuestionService : IQuestionService
         return result;
     }
 
-    public async Task<NganHangCauHoi?> UpdateAsync(string id, CauHoiUpdateRequest request)
+    public async Task<CauHoi?> UpdateAsync(string id, CauHoiUpdateRequest request)
     {
         await _updateValidator.ValidateAndThrowAsync(request);
         var cauHoi = await _unitOfWork.CauHois.GetByIdAsync(id);
@@ -113,27 +113,27 @@ public class QuestionService : IQuestionService
         return await _unitOfWork.CauHois.CountAsync();
     }
 
-    public async Task<IEnumerable<NganHangCauHoi>> GetBySkillAsync(KyNang skill)
+    public async Task<IEnumerable<CauHoi>> GetBySkillAsync(KyNang skill)
     {
         return await _unitOfWork.CauHois.GetAllAsync(filter: ch => ch.KyNang == skill);
     }
 
-    public async Task<IEnumerable<NganHangCauHoi>> GetByDifficultyAsync(DoKho difficulty)
+    public async Task<IEnumerable<CauHoi>> GetByDifficultyAsync(DoKho difficulty)
     {
         return await _unitOfWork.CauHois.GetAllAsync(filter: ch => ch.DoKho == difficulty);
     }
 
-    public async Task<IEnumerable<NganHangCauHoi>> GetByLevelAsync(CapDo level)
+    public async Task<IEnumerable<CauHoi>> GetByLevelAsync(CapDo level)
     {
         return await _unitOfWork.CauHois.GetAllAsync(filter: ch => ch.CapDo == level);
     }
 
-    public async Task<IEnumerable<NganHangCauHoi>> GetByTypeAsync(LoaiCauHoi type)
+    public async Task<IEnumerable<CauHoi>> GetByTypeAsync(LoaiCauHoi type)
     {
         return await _unitOfWork.CauHois.GetAllAsync(filter: ch => ch.LoaiCauHoi == type);
     }
 
-    public async Task<NganHangCauHoi> AddAnswerToQuestionAsync(string questionId, DapAnRequest answerRequest)
+    public async Task<CauHoi> AddAnswerToQuestionAsync(string questionId, DapAnRequest answerRequest)
     {
         var cauHoi = await _unitOfWork.CauHois.GetByIdAsync(questionId);
         if (cauHoi == null)
@@ -153,7 +153,7 @@ public class QuestionService : IQuestionService
         return cauHoi;
     }
 
-    public async Task<NganHangCauHoi?> GetQuestionWithAnswersAsync(string id)
+    public async Task<CauHoi?> GetQuestionWithAnswersAsync(string id)
     {
         var questions = await _unitOfWork.CauHois.GetAllAsync(
             filter: ch => ch.Id.ToString() == id,
@@ -163,7 +163,7 @@ public class QuestionService : IQuestionService
     }
 
     // Các method cũ - giữ lại để tương thích ngược
-    public async Task<NganHangCauHoi> AddCorrectAnswerToQuestionAsync(string questionId, DapAnCauHoi dapAnCauHoi)
+    public async Task<CauHoi> AddCorrectAnswerToQuestionAsync(string questionId, DapAnCauHoi dapAnCauHoi)
     {
         var cauHoi = await _unitOfWork.CauHois.GetByIdAsync(questionId);
         if (cauHoi == null)
@@ -176,7 +176,7 @@ public class QuestionService : IQuestionService
         return cauHoi;
     }
 
-    public async Task<NganHangCauHoi> AddGroupToQuestionAsync(string questionId, NhomCauHoiChiTiet nhomCauHoiChiTiet)
+    public async Task<CauHoi> AddGroupToQuestionAsync(string questionId, NhomCauHoiChiTiet nhomCauHoiChiTiet)
     {
         var cauHoi = await _unitOfWork.CauHois.GetByIdAsync(questionId);
         if (cauHoi == null)

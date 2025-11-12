@@ -30,12 +30,12 @@ export function NhomCauHoiApiUrl(path: string = '') {
 
 // DangKy URLs
 export function DangKyApiUrl(path: string = '') {
-    return path ? `${BASE_API_URL}/DangKy/${path}` : `${BASE_API_URL}/DangKy`;
+    return path ? `${BASE_API_URL}/DangKyKhoaHoc/${path}` : `${BASE_API_URL}/DangKyKhoaHoc`;
 }
 
 // DangKyKhach URLs
 export function DangKyKhachApiUrl(path: string = '') {
-    return path ? `${BASE_API_URL}/DangKyKhach/${path}` : `${BASE_API_URL}/DangKyKhach`;
+    return path ? `${BASE_API_URL}/DangKyTuVan/${path}` : `${BASE_API_URL}/DangKyTuVan`;
 }
 
 // DeThi URLs

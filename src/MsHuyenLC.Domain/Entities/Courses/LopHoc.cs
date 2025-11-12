@@ -9,7 +9,7 @@ public class LopHoc
     public TrangThaiLopHoc TrangThai { get; set; } = TrangThaiLopHoc.danghoc;
     public Guid KhoaHocId { get; set; }
     public KhoaHoc KhoaHoc { get; set; } = null!;
-    public ICollection<DangKy> CacDangKy { get; set; } = new List<DangKy>();
+    public ICollection<DangKyKhoaHoc> CacDangKy { get; set; } = new List<DangKyKhoaHoc>();
     public void CapNhatSiSo(int soLuongThayDoi)
     {
         SiSoHienTai += soLuongThayDoi;

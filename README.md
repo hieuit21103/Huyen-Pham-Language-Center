@@ -230,8 +230,8 @@ MsHuyenLC/
 
 Các controller đã được định nghĩa nhưng chưa triển khai đầy đủ:
 
-- 🚧 **Quản lý Đăng ký** (`DangKyController`) - Đăng ký học từ học viên
-- 🚧 **Đăng ký từ khách** (`DangKyKhachController`) - Đăng ký từ người chưa có tài khoản
+- 🚧 **Quản lý Đăng ký** (`DangKyKhoaHocController`) - Đăng ký học từ học viên
+- 🚧 **Đăng ký từ khách** (`DangKyTuVanController`) - Đăng ký từ người chưa có tài khoản
 - 🚧 **Quản lý Thanh toán** (`ThanhToanController`) - Thanh toán học phí, hóa đơn
 - 🚧 **Quản lý Đề thi** (`DeThiController`) - Tạo và quản lý đề thi
 - 🚧 **Ngân hàng đề** (`NganHangDeController`) - Kho câu hỏi

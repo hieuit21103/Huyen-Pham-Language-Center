@@ -8,5 +8,5 @@ public class CauTraLoi
     public string? CauTraLoiText { get; set; }
     public bool? Dung { get; set; }
     public virtual PhienLamBai Phien { get; set; } = null!;
-    public virtual NganHangCauHoi CauHoi { get; set; } = null!;
+    public virtual CauHoi CauHoi { get; set; } = null!;
 }

@@ -9,7 +9,7 @@ public class ApplicationDbContext : DbContext
     {
     }
     // Learning
-    public DbSet<NganHangCauHoi> CauHois { get; set; } = null!;
+    public DbSet<CauHoi> CauHois { get; set; } = null!;
     public DbSet<DapAnCauHoi> DapAnCauHois { get; set; } = null!;
     public DbSet<NhomCauHoi> NhomCauHois { get; set; } = null!;
     public DbSet<NhomCauHoiChiTiet> NhomCauHoiChiTiets { get; set; } = null!;
@@ -18,8 +18,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<KyThi> KyThis { get; set; } = null!;
     public DbSet<PhienLamBai> BaiThis { get; set; } = null!;
     public DbSet<CauTraLoi> BaiThiChiTiets { get; set; } = null!;
-    public DbSet<DangKy> DangKys { get; set; } = null!;
-    public DbSet<DangKyKhach> DangKyKhachs { get; set; } = null!;
+    public DbSet<DangKyKhoaHoc> DangKys { get; set; } = null!;
+    public DbSet<DangKyTuVan> DangKyKhachs { get; set; } = null!;
     public DbSet<ThongBao> ThongBaos { get; set; } = null!;
     public DbSet<PhanHoi> PhanHois { get; set; } = null!;
 
@@ -45,11 +45,11 @@ public class ApplicationDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<NganHangCauHoi>().ToTable("NganHangCauHoi");
-        modelBuilder.Entity<NganHangCauHoi>()
+        modelBuilder.Entity<CauHoi>().ToTable("NganHangCauHoi");
+        modelBuilder.Entity<CauHoi>()
             .Navigation(n => n.CacDapAn)
             .AutoInclude();
-        modelBuilder.Entity<NganHangCauHoi>()
+        modelBuilder.Entity<CauHoi>()
             .Navigation(n => n.CacNhom)
             .AutoInclude();
         modelBuilder.Entity<DapAnCauHoi>().ToTable("DapAnCauHoi");
@@ -75,17 +75,17 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<CauTraLoi>()
             .Navigation(ct => ct.CauHoi)
             .AutoInclude();
-        modelBuilder.Entity<DangKy>().ToTable("DangKy");
-        modelBuilder.Entity<DangKy>()
+        modelBuilder.Entity<DangKyKhoaHoc>().ToTable("DangKyKhoaHoc");
+        modelBuilder.Entity<DangKyKhoaHoc>()
             .Navigation(dk => dk.HocVien)
             .AutoInclude();
-        modelBuilder.Entity<DangKy>()
+        modelBuilder.Entity<DangKyKhoaHoc>()
             .Navigation(dk => dk.LopHoc)
             .AutoInclude();
-        modelBuilder.Entity<DangKy>()
+        modelBuilder.Entity<DangKyKhoaHoc>()
             .Navigation(dk => dk.KhoaHoc)
             .AutoInclude();
-        modelBuilder.Entity<DangKyKhach>().ToTable("DangKyKhach");
+        modelBuilder.Entity<DangKyTuVan>().ToTable("DangKyTuVan");
         modelBuilder.Entity<ThongBao>().ToTable("ThongBao");
         modelBuilder.Entity<PhanHoi>().ToTable("PhanHoi");
         modelBuilder.Entity<PhanHoi>()

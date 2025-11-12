@@ -1,16 +1,16 @@
-using MsHuyenLC.Application.DTOs.Learning.DangKyKhach;
+using MsHuyenLC.Application.DTOs.Learning.DangKyTuVan;
 using MsHuyenLC.Domain.Entities.Learning;
 
 namespace MsHuyenLC.Application.Interfaces.Services.Learning;
 
 public interface IGuestRegistrationService
 {
-    Task<DangKyKhach?> GetByIdAsync(string id);
-    Task<IEnumerable<DangKyKhach>> GetAllAsync();
-    Task<DangKyKhach> CreateAsync(DangKyKhachRequest request);
-    Task<DangKyKhach?> CreateFullAsync(DangKyKhachCreateRequest request);
-    Task<DangKyKhach?> UpdateAsync(string id, DangKyKhachUpdateRequest request);
+    Task<DangKyTuVan?> GetByIdAsync(string id);
+    Task<IEnumerable<DangKyTuVan>> GetAllAsync();
+    Task<DangKyTuVan> CreateAsync(DangKyTuVanRequest request);
+    Task<DangKyTuVan?> CreateFullAsync(DangKyTuVanCreateRequest request);
+    Task<DangKyTuVan?> UpdateAsync(string id, DangKyTuVanUpdateRequest request);
     Task<bool> DeleteAsync(string id);
-    Task<IEnumerable<DangKyKhach>> GetByCourseIdAsync(string courseId);
+    Task<IEnumerable<DangKyTuVan>> GetByCourseIdAsync(string courseId);
     Task<int> CountAsync();
 }
