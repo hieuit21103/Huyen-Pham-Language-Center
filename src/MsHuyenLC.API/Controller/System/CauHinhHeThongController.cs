@@ -15,11 +15,56 @@ public class CauHinhHeThongController : BaseController
 {
     private readonly ISystemConfigService _service;
     public CauHinhHeThongController(
-        ISystemConfigService service, 
-        ISystemLoggerService logService) 
+        ISystemConfigService service,
+        ISystemLoggerService logService)
         : base(logService)
     {
         _service = service;
+    }
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var results = await _service.GetAllAsync();
+        var response = results.Select(cauHinh => new CauHinhHeThongResponse
+        {
+            Id = cauHinh.Id,
+            Ten = cauHinh.Ten,
+            GiaTri = cauHinh.GiaTri
+        });
+
+        var totalItems = await _service.CountAsync();
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy danh sách cấu hình thành công",
+            count = totalItems,
+            data = response
+        });
+    }
+    
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(string id)
+    {
+        var result = await _service.GetByIdAsync(id);
+        if (result == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy cấu hình" 
+            });
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy cấu hình thành công",
+            data = new CauHinhHeThongResponse
+            {
+                Id = result.Id,
+                Ten = result.Ten,
+                GiaTri = result.GiaTri
+            }
+        });
     }
 
     /// <summary>

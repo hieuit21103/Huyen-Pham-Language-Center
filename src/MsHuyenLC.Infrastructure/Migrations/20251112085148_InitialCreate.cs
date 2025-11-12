@@ -25,24 +25,7 @@ namespace MsHuyenLC.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "KhoaHoc",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TenKhoaHoc = table.Column<string>(type: "text", nullable: false),
-                    MoTa = table.Column<string>(type: "text", nullable: true),
-                    HocPhi = table.Column<decimal>(type: "numeric", nullable: false),
-                    ThoiLuong = table.Column<int>(type: "integer", nullable: false),
-                    NgayKhaiGiang = table.Column<DateOnly>(type: "date", nullable: false),
-                    TrangThai = table.Column<int>(type: "integer", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_KhoaHoc", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "NganHangCauHoi",
+                name: "CauHoi",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -57,7 +40,24 @@ namespace MsHuyenLC.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_NganHangCauHoi", x => x.Id);
+                    table.PrimaryKey("PK_CauHoi", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "KhoaHoc",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    TenKhoaHoc = table.Column<string>(type: "text", nullable: false),
+                    MoTa = table.Column<string>(type: "text", nullable: true),
+                    HocPhi = table.Column<decimal>(type: "numeric", nullable: false),
+                    ThoiLuong = table.Column<int>(type: "integer", nullable: false),
+                    NgayKhaiGiang = table.Column<DateOnly>(type: "date", nullable: false),
+                    TrangThai = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_KhoaHoc", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -125,6 +125,28 @@ namespace MsHuyenLC.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "DapAnCauHoi",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    CauHoiId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Nhan = table.Column<string>(type: "text", nullable: false),
+                    NoiDung = table.Column<string>(type: "text", nullable: false),
+                    Dung = table.Column<bool>(type: "boolean", nullable: false),
+                    GiaiThich = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DapAnCauHoi", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DapAnCauHoi_CauHoi_CauHoiId",
+                        column: x => x.CauHoiId,
+                        principalTable: "CauHoi",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "LopHoc",
                 columns: table => new
                 {
@@ -147,28 +169,6 @@ namespace MsHuyenLC.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "DapAnCauHoi",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    CauHoiId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Nhan = table.Column<string>(type: "text", nullable: false),
-                    NoiDung = table.Column<string>(type: "text", nullable: false),
-                    Dung = table.Column<bool>(type: "boolean", nullable: false),
-                    GiaiThich = table.Column<string>(type: "text", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DapAnCauHoi", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_DapAnCauHoi_NganHangCauHoi_CauHoiId",
-                        column: x => x.CauHoiId,
-                        principalTable: "NganHangCauHoi",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "NhomCauHoiChiTiet",
                 columns: table => new
                 {
@@ -181,9 +181,9 @@ namespace MsHuyenLC.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_NhomCauHoiChiTiet", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_NhomCauHoiChiTiet_NganHangCauHoi_CauHoiId",
+                        name: "FK_NhomCauHoiChiTiet_CauHoi_CauHoiId",
                         column: x => x.CauHoiId,
-                        principalTable: "NganHangCauHoi",
+                        principalTable: "CauHoi",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -554,15 +554,15 @@ namespace MsHuyenLC.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_CauHoiDeThi", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CauHoiDeThi_DeThi_DeThiId",
-                        column: x => x.DeThiId,
-                        principalTable: "DeThi",
+                        name: "FK_CauHoiDeThi_CauHoi_CauHoiId",
+                        column: x => x.CauHoiId,
+                        principalTable: "CauHoi",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_CauHoiDeThi_NganHangCauHoi_CauHoiId",
-                        column: x => x.CauHoiId,
-                        principalTable: "NganHangCauHoi",
+                        name: "FK_CauHoiDeThi_DeThi_DeThiId",
+                        column: x => x.DeThiId,
+                        principalTable: "DeThi",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -616,9 +616,9 @@ namespace MsHuyenLC.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_CauTraLoi", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CauTraLoi_NganHangCauHoi_CauHoiId",
+                        name: "FK_CauTraLoi_CauHoi_CauHoiId",
                         column: x => x.CauHoiId,
-                        principalTable: "NganHangCauHoi",
+                        principalTable: "CauHoi",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -843,7 +843,7 @@ namespace MsHuyenLC.Infrastructure.Migrations
                 name: "PhongHoc");
 
             migrationBuilder.DropTable(
-                name: "NganHangCauHoi");
+                name: "CauHoi");
 
             migrationBuilder.DropTable(
                 name: "NhomCauHoi");

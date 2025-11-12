@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MsHuyenLC.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251112080754_InitialCreate")]
+    [Migration("20251112085148_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -400,7 +400,7 @@ namespace MsHuyenLC.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("NganHangCauHoi", (string)null);
+                    b.ToTable("CauHoi", (string)null);
                 });
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.CauTraLoi", b =>

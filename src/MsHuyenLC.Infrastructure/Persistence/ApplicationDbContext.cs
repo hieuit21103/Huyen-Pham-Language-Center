@@ -45,7 +45,7 @@ public class ApplicationDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<CauHoi>().ToTable("NganHangCauHoi");
+        modelBuilder.Entity<CauHoi>().ToTable("CauHoi");
         modelBuilder.Entity<CauHoi>()
             .Navigation(n => n.CacDapAn)
             .AutoInclude();

@@ -397,7 +397,7 @@ namespace MsHuyenLC.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("NganHangCauHoi", (string)null);
+                    b.ToTable("CauHoi", (string)null);
                 });
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.CauTraLoi", b =>
