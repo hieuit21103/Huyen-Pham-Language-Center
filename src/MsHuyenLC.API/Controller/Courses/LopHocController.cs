@@ -9,7 +9,7 @@ namespace MsHuyenLC.API.Controller.Courses;
 
 [Route("api/[controller]")]
 [ApiController]
-public class LopHocController : BaseController<LopHoc>
+public class LopHocController : BaseController
 {
     private readonly IClassService _service;
     public LopHocController(

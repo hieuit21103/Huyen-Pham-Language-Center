@@ -10,7 +10,7 @@ namespace MsHuyenLC.API.Controller.System;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class SystemLoggerController : BaseController<NhatKyHeThong>
+public class SystemLoggerController : BaseController
 {
     public SystemLoggerController(
         ISystemLoggerService logService) : base(logService)

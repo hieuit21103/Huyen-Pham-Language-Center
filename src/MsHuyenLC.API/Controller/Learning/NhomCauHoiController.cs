@@ -11,7 +11,7 @@ namespace MsHuyenLC.API.Controller.Learning;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "admin,giaovu")]
-public class NhomCauHoiController : BaseController<NhomCauHoi>
+public class NhomCauHoiController : BaseController
 {
     private readonly IGroupQuestionService _service;
 

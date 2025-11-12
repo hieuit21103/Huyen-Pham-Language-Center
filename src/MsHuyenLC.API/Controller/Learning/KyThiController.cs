@@ -14,7 +14,7 @@ namespace MsHuyenLC.API.Controller.Learning;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "admin,giaovu")]
-public class KyThiController : BaseController<KyThi>
+public class KyThiController : BaseController
 {
     private readonly IExamSessionService _service;
     public KyThiController(ISystemLoggerService loggerService, IExamSessionService service) : base(loggerService)

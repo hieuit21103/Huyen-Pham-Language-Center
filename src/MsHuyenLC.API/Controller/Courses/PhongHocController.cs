@@ -1,7 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Interfaces.Repositories;
-using MsHuyenLC.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Courses.PhongHoc;
 using MsHuyenLC.Application.Interfaces.Services.System;
@@ -13,7 +10,7 @@ namespace MsHuyenLC.API.Controller.Courses;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "admin,giaovu")]
-public class PhongHocController : BaseController<PhongHoc>
+public class PhongHocController : BaseController
 {
     private readonly IRoomService _service;
     public PhongHocController(

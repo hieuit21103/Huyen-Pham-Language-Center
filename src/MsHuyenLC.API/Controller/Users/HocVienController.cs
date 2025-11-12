@@ -10,14 +10,46 @@ namespace MsHuyenLC.API.Controller.Users;
 
 [Route("api/[controller]")]
 [ApiController]
-public class HocVienController : BaseController<HocVien>
+public class HocVienController : BaseController
 {
     private readonly IStudentService _service;
-    
-    public HocVienController(IStudentService service, ISystemLoggerService logService) 
+
+    public HocVienController(IStudentService service, ISystemLoggerService logService)
         : base(logService)
     {
         _service = service;
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "admin,giaovu")]
+    public async Task<IActionResult> GetAll()
+    {
+        var hocViens = await _service.GetAllAsync();
+        return Ok(new
+        {
+            success = true,
+            data = hocViens
+        });
+    }
+
+    [HttpGet("{id}")]
+    [Authorize(Roles = "admin,giaovu")]
+    public async Task<IActionResult> GetById(string id)
+    {
+        var hocVien = await _service.GetByIdAsync(id);
+        if (hocVien == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy học viên" 
+            });
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy thông tin học viên thành công",
+            data = hocVien
+        });
     }
 
     [Authorize]

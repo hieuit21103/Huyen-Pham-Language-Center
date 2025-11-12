@@ -6,10 +6,6 @@ using MsHuyenLC.Application.Interfaces.Repositories;
 using MsHuyenLC.Application.Interfaces.Services;
 using MsHuyenLC.Application.Interfaces.Services.Auth;
 using MsHuyenLC.Application.Interfaces.Services.System;
-using System.Security.Claims;
-using MsHuyenLC.Application.Interfaces.Services.Email;
-using MsHuyenLC.Application.DTOs.Finance.ThanhToan;
-using MsHuyenLC.Application.Interfaces.Services.User;
 using MsHuyenLC.Application.Interfaces.Services.Learning;
 using MsHuyenLC.Application.Interfaces.Services.Course;
 
@@ -17,7 +13,7 @@ namespace MsHuyenLC.API.Controller.Learning;
 
 [Route("api/[controller]")]
 [ApiController]
-public class DangKyKhachController : BaseController<DangKyKhach>
+public class DangKyKhachController : BaseController
 {
     private readonly IGuestRegistrationService _service;
     private readonly ICourseService _courseService;

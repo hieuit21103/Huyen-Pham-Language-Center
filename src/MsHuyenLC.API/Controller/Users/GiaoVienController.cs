@@ -13,7 +13,7 @@ namespace MsHuyenLC.API.Controller.Users;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "admin,giaovu")]
-public class GiaoVienController : BaseController<GiaoVien>
+public class GiaoVienController : BaseController
 {
     private readonly ITeacherService _service;
     public GiaoVienController(

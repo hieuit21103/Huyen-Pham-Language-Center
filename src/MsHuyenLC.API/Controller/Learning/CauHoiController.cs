@@ -10,7 +10,7 @@ namespace MsHuyenLC.API.Controller.Learning;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Roles = "admin,giaovu")]
-public class CauHoiController : BaseController<NganHangCauHoi>
+public class CauHoiController : BaseController
 {
     private readonly IQuestionService _service;
     

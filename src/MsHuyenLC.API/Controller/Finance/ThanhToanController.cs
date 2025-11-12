@@ -18,7 +18,7 @@ namespace MsHuyenLC.API.Controller.Finance;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class ThanhToanController : BaseController<ThanhToan>
+public class ThanhToanController : BaseController
 {
 
     private readonly IVnpayService _vnpayService;

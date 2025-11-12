@@ -1,4 +1,5 @@
 using MsHuyenLC.Domain.Entities.Courses;
+using MsHuyenLC.Domain.Entities.Users;
 using MsHuyenLC.Domain.Enums;
 
 namespace MsHuyenLC.Application.DTOs.Learning.DangKy;
@@ -6,6 +7,7 @@ namespace MsHuyenLC.Application.DTOs.Learning.DangKy;
 public class DangKyHocVienResponse
 {
     public Guid Id { get; set; }
+    public HocVien? HocVien { get; set; }
     public KhoaHoc? KhoaHoc { get; set; }
     public LopHoc? LopHoc { get; set; }
     public DateOnly NgayDangKy { get; set; }

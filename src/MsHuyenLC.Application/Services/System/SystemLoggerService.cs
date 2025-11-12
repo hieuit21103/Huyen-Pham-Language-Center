@@ -15,9 +15,6 @@ public class SystemLoggerService : ISystemLoggerService
     {
         _unitOfWork = unitOfWork;
     }
-
-    #region Read Operations
-
     public async Task<NhatKyHeThong?> GetByIdAsync(string id)
     {
         return await _unitOfWork.NhatKyHeThongs.GetByIdAsync(id);
@@ -67,10 +64,6 @@ public class SystemLoggerService : ISystemLoggerService
             predicate: log => log.HanhDong.Contains(action)
         );
     }
-
-    #endregion
-
-    #region Write Operations - Logging
 
     public async Task LogAsync(
         Guid taiKhoanId,
@@ -187,10 +180,6 @@ public class SystemLoggerService : ISystemLoggerService
         await _unitOfWork.SaveChangesAsync();
     }
 
-    #endregion
-
-    #region Private Helper Methods
-
     private string SerializeEntity<T>(T entity) where T : class
     {
         try
@@ -238,6 +227,5 @@ public class SystemLoggerService : ISystemLoggerService
 
         return changes;
     }
-    #endregion
 }
 

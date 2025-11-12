@@ -11,7 +11,7 @@ namespace MsHuyenLC.API.Controller.Learning;
 [Route("api/[controller]")]
 [Authorize(Roles = "admin,giaovu,hocvien")]
 
-public class PhanHoiController : BaseController<PhanHoi>
+public class PhanHoiController : BaseController
 {
     private readonly IFeedbackService _service;
     

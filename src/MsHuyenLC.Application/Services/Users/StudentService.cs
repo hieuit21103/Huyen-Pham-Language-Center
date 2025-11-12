@@ -4,7 +4,7 @@ using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.Interfaces.Services.User;
 using MsHuyenLC.Domain.Entities.Users;
 
-namespace MsHuyenLC.Application.Services.User;
+namespace MsHuyenLC.Application.Services.Users;
 
 public class StudentService : IStudentService
 {

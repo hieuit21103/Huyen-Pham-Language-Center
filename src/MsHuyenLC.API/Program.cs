@@ -5,20 +5,26 @@ using StackExchange.Redis;
 using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.Interfaces.Repositories;
 using MsHuyenLC.Application.Interfaces.Repositories.Users;
-using MsHuyenLC.Application.Interfaces.Services;
 using MsHuyenLC.Application.Interfaces.Services.Auth;
 using MsHuyenLC.Application.Interfaces.Services.System;
 using MsHuyenLC.Application.Interfaces.Services.Email;
 using MsHuyenLC.Application.Interfaces.Services.Finance;
+using MsHuyenLC.Application.Interfaces.Services.User;
+using MsHuyenLC.Application.Interfaces.Services.Course;
+using MsHuyenLC.Application.Interfaces.Services.Learning;
 using MsHuyenLC.Application.Services;
 using MsHuyenLC.Application.Services.System;
+using MsHuyenLC.Application.Services.Users;
+using MsHuyenLC.Application.Services.User;
+using MsHuyenLC.Application.Services.Courses;
+using MsHuyenLC.Application.Services.Learning;
+using MsHuyenLC.Application.Services.Finance;
 using MsHuyenLC.Infrastructure.Repositories;
 using MsHuyenLC.Infrastructure.Repositories.Users;
 using MsHuyenLC.Infrastructure.Services;
 using MsHuyenLC.Infrastructure.Services.Email;
+using MsHuyenLC.Infrastructure.Persistence;
 using MsHuyenLC.Infrastructure.Persistence.Seed;
-using MsHuyenLC.Application.Services.Courses;
-using MsHuyenLC.Application.Services.Learning;
 using MsHuyenLC.API.Middleware;
 using MsHuyenLC.Application.Validators.Users;
 using FluentValidation;
@@ -130,26 +136,52 @@ builder.Services.AddCors(options =>
     });
 });
 
+// ========== Repository Pattern ==========
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// ========== Auth Services ==========
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IVnpayService, VNPayService>();
 
-// Unit of Work & Repository Pattern
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-// Services
-builder.Services.AddScoped<AssignmentService>();
-builder.Services.AddScoped<ScheduleService>();
-builder.Services.AddScoped<TestService>();
-builder.Services.AddScoped<QuestionService>();
-builder.Services.AddScoped<GroupQuestionService>();
-builder.Services.AddScoped<TestService>();
+// ========== System Services ==========
 builder.Services.AddScoped<ISystemLoggerService, SystemLoggerService>();
+builder.Services.AddScoped<ISystemConfigService, SystemConfigService>();
+
+// ========== Email Services ==========
+builder.Services.AddScoped<IEmailService, EmailService>();
+
+// ========== Finance Services ==========
+builder.Services.AddScoped<IVnpayService, VNPayService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+
+// ========== User Services ==========
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<ITeacherService, TeacherService>();
+builder.Services.AddScoped<IAcademicStaffService, AcademicStaffService>();
+
+// ========== Course Services ==========
+builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<IClassService, ClassService>();
+builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<IScheduleService, ScheduleService>();
+builder.Services.AddScoped<IAssignmentService, AssignmentService>();
+
+// ========== Learning Services ==========
+builder.Services.AddScoped<ITestService, TestService>();
+builder.Services.AddScoped<IQuestionService, QuestionService>();
+builder.Services.AddScoped<IGroupQuestionService, GroupQuestionService>();
+builder.Services.AddScoped<IExamSessionService, ExamSessionService>();
+builder.Services.AddScoped<ITestSessionService, TestSessionService>();
+builder.Services.AddScoped<IRegistrationService, RegistrationService>();
+builder.Services.AddScoped<IGuestRegistrationService, GuestRegistrationService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 
 // FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<TaiKhoanRequestValidator>();

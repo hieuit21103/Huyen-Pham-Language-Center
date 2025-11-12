@@ -3,8 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Courses.LichHoc;
 using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.Interfaces.Repositories;
-using MsHuyenLC.Application.Interfaces.Services;
-using MsHuyenLC.Application.Services.Courses;
+using MsHuyenLC.Application.Interfaces.Services.Course;
 using MsHuyenLC.Application.Interfaces.Services.System;
 
 namespace MsHuyenLC.API.Controller.Courses;
@@ -12,12 +11,12 @@ namespace MsHuyenLC.API.Controller.Courses;
 [Route("api/[controller]")]
 [ApiController]
 
-public class LichHocController : BaseController<LichHoc>
+public class LichHocController : BaseController
 {
-    private readonly ScheduleService _service;
+    private readonly IScheduleService _service;
     public LichHocController(
         ISystemLoggerService logService,
-        ScheduleService service) : base(logService)
+        IScheduleService service) : base(logService)
     {
         _service = service;
     }

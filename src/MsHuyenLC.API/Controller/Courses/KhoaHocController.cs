@@ -10,7 +10,7 @@ namespace MsHuyenLC.API.Controller.Courses;
 
 [Route("api/[controller]")]
 [ApiController]
-public class KhoaHocController : BaseController<KhoaHoc>
+public class KhoaHocController : BaseController
 {
     private readonly ICourseService _service;
     public KhoaHocController(ICourseService service, ISystemLoggerService logService) 

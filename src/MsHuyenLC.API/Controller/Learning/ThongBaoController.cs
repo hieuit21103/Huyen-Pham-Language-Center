@@ -9,7 +9,7 @@ namespace MsHuyenLC.API.Controller.Learning;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ThongBaoController : BaseController<ThongBao>
+public class ThongBaoController : BaseController
 {
     private readonly INotificationService _service;
     

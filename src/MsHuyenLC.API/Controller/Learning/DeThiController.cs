@@ -11,7 +11,7 @@ namespace MsHuyenLC.API.Controller.Learning;
 
 [ApiController]
 [Route("api/[controller]")]
-public class DeThiController : BaseController<DeThi>
+public class DeThiController : BaseController
 {
     private readonly ITestService _service;
     public DeThiController(

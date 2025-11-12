@@ -10,7 +10,7 @@ namespace MsHuyenLC.API.Controller;
 
 [ApiController]
 [Route("api/[controller]")]
-public abstract class BaseController<TEntity> : ControllerBase where TEntity : class
+public abstract class BaseController : ControllerBase
 {
     protected readonly ISystemLoggerService _logService;
 
@@ -37,7 +37,7 @@ public abstract class BaseController<TEntity> : ControllerBase where TEntity : c
         return HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
     }
 
-    protected async Task LogCreateAsync(TEntity entity)
+    protected async Task LogCreateAsync(object entity)
     {
         if (_logService != null)
         {
@@ -46,7 +46,7 @@ public abstract class BaseController<TEntity> : ControllerBase where TEntity : c
         }
     }
 
-    protected async Task LogUpdateAsync(TEntity oldEntity, TEntity newEntity)
+    protected async Task LogUpdateAsync(object oldEntity, object newEntity)
     {
         if (_logService != null)
         {
@@ -55,7 +55,7 @@ public abstract class BaseController<TEntity> : ControllerBase where TEntity : c
         }
     }
 
-    protected async Task LogDeleteAsync(TEntity entity)
+    protected async Task LogDeleteAsync(object entity)
     {
         if (_logService != null)
         {

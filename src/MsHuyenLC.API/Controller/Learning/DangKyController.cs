@@ -11,7 +11,7 @@ namespace MsHuyenLC.API.Controller.Learning;
 
 [Route("api/[controller]")]
 [ApiController]
-public class DangKyController : BaseController<DangKy>
+public class DangKyController : BaseController
 {
     private readonly IRegistrationService _service;
     public DangKyController(
@@ -31,6 +31,7 @@ public class DangKyController : BaseController<DangKy>
         var response = entities.Select(dk => new DangKyHocVienResponse
         {
             Id = dk.Id,
+            HocVien = dk.HocVien,
             KhoaHoc = dk.KhoaHoc,
             LopHoc = dk.LopHoc,
             NgayDangKy = dk.NgayDangKy,

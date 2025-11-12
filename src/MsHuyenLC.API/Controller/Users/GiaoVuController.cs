@@ -12,7 +12,7 @@ namespace MsHuyenLC.API.Controller.Users;
 
 [Route("api/[controller]")]
 [ApiController]
-public class GiaoVuController : BaseController<GiaoVu>
+public class GiaoVuController : BaseController
 {
     private readonly IAcademicStaffService _service;
     public GiaoVuController(IAcademicStaffService service, ISystemLoggerService logService)

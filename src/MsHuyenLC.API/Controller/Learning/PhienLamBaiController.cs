@@ -13,7 +13,7 @@ namespace MsHuyenLC.API.Controller.Learning;
 
 [ApiController]
 [Route("api/[controller]")]
-public class PhienLamBaiController : BaseController<PhienLamBai>
+public class PhienLamBaiController : BaseController
 {
     private readonly ITestSessionService _service;
     public PhienLamBaiController(
@@ -22,6 +22,39 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
         ) : base(logService)
     {
         _service = service;
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "admin,giaovu,giaovien")]
+    public async Task<IActionResult> GetAll()
+    {
+        var phienLamBais = await _service.GetAllAsync();
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy danh sách phiên làm bài thành công",
+            data = phienLamBais
+        });
+    }
+
+    [HttpGet("{id}")]
+    [Authorize(Roles = "admin,giaovu,giaovien")]
+    public async Task<IActionResult> GetById(string id){
+        var phienLamBai = await _service.GetByIdAsync(id);
+        if (phienLamBai == null)
+            return NotFound(new
+            {
+                success = false,
+                message = "Không tìm thấy phiên làm bài"
+            });
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy thông tin phiên làm bài thành công",
+            data = phienLamBai
+        });
     }
 
     [HttpPost("submit")]

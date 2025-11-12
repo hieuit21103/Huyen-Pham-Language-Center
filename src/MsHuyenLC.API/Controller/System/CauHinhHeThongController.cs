@@ -11,7 +11,7 @@ namespace MsHuyenLC.API.Controller.System;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(Roles = "admin")]
-public class CauHinhHeThongController : BaseController<CauHinhHeThong>
+public class CauHinhHeThongController : BaseController
 {
     private readonly ISystemConfigService _service;
     public CauHinhHeThongController(
