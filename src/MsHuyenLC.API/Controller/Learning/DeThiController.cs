@@ -1,60 +1,105 @@
 using Microsoft.AspNetCore.Mvc;
 using MsHuyenLC.Application.DTOs.Learning.DeThi;
 using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Services.Learnings;
+using MsHuyenLC.Application.Interfaces.Repositories;
+using MsHuyenLC.Application.Interfaces.Services.Learning;
+using MsHuyenLC.Application.Interfaces.Services.System;
+using MsHuyenLC.Application.Services.Learning;
 using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
-/// <summary>
-/// Controller quản lý đề thi
-/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class DeThiController : BaseController<DeThi>
 {
-    private readonly TestService _testService;
-    private readonly IGenericService<NganHangCauHoi> _cauHoiService;
-    private readonly IGenericService<CauHoiDeThi> _cauHoiDeThiService;
-
+    private readonly ITestService _service;
     public DeThiController(
-        IGenericService<DeThi> service,
-        TestService testService,
-        IGenericService<NganHangCauHoi> cauHoiService,
-        IGenericService<CauHoiDeThi> cauHoiDeThiService) : base(service)
+        ISystemLoggerService loggerService,
+        ITestService service) : base(loggerService)
     {
-        _testService = testService;
-        _cauHoiService = cauHoiService;
-        _cauHoiDeThiService = cauHoiDeThiService;
+        _service = service;
+    }
+
+    /// <summary>
+    /// Lấy tất cả đề thi
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var deThis = await _service.GetAllAsync();
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy danh sách đề thi thành công",
+            data = deThis
+        });
+    }
+
+    /// <summary>
+    /// Lấy đề thi theo ID
+    /// </summary>
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(string id)
+    {
+        var deThi = await _service.GetByIdAsync(id);
+        if (deThi == null)
+        {
+            return NotFound(new
+            {
+                success = false,
+                message = "Không tìm thấy đề thi"
+            });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy thông tin đề thi thành công",
+            data = deThi
+        });
+    }
+
+    /// <summary>
+    /// Lấy đề thi theo người tạo
+    /// </summary>
+    [HttpGet("creator/{creatorId}")]
+    public async Task<IActionResult> GetTestsByCreator(string creatorId)
+    {
+        var deThis = await _service.GetTestsByCreatorAsync(creatorId);
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy danh sách đề thi theo người tạo thành công",
+            data = deThis
+        });
+    }
+
+    /// <summary>
+    /// Lấy đề thi theo kỳ thi
+    /// </summary>
+    [HttpGet("exam/{examId}")]
+    public async Task<IActionResult> GetTestsByExam(string examId)
+    {
+        var deThis = await _service.GetTestsByExamAsync(examId);
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy danh sách đề thi theo kỳ thi thành công",
+            data = deThis
+        });
     }
 
     /// <summary>
     /// Tự động tạo đề thi với câu hỏi ngẫu nhiên
     /// </summary>
-    /// <param name="request">Tiêu chí tạo đề thi (loại câu hỏi, kỹ năng, cấp độ, độ khó)</param>
-    /// <returns>Đề thi đã được tạo</returns>
-    /// <response code="200">Tạo đề thi thành công</response>
-    /// <response code="400">Không đủ câu hỏi hoặc dữ liệu không hợp lệ</response>
-    /// <response code="500">Lỗi server</response>
-    /// <remarks>
-    /// Hệ thống sẽ tự động chọn ngẫu nhiên câu hỏi từ ngân hàng đề theo các tiêu chí đã chọn
-    /// </remarks>
     [HttpPost("generate")]
     public async Task<ActionResult> GenerateTest([FromBody] GenerateTestRequest request)
     {
         try
         {
-            var deThi = await _testService.GenerateTestAsync(
-                request.TenDe,
-                request.TongCauHoi,
-                request.ThoiGianLamBai,
-                request.LoaiDeThi,
-                request.LoaiCauHoi,
-                request.KyNang,
-                request.CapDo,
-                request.DoKho,
-                GetCurrentUserId()
-            );
+            request.NguoiTaoId = GetCurrentUserId();
+            var deThi = await _service.GenerateTestAsync(request);
 
             if (deThi == null)
             {
@@ -109,34 +154,13 @@ public class DeThiController : BaseController<DeThi>
         }
     }
 
-    /// <summary>
-    /// Tạo đề thi với phân bổ câu hỏi theo độ khó
-    /// </summary>
-    /// <param name="request">Tiêu chí và số lượng câu theo từng độ khó (dễ/trung bình/khó)</param>
-    /// <returns>Đề thi đã được tạo</returns>
-    /// <response code="200">Tạo đề thi thành công</response>
-    /// <response code="400">Không đủ câu hỏi hoặc dữ liệu không hợp lệ</response>
-    /// <response code="500">Lỗi server</response>
-    /// <remarks>
-    /// Cho phép tạo đề thi với số lượng câu hỏi cụ thể cho từng mức độ khó
-    /// </remarks>
     [HttpPost("generate-with-difficulty")]
     public async Task<ActionResult> GenerateTestWithDifficulty([FromBody] GenerateTestWithDifficultyRequest request)
     {
         try
         {
-            var deThi = await _testService.GenerateTestWithDifficultyDistributionAsync(
-                request.TenDe,
-                request.SoCauDe,
-                request.SoCauTrungBinh,
-                request.SoCauKho,
-                request.ThoiGianLamBai,
-                request.LoaiDeThi,
-                request.LoaiCauHoi,
-                request.KyNang,
-                request.CapDo,
-                GetCurrentUserId()
-            );
+            request.NguoiTaoId = GetCurrentUserId();
+            var deThi = await _service.GenerateTestWithDifficultyDistributionAsync(request);
 
             return Ok(new
             {
@@ -182,17 +206,6 @@ public class DeThiController : BaseController<DeThi>
         }
     }
 
-    /// <summary>
-    /// Tạo đề thi thủ công với danh sách câu hỏi được chọn
-    /// </summary>
-    /// <param name="request">Thông tin đề thi và danh sách ID câu hỏi</param>
-    /// <returns>Đề thi đã tạo</returns>
-    /// <response code="200">Tạo đề thi thành công</response>
-    /// <response code="400">Dữ liệu không hợp lệ</response>
-    /// <response code="500">Lỗi server</response>
-    /// <remarks>
-    /// Số câu hỏi phải khớp với số lượng ID câu hỏi được cung cấp
-    /// </remarks>
     [HttpPost]
     public async Task<ActionResult<DeThi>> Create([FromBody] DeThiRequest request)
     {
@@ -203,63 +216,10 @@ public class DeThiController : BaseController<DeThi>
                 return BadRequest(ModelState);
             }
 
-            if (request.LoaiDeThi == LoaiDeThi.ChinhThuc && request.KyThiId == "")
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "KyThiId không được để trống khi tạo đề thi chính thức"
-                });
-            }
+            request.NguoiTaoId = GetCurrentUserId();
+            var createdDeThi = await _service.CreateAsync(request);
 
-            if (request.TongCauHoi != request.CauHoiIds.Count)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = $"Số câu hỏi ({request.TongCauHoi}) không khớp với số lượng câu hỏi được chọn ({request.CauHoiIds.Count})"
-                });
-            }
-
-            // Validate câu hỏi tồn tại
-            var cauHoi = new List<NganHangCauHoi>();
-            foreach (var cauHoiId in request.CauHoiIds)
-            {
-                var ch = await _cauHoiService.GetByIdAsync(cauHoiId);
-                if (ch == null)
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = $"Câu hỏi với ID {cauHoiId} không tồn tại"
-                    });
-                }
-                cauHoi.Add(ch);
-            }
-
-            var deThi = new DeThi
-            {
-                TenDe = request.TenDe,
-                TongCauHoi = request.TongCauHoi,
-                ThoiLuongPhut = request.ThoiGianLamBai,
-                LoaiDeThi = request.LoaiDeThi,
-                KyThiId = string.IsNullOrEmpty(request.KyThiId) ? null : Guid.Parse(request.KyThiId),
-                NguoiTaoId = GetCurrentUserId()
-            };
-
-            var createdDeThi = await _testService.AddAsync(deThi);
-
-            foreach (var ch in cauHoi)
-            {
-                var cauHoiDeThi = new CauHoiDeThi
-                {
-                    DeThiId = createdDeThi.Id,
-                    CauHoiId = ch.Id
-                };
-                await _cauHoiDeThiService.AddAsync(cauHoiDeThi);
-            }
-
-            return Ok( new
+            return Ok(new
             {
                 success = true,
                 message = "Tạo đề thi thành công",
@@ -274,6 +234,22 @@ public class DeThiController : BaseController<DeThi>
                 }
             });
         }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = ex.Message
+            });
+        }
         catch (Exception ex)
         {
             return StatusCode(500, new
@@ -285,18 +261,6 @@ public class DeThiController : BaseController<DeThi>
         }
     }
 
-    /// <summary>
-    /// Tạo đề thi hỗn hợp với cả nhóm câu hỏi và câu hỏi độc lập
-    /// </summary>
-    /// <param name="request">Thông tin đề thi, danh sách ID nhóm câu hỏi và câu hỏi độc lập</param>
-    /// <returns>Đề thi đã tạo</returns>
-    /// <response code="200">Tạo đề thi thành công</response>
-    /// <response code="400">Dữ liệu không hợp lệ</response>
-    /// <response code="500">Lỗi server</response>
-    /// <remarks>
-    /// Tạo đề thi từ cả nhóm câu hỏi (lấy tất cả câu hỏi trong nhóm) và câu hỏi độc lập.
-    /// Câu hỏi độc lập không được thuộc bất kỳ nhóm nào.
-    /// </remarks>
     [HttpPost("create-mixed")]
     public async Task<ActionResult> CreateMixed([FromBody] CreateMixedTestRequest request)
     {
@@ -316,17 +280,7 @@ public class DeThiController : BaseController<DeThi>
                 });
             }
 
-            Guid? kyThiId = string.IsNullOrEmpty(request.KyThiId) ? null : Guid.Parse(request.KyThiId);
-
-            var deThi = await _testService.CreateMixedTestAsync(
-                request.TenDe,
-                request.ThoiGianLamBai,
-                request.LoaiDeThi,
-                kyThiId,
-                request.NhomCauHoiIds ?? new List<string>(),
-                request.CauHoiDocLapIds ?? new List<string>(),
-                GetCurrentUserId()
-            );
+            var deThi = await _service.CreateMixedTestAsync(request);
 
             return Ok(new
             {
@@ -370,6 +324,9 @@ public class DeThiController : BaseController<DeThi>
         }
     }
 
+
+
+
     /// <summary>
     /// Cập nhật đề thi
     /// </summary>
@@ -393,17 +350,6 @@ public class DeThiController : BaseController<DeThi>
                 return BadRequest(ModelState);
             }
 
-            // Kiểm tra đề thi tồn tại
-            var existingDeThi = await _testService.GetByIdAsync(id);
-            if (existingDeThi == null)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    message = "Không tìm thấy đề thi"
-                });
-            }
-
             // Validation
             if (request.LoaiDeThi == LoaiDeThi.ChinhThuc && request.KyThiId == null)
             {
@@ -414,58 +360,15 @@ public class DeThiController : BaseController<DeThi>
                 });
             }
 
-            if (request.TongCauHoi != request.CauHoiIds.Count)
+            // Service sẽ xử lý validation và cập nhật
+            var updatedDeThi = await _service.UpdateAsync(id, request);
+            if (updatedDeThi == null)
             {
-                return BadRequest(new
+                return NotFound(new
                 {
                     success = false,
-                    message = $"Số câu hỏi ({request.TongCauHoi}) không khớp với số lượng câu hỏi được chọn ({request.CauHoiIds.Count})"
+                    message = "Không tìm thấy đề thi"
                 });
-            }
-
-            // Validate câu hỏi tồn tại
-            var cauHoi = new List<NganHangCauHoi>();
-            foreach (var cauHoiId in request.CauHoiIds)
-            {
-                var ch = await _cauHoiService.GetByIdAsync(cauHoiId);
-                if (ch == null)
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = $"Câu hỏi với ID {cauHoiId} không tồn tại"
-                    });
-                }
-                cauHoi.Add(ch);
-            }
-
-            existingDeThi.TenDe = request.TenDe;
-            existingDeThi.TongCauHoi = request.TongCauHoi;
-            existingDeThi.ThoiLuongPhut = request.ThoiGianLamBai;
-            existingDeThi.LoaiDeThi = request.LoaiDeThi;
-            existingDeThi.KyThiId = request.KyThiId;
-
-            await _testService.UpdateAsync(existingDeThi);
-
-            var oldCauHoiDeThis = await _cauHoiDeThiService.GetAllAsync(
-                PageNumber: 1,
-                PageSize: 1000,
-                Filter: cd => cd.DeThiId == existingDeThi.Id
-            );
-
-            foreach (var old in oldCauHoiDeThis)
-            {
-                await _cauHoiDeThiService.DeleteAsync(old);
-            }
-
-            foreach (var ch in cauHoi)
-            {
-                var cauHoiDeThi = new CauHoiDeThi
-                {
-                    DeThiId = existingDeThi.Id,
-                    CauHoiId = ch.Id
-                };
-                await _cauHoiDeThiService.AddAsync(cauHoiDeThi);
             }
 
             return Ok(new
@@ -474,13 +377,29 @@ public class DeThiController : BaseController<DeThi>
                 message = "Cập nhật đề thi thành công",
                 data = new
                 {
-                    id = existingDeThi.Id,
-                    tenDe = existingDeThi.TenDe,
-                    soCauHoi = existingDeThi.TongCauHoi,
-                    thoiGianLamBai = existingDeThi.ThoiLuongPhut,
-                    loaiDeThi = existingDeThi.LoaiDeThi,
-                    kyThiId = existingDeThi.KyThiId
+                    id = updatedDeThi.Id,
+                    tenDe = updatedDeThi.TenDe,
+                    soCauHoi = updatedDeThi.TongCauHoi,
+                    thoiGianLamBai = updatedDeThi.ThoiLuongPhut,
+                    loaiDeThi = updatedDeThi.LoaiDeThi,
+                    kyThiId = updatedDeThi.KyThiId
                 }
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new
+            {
+                success = false,
+                message = ex.Message
             });
         }
         catch (Exception ex)
@@ -507,7 +426,7 @@ public class DeThiController : BaseController<DeThi>
     {
         try
         {
-            var deThi = await _testService.GetByIdAsync(id);
+            var deThi = await _service.GetByIdAsync(id);
 
             if (deThi == null)
             {
@@ -518,7 +437,7 @@ public class DeThiController : BaseController<DeThi>
                 });
             }
 
-            await _testService.DeleteAsync(deThi);
+            await _service.DeleteAsync(id);
 
             return Ok(new
             {
@@ -550,7 +469,7 @@ public class DeThiController : BaseController<DeThi>
     {
         try
         {
-            var deThi = await _testService.GetTestWithQuestionsAsync(id);
+            var deThi = await _service.GetTestWithQuestionsAsync(id);
 
             if (deThi == null)
             {
@@ -561,13 +480,16 @@ public class DeThiController : BaseController<DeThi>
                 });
             }
 
-            var questions = _testService.GetQuestionsInTest(deThi);
+            var questions = deThi.CacCauHoi
+                .Where(chdt => chdt.CauHoi != null)
+                .OrderBy(chdt => chdt.ThuTuCauHoi)
+                .Select(chdt => chdt.CauHoi);
 
             return Ok(new
             {
                 success = true,
                 data = questions,
-                totalQuestions = _testService.GetNumberOfQuestions(deThi)
+                totalQuestions = deThi.CacCauHoi.Count
             });
         }
         catch (Exception ex)
@@ -594,7 +516,7 @@ public class DeThiController : BaseController<DeThi>
     {
         try
         {
-            var result = await _testService.GetTestWithQuestionsGroupedAsync(id);
+            var result = await _service.GetTestWithQuestionsGroupedAsync(id);
 
             if (result == null)
             {
@@ -622,3 +544,5 @@ public class DeThiController : BaseController<DeThi>
         }
     }
 }
+
+

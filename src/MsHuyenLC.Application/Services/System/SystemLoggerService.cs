@@ -1,18 +1,76 @@
 using System.Text.Json;
 using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Interfaces.System;
+using MsHuyenLC.Application.Interfaces.Repositories;
+using MsHuyenLC.Application.Interfaces.Services;
+using MsHuyenLC.Application.Interfaces.Services.System;
 using MsHuyenLC.Domain.Entities.System;
 
 namespace MsHuyenLC.Application.Services.System;
 
 public class SystemLoggerService : ISystemLoggerService
 {
-    private readonly IGenericRepository<NhatKyHeThong> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public SystemLoggerService(IGenericRepository<NhatKyHeThong> repository)
+    public SystemLoggerService(IUnitOfWork unitOfWork)
     {
-        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
+
+    #region Read Operations
+
+    public async Task<NhatKyHeThong?> GetByIdAsync(string id)
+    {
+        return await _unitOfWork.NhatKyHeThongs.GetByIdAsync(id);
+    }
+
+    public async Task<IEnumerable<NhatKyHeThong>> GetAllAsync()
+    {
+        return await _unitOfWork.NhatKyHeThongs.GetAllAsync();
+    }
+
+    public async Task<IEnumerable<NhatKyHeThong>> GetByUserIdAsync(Guid userId)
+    {
+        return await _unitOfWork.NhatKyHeThongs.GetAllAsync(
+            filter: log => log.TaiKhoanId == userId
+        );
+    }
+
+    public async Task<IEnumerable<NhatKyHeThong>> GetByActionAsync(string action)
+    {
+        return await _unitOfWork.NhatKyHeThongs.GetAllAsync(
+            filter: log => log.HanhDong.Contains(action)
+        );
+    }
+
+    public async Task<IEnumerable<NhatKyHeThong>> GetByDateRangeAsync(DateOnly from, DateOnly to)
+    {
+        return await _unitOfWork.NhatKyHeThongs.GetAllAsync(
+            filter: log => log.ThoiGian >= from && log.ThoiGian <= to
+        );
+    }
+
+    public async Task<int> CountAsync()
+    {
+        return await _unitOfWork.NhatKyHeThongs.CountAsync();
+    }
+
+    public async Task<int> CountByUserIdAsync(Guid userId)
+    {
+        return await _unitOfWork.NhatKyHeThongs.CountAsync(
+            predicate: log => log.TaiKhoanId == userId
+        );
+    }
+
+    public async Task<int> CountByActionAsync(string action)
+    {
+        return await _unitOfWork.NhatKyHeThongs.CountAsync(
+            predicate: log => log.HanhDong.Contains(action)
+        );
+    }
+
+    #endregion
+
+    #region Write Operations - Logging
 
     public async Task LogAsync(
         Guid taiKhoanId,
@@ -36,7 +94,7 @@ public class SystemLoggerService : ISystemLoggerService
                 ThoiGian = DateOnly.FromDateTime(DateTime.UtcNow)
             };
 
-            await _repository.AddAsync(log);
+            await _unitOfWork.NhatKyHeThongs.AddAsync(log);
         }
         catch (Exception ex)
         {
@@ -126,8 +184,10 @@ public class SystemLoggerService : ISystemLoggerService
 
     public async Task SaveChangesAsync()
     {
-        await _repository.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
+
+    #endregion
 
     #region Private Helper Methods
 
@@ -180,3 +240,4 @@ public class SystemLoggerService : ISystemLoggerService
     }
     #endregion
 }
+

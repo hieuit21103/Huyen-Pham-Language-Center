@@ -13,4 +13,5 @@ public class GenerateTestRequest
     public CapDo CapDo { get; set; }
     public DoKho DoKho { get; set; }
     public Guid? KyThiId { get; set; }
+    public Guid? NguoiTaoId { get; set; } = null!;
 }

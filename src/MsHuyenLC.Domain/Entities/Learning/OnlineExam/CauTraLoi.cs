@@ -1,6 +1,4 @@
-using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
-
-namespace MsHuyenLC.Domain.Entities.Learning;
+namespace MsHuyenLC.Domain.Entities.Learning.OnlineExam;
 
 public class CauTraLoi
 {

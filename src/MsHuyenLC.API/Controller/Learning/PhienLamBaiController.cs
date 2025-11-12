@@ -1,55 +1,29 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MsHuyenLC.Application.DTOs.Learning.BaiThi;
+using MsHuyenLC.Application.DTOs.Learning.PhienLamBai;
 using MsHuyenLC.Application.Interfaces;
+using MsHuyenLC.Application.Interfaces.Repositories;
+using MsHuyenLC.Application.Interfaces.Services;
+using MsHuyenLC.Application.Interfaces.Services.Learning;
+using MsHuyenLC.Application.Interfaces.Services.System;
 using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
 using System.Security.Claims;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
-/// <summary>
-/// Controller quản lý bài thi (nộp bài, chấm bài)
-/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class PhienLamBaiController : BaseController<PhienLamBai>
 {
-    private readonly IGenericService<CauTraLoi> _cauTraLoiService;
-    private readonly IGenericService<NganHangCauHoi> _cauHoiService;
-    private readonly IGenericService<DapAnCauHoi> _dapAnCauHoiService;
-    private readonly IGenericService<HocVien> _hocVienService;
-    private readonly IGenericService<DeThi> _deThiService;
-
+    private readonly ITestSessionService _service;
     public PhienLamBaiController(
-        IGenericService<PhienLamBai> service,
-        IGenericService<CauTraLoi> cauTraLoiService,
-        IGenericService<NganHangCauHoi> cauHoiService,
-        IGenericService<DapAnCauHoi> dapAnCauHoiService,
-        IGenericService<HocVien> hocVienService,
-        IGenericService<DeThi> deThiService
-        ) : base(service)
+        ITestSessionService service,
+        ISystemLoggerService logService
+        ) : base(logService)
     {
-        _cauTraLoiService = cauTraLoiService;
-        _cauHoiService = cauHoiService;
-        _dapAnCauHoiService = dapAnCauHoiService;
-        _hocVienService = hocVienService;
-        _deThiService = deThiService;
+        _service = service;
     }
 
-    /// <summary>
-    /// Nộp bài thi
-    /// </summary>
-    /// <param name="request">
-    /// Thông tin bài thi và câu trả lời
-    /// </param>
-    /// <returns>Bài thi đã nộp</returns>
-    /// <response code="200">Nộp bài thành công</response>
-    /// <response code="404">Không tìm thấy đề thi</response>
-    /// <response code="400">Dữ liệu không hợp lệ</response>
-    /// <response code="500">Lỗi server</response>
-    /// <remarks>
-    /// Hệ thống sẽ tự động chấm điểm cho các câu trắc nghiệm
-    /// </remarks>
     [HttpPost("submit")]
     [Authorize]
     public async Task<ActionResult> Submit([FromBody] SubmitRequest request)
@@ -66,62 +40,7 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
                 });
             }
 
-            var taiKhoanId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-            var hocVien = await _hocVienService.GetAllAsync(
-                PageNumber: 1,
-                PageSize: 1,
-                Filter: hv => hv.TaiKhoanId.ToString() == taiKhoanId
-            );
-            Console.WriteLine(hocVien.FirstOrDefault());
-            if (hocVien.Count() == 0)
-            {
-                return NotFound(new 
-                { 
-                    success = false, 
-                    message = "Không tìm thấy học viên" 
-                });
-            }
-
-            var thoiGianLamBai = TimeSpan.FromSeconds(request.ThoiGianLamBai);
-            var soCauDung = 0;
-            var diemTong = 0;
-
-            if (request.TuDongCham == false)
-            {
-                diemTong = -1;
-                soCauDung = -1;
-            }
-            else
-            {
-                foreach (var answer in request.CacTraLoi)
-                {
-                    var cauHoiId = answer.Key;
-                    var cauTraLoi = answer.Value;
-                    var isCorrect = IsTrueAnswer(cauHoiId, cauTraLoi);
-                    if (isCorrect)
-                    {
-                        soCauDung++;
-                        var dapAn = await _dapAnCauHoiService.GetAllAsync(
-                            PageNumber: 1,
-                            PageSize: 1,
-                            Filter: da => da.CauHoiId == cauHoiId && da.Dung == true
-                        );
-                        diemTong++;
-                    }
-                }
-            }
-
-            var baiThi = new PhienLamBai
-            {
-                TongCauHoi = request.TongCauHoi,
-                SoCauDung = soCauDung == -1 ? null : soCauDung,
-                Diem = diemTong == -1 ? null : diemTong,
-                ThoiGianLam = thoiGianLamBai,
-                HocVienId = hocVien.FirstOrDefault()!.Id,
-                DeThiId = Guid.Parse(request.DeThiId),
-            };
-
-            var createdPhienLamBai = await _service.AddAsync(baiThi);
+            var createdPhienLamBai = await _service.SubmitAsync(request, taiKhoanId: Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? ""));
             if (createdPhienLamBai == null)
             {
                 return BadRequest(new 
@@ -129,26 +48,6 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
                     success = false, 
                     message = "Không thể nộp bài thi" 
                 });
-            }
-
-            foreach (var answer in request.CacTraLoi)
-            {
-                var cauTraLoi = new CauTraLoi
-                {
-                    PhienId = createdPhienLamBai.Id,
-                    CauHoiId = answer.Key,
-                    CauTraLoiText = answer.Value,
-                    Dung = IsTrueAnswer(answer.Key, answer.Value)
-                };
-                var result = await _cauTraLoiService.AddAsync(cauTraLoi);
-                if (result == null)
-                {
-                    return BadRequest(new 
-                    { 
-                        success = false, 
-                        message = "Không thể lưu câu trả lời" 
-                    });
-                }
             }
 
             return Ok(new
@@ -200,7 +99,7 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
             phienLamBai.SoCauDung = request.SoCauDung;
             phienLamBai.Diem = request.Diem;
 
-            await _service.UpdateAsync(phienLamBai);
+            await _service.GradeAsync(id, request);
 
             return Ok(new
             {
@@ -220,14 +119,6 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
         }
     }
 
-    /// <summary>
-    /// Lấy chi tiết bài thi và các câu trả lời
-    /// </summary>
-    /// <param name="id">ID bài thi</param>
-    /// <returns>Thông tin bài thi và danh sách câu trả lời</returns>
-    /// <response code="200">Lấy chi tiết thành công</response>
-    /// <response code="404">Không tìm thấy bài thi</response>
-    /// <response code="500">Lỗi server</response>
     [HttpGet("{id}/details")]
     [Authorize(Roles = "hocvien,giaovien,giaovu,admin")]
     public async Task<ActionResult> GetDetails(string id)
@@ -244,54 +135,20 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
                 });
             }
 
-            var hocVien = await _hocVienService.GetByIdAsync(phienLamBai.HocVienId.ToString());
-
-            if (hocVien.TaiKhoan.Id.ToString() != User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value
-                && !User.IsInRole("giaovien") && !User.IsInRole("giaovu") && !User.IsInRole("admin"))
+            var result = await _service.GetDetailsAsync(id);
+            if (result == null)
             {
-                return Forbid();
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Không tìm thấy chi tiết bài thi"
+                });
             }
-
-            var cauTraLoi = await _cauTraLoiService.GetAllAsync(
-                PageNumber: 1,
-                PageSize: int.MaxValue,
-                Filter: ct => ct.PhienId == phienLamBai.Id,
-                Includes: ct => ct.CauHoi
-            );
 
             return Ok(new
             {
                 success = true,
-                data = new
-                {
-                    phienLamBai = new
-                    {
-                        id = phienLamBai.Id,
-                        tongCauHoi = phienLamBai.TongCauHoi,
-                        soCauDung = phienLamBai.SoCauDung,
-                        diem = phienLamBai.Diem,
-                        thoiGianLam = phienLamBai.ThoiGianLam,
-                        ngayLam = phienLamBai.NgayLam,
-                        deThiId = phienLamBai.DeThiId,
-                        hocVienId = phienLamBai.HocVienId
-                    },
-                    cauTraLoi = cauTraLoi.Select(ct => new
-                    {
-                        id = ct.Id,
-                        cauHoiId = ct.CauHoiId,
-                        cacDapAn = ct.CauHoi.CacDapAn.Select(da => new
-                        {
-                            id = da.Id,
-                            nhan = da.Nhan,
-                            noiDung = da.NoiDung,
-                            dung = da.Dung,
-                            giaiThich = da.GiaiThich
-                        }),
-                        cauTraLoiText = ct.CauTraLoiText,
-                        dung = ct.Dung,
-                        noiDungCauHoi = ct.CauHoi.NoiDungCauHoi
-                    })
-                }
+                data = result
             });
         }
         catch (Exception ex)
@@ -305,34 +162,17 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
         }
     }
 
-    /// <summary>
-    /// Lấy danh sách bài thi của học viên
-    /// </summary>
-    /// <param name="hocVienId">ID học viên</param>
-    /// <param name="pageNumber">Số trang</param>
-    /// <param name="pageSize">Kích thước trang</param>
-    /// <returns>Danh sách bài thi</returns>
-    /// <response code="200">Lấy danh sách thành công</response>
-    /// <response code="500">Lỗi server</response>
     [HttpGet("hocvien/{hocVienId}")]
-    public async Task<ActionResult> GetByHocVien(
-        string hocVienId,
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10
-    )
+    public async Task<ActionResult> GetByHocVien(string hocVienId)
     {
         try
         {
-            var phienLamBai = await _service.GetAllAsync(
-                PageNumber: pageNumber,
-                PageSize: pageSize,
-                Filter: plb => plb.HocVienId == Guid.Parse(hocVienId)
-            );
+            var result = await _service.GetByHocVienIdAsync(hocVienId);
 
             return Ok(new
             {
                 success = true,
-                data = phienLamBai.Select(plb => new
+                data = result.Select(plb => new
                 {
                     id = plb.Id,
                     deThiId = plb.DeThiId,
@@ -340,7 +180,7 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
                     diem = plb.Diem,
                     ngayLam = plb.NgayLam,
                 }),
-                count = phienLamBai.Count()
+                count = result.Count()
             });
         }
         catch (Exception ex)
@@ -366,16 +206,12 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
     {
         try
         {
-            var phienLamBai = await _service.GetAllAsync(
-                PageNumber: 1,
-                PageSize: 100,
-                Filter: plb => plb.DeThiId.ToString() == deThiId
-            );
+            var result = await _service.GetByDeThiIdAsync(deThiId);
 
             return Ok(new
             {
                 success = true,
-                data = phienLamBai.Select(plb => new
+                data = result.Select(plb => new
                 {
                     id = plb.Id,
                     hocVienId = plb.HocVienId,
@@ -383,7 +219,7 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
                     ngayLam = plb.NgayLam,
                     soCauDung = plb.SoCauDung
                 }),
-                total = phienLamBai.Count()
+                total = result.Count()
             });
         }
         catch (Exception ex)
@@ -396,19 +232,6 @@ public class PhienLamBaiController : BaseController<PhienLamBai>
             });
         }
     }
-
-    private bool IsTrueAnswer(Guid cauHoiId, string cauTraLoi)
-    {
-        var dapAn = _dapAnCauHoiService.GetAllAsync(
-            PageNumber: 1,
-            PageSize: 1,
-            Filter: da => da.CauHoiId == cauHoiId && da.Dung == true
-        ).Result.FirstOrDefault();
-
-        if (dapAn != null && dapAn.Nhan.Equals(cauTraLoi, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-        return false;
-    }
 }
+
+

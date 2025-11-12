@@ -10,5 +10,6 @@ public class DeThiRequest
     public LoaiDeThi LoaiDeThi { get; set; } = LoaiDeThi.LuyenTap;
     public string? KyThiId { get; set; }
     public int ThoiGianLamBai { get; set; }
+    public Guid? NguoiTaoId { get; set; }
     public List<string> CauHoiIds { get; set; } = new List<string>();  
 }

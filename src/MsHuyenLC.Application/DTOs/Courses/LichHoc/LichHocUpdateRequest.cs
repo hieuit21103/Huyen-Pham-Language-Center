@@ -2,6 +2,7 @@ namespace MsHuyenLC.Application.DTOs.Courses.LichHoc;
 
 public class LichHocUpdateRequest
 {
+    public Guid LopHocId { get; set; }
     public Guid PhongHocId { get; set; }
     public DayOfWeek Thu { get; set; }
     public TimeOnly GioBatDau { get; set; }

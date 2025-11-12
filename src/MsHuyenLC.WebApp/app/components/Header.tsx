@@ -3,14 +3,16 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { Asset } from "~/assets/Asset";
 import { clearJwtToken } from "~/apis/Auth";
-import { getThongBaos, type ThongBaoNguoiNhanResponse } from "~/apis/ThongBao";
+import { getThongBaoByTaiKhoanId } from "~/apis/ThongBao";
 import { formatDateTime } from "~/utils/date-utils";
+import type { ThongBaoResponse } from "~/types";
 
 export default function Header() {
   const [jwtToken, setJwtToken] = useState<string | undefined>(undefined);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<ThongBaoNguoiNhanResponse[]>([]);
+  const [notifications, setNotifications] = useState<ThongBaoResponse[]>([]);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [activeSection, setActiveSection] = useState('');
 
@@ -20,14 +22,25 @@ export default function Header() {
       setJwtToken(token);
 
       if (token) {
-        loadNotifications();
+        const tokenValue = token.split('=')[1];
+        try {
+          const payload = JSON.parse(atob(tokenValue.split('.')[1]));
+          const userId = payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
+          setCurrentUserId(userId);
+          
+          if (userId) {
+            loadNotifications(userId);
+          }
+        } catch (error) {
+          console.error("Error decoding JWT:", error);
+        }
       }
     }
   }, []);
 
-  const loadNotifications = async () => {
+  const loadNotifications = async (userId: string) => {
     try {
-      const result = await getThongBaos(1, 20);
+      const result = await getThongBaoByTaiKhoanId(userId);
       if (result.success && result.data) {
         setNotifications(result.data);
       }
@@ -112,16 +125,13 @@ export default function Header() {
                         notifications.map((notif, index) => (
                           <div
                             key={index}
-                            className={`px-4 py-3 hover:bg-gray-50 cursor-pointer border-l-4`}
+                            className={`px-4 py-3 hover:bg-gray-50 cursor-pointer border-l-4 border-blue-500`}
                           >
                             <div className="flex items-center justify-between mb-1">
-                              <p className="font-medium text-gray-900 text-sm">{notif.tieuDe || notif.tieuDe}</p>
+                              <p className="font-medium text-gray-900 text-sm">{notif.tieuDe}</p>
                               <span className="text-xs text-gray-400">{formatDateTime(notif.ngayTao)}</span>
                             </div>
-                            <p className="text-xs text-gray-600 mt-1">{notif.noiDung || notif.noiDung}</p>
-                            {notif.tenNguoiGui && (
-                              <p className="text-xs text-gray-500 mt-1">Từ: {notif.tenNguoiGui}</p>
-                            )}
+                            <p className="text-xs text-gray-600 mt-1">{notif.noiDung}</p>
                           </div>
                         ))
                       )}
@@ -220,9 +230,6 @@ export default function Header() {
                               <span className="text-xs text-gray-400">{formatDateTime(notif.ngayTao)}</span>
                             </div>
                             <p className="text-xs text-gray-600 mt-1">{notif.noiDung}</p>
-                            {notif.tenNguoiGui && (
-                              <p className="text-xs text-gray-500 mt-1">Từ: {notif.tenNguoiGui}</p>
-                            )}
                           </div>
                         ))
                       )}

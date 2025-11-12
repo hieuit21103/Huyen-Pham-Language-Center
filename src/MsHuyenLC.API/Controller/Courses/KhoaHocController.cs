@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Interfaces.System;
+using MsHuyenLC.Application.Interfaces.Repositories;
+using MsHuyenLC.Application.Interfaces.Services.Course;
+using MsHuyenLC.Application.Interfaces.Services.System;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Courses.KhoaHoc;
 
@@ -10,28 +12,68 @@ namespace MsHuyenLC.API.Controller.Courses;
 [ApiController]
 public class KhoaHocController : BaseController<KhoaHoc>
 {
-    public KhoaHocController(IGenericService<KhoaHoc> service, ISystemLoggerService logService) 
-        : base(service, logService)
+    private readonly ICourseService _service;
+    public KhoaHocController(ICourseService service, ISystemLoggerService logService) 
+        : base(logService)
     {
+        _service = service;
     }
 
-    protected override Func<IQueryable<KhoaHoc>, IOrderedQueryable<KhoaHoc>>? BuildOrderBy(string sortBy, string? sortOrder)
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
     {
-        return sortBy?.ToLower() switch
+        var khoaHocs = await _service.GetAllAsync();
+
+        var response = khoaHocs.Select(kh => new KhoaHocResponse
         {
-            "tenkhoahoc" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.TenKhoaHoc))
-                : (q => q.OrderBy(k => k.TenKhoaHoc)),
-            "hocphi" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.HocPhi))
-                : (q => q.OrderBy(k => k.HocPhi)),
-            "ngaykhaigiang" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.NgayKhaiGiang))
-                : (q => q.OrderBy(k => k.NgayKhaiGiang)),
-            _ => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.Id))
-                : (q => q.OrderBy(k => k.Id)),
+            Id = kh.Id,
+            TenKhoaHoc = kh.TenKhoaHoc,
+            MoTa = kh.MoTa,
+            HocPhi = kh.HocPhi,
+            ThoiLuong = kh.ThoiLuong,
+            NgayKhaiGiang = kh.NgayKhaiGiang,
+            TrangThai = kh.TrangThai
+        });
+
+        var totalItems = await _service.CountAsync();
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy danh sách khóa học thành công",
+            count = totalItems,
+            data = response
+        });
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(string id)
+    {
+        var khoaHoc = await _service.GetByIdAsync(id);
+        if (khoaHoc == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy khóa học" 
+            });
+
+        var response = new KhoaHocResponse
+        {
+            Id = khoaHoc.Id,
+            TenKhoaHoc = khoaHoc.TenKhoaHoc,
+            MoTa = khoaHoc.MoTa,
+            HocPhi = khoaHoc.HocPhi,
+            ThoiLuong = khoaHoc.ThoiLuong,
+            NgayKhaiGiang = khoaHoc.NgayKhaiGiang,
+            TrangThai = khoaHoc.TrangThai
         };
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy thông tin khóa học thành công",
+            data = response
+        });
     }
 
     [Authorize(Roles = "admin,giaovu")]
@@ -46,16 +88,7 @@ public class KhoaHocController : BaseController<KhoaHoc>
                 errors = ModelState 
             });
 
-        var khoaHoc = new KhoaHoc
-        {
-            TenKhoaHoc = request.TenKhoaHoc,
-            MoTa = request.MoTa,
-            HocPhi = request.HocPhi,
-            ThoiLuong = request.ThoiLuong,
-            NgayKhaiGiang = request.NgayKhaiGiang
-        };
-
-        var result = await _service.AddAsync(khoaHoc);
+        var result = await _service.CreateAsync(request);
         if (result == null) 
             return BadRequest(new 
             { 
@@ -116,15 +149,7 @@ public class KhoaHocController : BaseController<KhoaHoc>
             TrangThai = existingKhoaHoc.TrangThai
         };
 
-        existingKhoaHoc.TenKhoaHoc = request.TenKhoaHoc;
-        existingKhoaHoc.MoTa = request.MoTa;
-        existingKhoaHoc.HocPhi = request.HocPhi;
-        existingKhoaHoc.ThoiLuong = request.ThoiLuong;
-        existingKhoaHoc.NgayKhaiGiang = request.NgayKhaiGiang;
-        existingKhoaHoc.TrangThai = request.TrangThai;
-
-        await _service.UpdateAsync(existingKhoaHoc);
-
+        await _service.UpdateAsync(id, request);
         await LogUpdateAsync(oldData, existingKhoaHoc);
 
         return Ok(
@@ -149,8 +174,7 @@ public class KhoaHocController : BaseController<KhoaHoc>
                 message = "Không tìm thấy khóa học" 
             });
         
-        await _service.DeleteAsync(entity);
-
+        await _service.DeleteAsync(id);
         await LogDeleteAsync(entity);
 
         return Ok(
@@ -162,3 +186,5 @@ public class KhoaHocController : BaseController<KhoaHoc>
         );
     }
 }
+
+

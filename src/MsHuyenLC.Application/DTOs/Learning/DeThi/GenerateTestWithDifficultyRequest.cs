@@ -14,4 +14,5 @@ public class GenerateTestWithDifficultyRequest
     public KyNang KyNang { get; set; }
     public CapDo CapDo { get; set; }
     public Guid? KyThiId { get; set; }
+    public Guid? NguoiTaoId { get; set; }
 }

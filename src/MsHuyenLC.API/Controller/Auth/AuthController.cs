@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using MsHuyenLC.Application.Interfaces.Auth;
 using MsHuyenLC.Application.DTOs.Auth;
 using System.Security.Claims;
-using MsHuyenLC.Application.Interfaces.Email;
-using MsHuyenLC.Application.Interfaces.System;
+using MsHuyenLC.Application.Interfaces.Repositories.Users;
+using MsHuyenLC.Application.Interfaces.Services.Email;
+using MsHuyenLC.Application.Interfaces.Services.Auth;
+using MsHuyenLC.Application.Interfaces.Services.System;
 
 namespace MsHuyenLC.API.Controller.Auth;
 
@@ -33,11 +34,6 @@ public class AuthController : ControllerBase
         _logService = logService;
     }
 
-    /// <summary>
-    /// Đăng nhập người dùng
-    /// <param name="request">Thông tin đăng nhập</param>
-    /// <returns>Token JWT nếu đăng nhập thành công</returns>
-    /// </summary>
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -48,12 +44,9 @@ public class AuthController : ControllerBase
                 errors = ModelState
             });
 
-        var username = request.TenDangNhap;
-        var password = request.MatKhau;
+        var result = await _authService.Login(request);
 
-        var result = await _authService.Login(username, password);
-        
-        var user = await _userRepository.GetByUsernameAsync(username);
+        var user = await _userRepository.GetByUsernameAsync(request.TenDangNhap);
         if (user != null)
         {
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
@@ -112,7 +105,7 @@ public class AuthController : ControllerBase
                 message = "Chưa đăng nhập"
             });
 
-        var result = await _authService.ChangePassword(userId, request.MatKhauCu, request.MatKhauMoi);
+        var result = await _authService.ChangePassword(request, userId);
         if (!result)
             return BadRequest(new
             {
@@ -178,7 +171,7 @@ public class AuthController : ControllerBase
                 errors = ModelState 
             });
 
-        var result = await _authService.ResetPassword(request.Email, request.Token, request.MatKhauMoi);
+        var result = await _authService.ResetPassword(request);
         if (!result)
             return BadRequest(new 
             { 

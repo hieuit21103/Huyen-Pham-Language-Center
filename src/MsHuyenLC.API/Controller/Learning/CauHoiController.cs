@@ -1,11 +1,9 @@
-using MsHuyenLC.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Learning.CauHoi;
-using MsHuyenLC.Application.Interfaces.System;
+using MsHuyenLC.Application.Interfaces.Services.System;
+using MsHuyenLC.Application.Interfaces.Services.Learning;
 using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
-using MsHuyenLC.Application.Services.Learnings;
-using System.Linq.Expressions;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
@@ -14,39 +12,51 @@ namespace MsHuyenLC.API.Controller.Learning;
 [Authorize(Roles = "admin,giaovu")]
 public class CauHoiController : BaseController<NganHangCauHoi>
 {
-    private readonly ISystemLoggerService _systemLoggerService;
-    private readonly IGenericService<DapAnCauHoi> _dapAnService;
+    private readonly IQuestionService _service;
+    
     public CauHoiController(
-        QuestionService service,
-        ISystemLoggerService systemLoggerService,
-        IGenericService<DapAnCauHoi> dapAnService
-        ) : base(service)
+        IQuestionService service,
+        ISystemLoggerService loggerService
+        ) : base(loggerService)
     {
-        _systemLoggerService = systemLoggerService;
-        _dapAnService = dapAnService;
+        _service = service;
     }
 
-    protected override Func<IQueryable<NganHangCauHoi>, IOrderedQueryable<NganHangCauHoi>>? BuildOrderBy(string sortBy, string? sortOrder)
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
     {
-        return sortBy?.ToLower() switch
+        var result = await _service.GetAllAsync();
+        var totalItems = await _service.CountAsync();
+        return Ok(new
         {
-            "loaicauhoi" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.LoaiCauHoi))
-                : (q => q.OrderBy(k => k.LoaiCauHoi)),
-            "kynang" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.KyNang))
-                : (q => q.OrderBy(k => k.KyNang)),
-            "capdo" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.CapDo))
-                : (q => q.OrderBy(k => k.CapDo)),
-            "dokho" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.DoKho))
-                : (q => q.OrderBy(k => k.DoKho)),
-            _ => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.Id))
-                : (q => q.OrderBy(k => k.Id)),
-        };
+            success = true,
+            message = "Lấy danh sách câu hỏi thành công",
+            data = result,
+            total = totalItems
+        });
     }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(string id)
+    {
+        var result = await _service.GetByIdAsync(id);
+        if (result == null)
+        {
+            return NotFound(new
+            {
+                success = false,
+                message = "Câu hỏi không tồn tại"
+            });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy câu hỏi thành công",
+            data = result
+        });
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] List<CauHoiRequest> requests)
     {
@@ -68,58 +78,10 @@ public class CauHoiController : BaseController<NganHangCauHoi>
                 message = "Danh sách câu hỏi rỗng"
             });
         }
-
         var createdCauHois = new List<NganHangCauHoi>();
         foreach (var request in requests)
         {
-            var dapAnCauHois = new List<DapAnCauHoi>();
-            foreach (var dapAnRequest in request.DapAnCauHois ?? Array.Empty<DapAnRequest>())
-            {
-                if (string.IsNullOrWhiteSpace(dapAnRequest.Nhan) || string.IsNullOrWhiteSpace(dapAnRequest.NoiDung))
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = "Nhãn và nội dung đáp án không được để trống"
-                    });
-                }
-                dapAnCauHois.Add(new DapAnCauHoi
-                {
-                    Nhan = dapAnRequest.Nhan,
-                    NoiDung = dapAnRequest.NoiDung,
-                    Dung = dapAnRequest.Dung,
-                    GiaiThich = dapAnRequest.GiaiThich
-                });
-            }
-
-            var nhomCauHoiChiTiets = new List<NhomCauHoiChiTiet>();
-            if (request.NhomCauHoiChiTiets != null && request.NhomCauHoiChiTiets.Any())
-            {
-                foreach (var nhomRequest in request.NhomCauHoiChiTiets)
-                {
-                    nhomCauHoiChiTiets.Add(new NhomCauHoiChiTiet
-                    {
-                        NhomId = nhomRequest.NhomId,
-                        CauHoiId = nhomRequest.CauHoiId,
-                        ThuTu = nhomRequest.ThuTu
-                    });
-                }
-            }
-
-            var cauHoi = new NganHangCauHoi
-            {
-                NoiDungCauHoi = request.NoiDungCauHoi,
-                LoaiCauHoi = request.LoaiCauHoi,
-                KyNang = request.KyNang,
-                UrlHinhAnh = request.UrlHinhAnh,
-                UrlAmThanh = request.UrlAmThanh,
-                CapDo = request.CapDo,
-                DoKho = request.DoKho,
-                LoiThoai = request.LoiThoai,
-                CacDapAn = dapAnCauHois
-            };
-            var result = await _service.AddAsync(cauHoi);
-            await _systemLoggerService.LogCreateAsync(GetCurrentUserId(), cauHoi, GetClientIpAddress());
+            var result = await _service.CreateAsync(request);
             if (result == null)
             {
                 return BadRequest(new
@@ -128,7 +90,8 @@ public class CauHoiController : BaseController<NganHangCauHoi>
                     message = "Không thể tạo câu hỏi"
                 });
             }
-            createdCauHois.Add(cauHoi);
+            await _logService.LogCreateAsync(GetCurrentUserId(), result, GetClientIpAddress());
+            createdCauHois.Add(result);
         }
 
         return Ok(new
@@ -175,38 +138,8 @@ public class CauHoiController : BaseController<NganHangCauHoi>
             DoKho = existingCauHoi.DoKho
         };
 
-        if (request.NoiDungCauHoi != null)
-            existingCauHoi.NoiDungCauHoi = request.NoiDungCauHoi;
-        if (request.LoaiCauHoi.HasValue)
-            existingCauHoi.LoaiCauHoi = request.LoaiCauHoi.Value;
-        if (request.KyNang.HasValue)
-            existingCauHoi.KyNang = request.KyNang.Value;
-        if (request.UrlHinhAnh != null)
-            existingCauHoi.UrlHinhAnh = request.UrlHinhAnh;
-        if (request.UrlAmThanh != null)
-            existingCauHoi.UrlAmThanh = request.UrlAmThanh;
-        if (request.LoiThoai != null)
-            existingCauHoi.LoiThoai = request.LoiThoai;
-        if (request.CapDo.HasValue)
-            existingCauHoi.CapDo = request.CapDo.Value;
-        if (request.DoKho.HasValue)
-            existingCauHoi.DoKho = request.DoKho.Value;
-        if (request.CacDapAn?.Count > 0)
-        {
-            existingCauHoi.CacDapAn.Clear();
-            foreach (var dapAnRequest in request.CacDapAn)
-            {
-                existingCauHoi.CacDapAn.Add(new DapAnCauHoi
-                {
-                    Nhan = dapAnRequest.Nhan,
-                    NoiDung = dapAnRequest.NoiDung,
-                    Dung = dapAnRequest.Dung,
-                    GiaiThich = dapAnRequest.GiaiThich
-                });
-            }
-        }
-        await _service.UpdateAsync(existingCauHoi);
-        await _systemLoggerService.LogUpdateAsync(GetCurrentUserId(), oldData, existingCauHoi, GetClientIpAddress());
+        await _service.UpdateAsync(id, request);
+        await _logService.LogUpdateAsync(GetCurrentUserId(), oldData, existingCauHoi, GetClientIpAddress());
         return Ok(new
         {
             success = true,
@@ -228,8 +161,8 @@ public class CauHoiController : BaseController<NganHangCauHoi>
             });
         }
 
-        await _service.DeleteAsync(existingCauHoi);
-        await _systemLoggerService.LogDeleteAsync(GetCurrentUserId(), existingCauHoi, GetClientIpAddress());
+        await _service.DeleteAsync(id);
+        await _logService.LogDeleteAsync(GetCurrentUserId(), existingCauHoi, GetClientIpAddress());
         return Ok(new
         {
             success = true,
@@ -237,3 +170,4 @@ public class CauHoiController : BaseController<NganHangCauHoi>
         });
     }
 }
+

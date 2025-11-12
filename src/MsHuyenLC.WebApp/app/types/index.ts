@@ -24,3 +24,6 @@ export * from './finance.types';
 
 // System
 export * from './system.types';
+
+// Notifications
+export * from './notification.types';

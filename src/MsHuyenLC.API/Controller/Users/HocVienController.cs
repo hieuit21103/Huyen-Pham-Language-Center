@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Interfaces.System;
+using MsHuyenLC.Application.Interfaces.Services.System;
+using MsHuyenLC.Application.Interfaces.Services.User;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Users.HocVien;
+using MsHuyenLC.Domain.Entities.Users;
 using System.Security.Claims;
 
 namespace MsHuyenLC.API.Controller.Users;
@@ -11,52 +12,19 @@ namespace MsHuyenLC.API.Controller.Users;
 [ApiController]
 public class HocVienController : BaseController<HocVien>
 {
+    private readonly IStudentService _service;
     
-
-    public HocVienController(IGenericService<HocVien> service, ISystemLoggerService logService) 
-        : base(service, logService)
+    public HocVienController(IStudentService service, ISystemLoggerService logService) 
+        : base(logService)
     {
-    }
-
-    protected override Func<IQueryable<HocVien>, IOrderedQueryable<HocVien>>? BuildOrderBy(string sortBy, string? sortOrder)
-    {
-        return sortBy?.ToLower() switch
-        {
-            "hoten" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.HoTen))
-                : (q => q.OrderBy(k => k.HoTen)),
-            "ngaysinh" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.NgaySinh))
-                : (q => q.OrderBy(k => k.NgaySinh)),
-            "gioitinh" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.GioiTinh))
-                : (q => q.OrderBy(k => k.GioiTinh)),
-            "diachi" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.DiaChi))
-                : (q => q.OrderBy(k => k.DiaChi)),
-            "ngaydangky" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.NgayDangKy))
-                : (q => q.OrderBy(k => k.NgayDangKy)),
-            "trangthai" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.TrangThai))
-                : (q => q.OrderBy(k => k.TrangThai)),
-            _ => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.Id))
-                : (q => q.OrderBy(k => k.Id)),
-        };
+        _service = service;
     }
 
     [Authorize]
     [HttpGet("taikhoan/{id}")]
     public async Task<IActionResult> GetByAccountId(string id)
     {
-        var result = await _service.GetAllAsync(
-            PageNumber: 1,
-            PageSize: 1,
-            Filter: hv => hv.TaiKhoanId.ToString() == id
-        );
-
-        var hocVien = result.FirstOrDefault();
+        var hocVien = await _service.GetByAccountIdAsync(id);
         if (hocVien == null) 
             return NotFound(new 
             { 
@@ -97,27 +65,21 @@ public class HocVienController : BaseController<HocVien>
             return Forbid();
         }
 
-        var existingStudent = await _service.GetByIdAsync(id);
-        if (existingStudent == null) 
+        var updatedStudent = await _service.UpdateAsync(id, request);
+        if (updatedStudent == null) 
             return NotFound(new 
             { 
                 success = false, 
                 message = "Không tìm thấy học viên" 
             });
 
-        existingStudent.HoTen = request.HoTen;
-        existingStudent.NgaySinh = request.NgaySinh;
-        existingStudent.GioiTinh = request.GioiTinh;
-        existingStudent.DiaChi = request.DiaChi;
-        existingStudent.TrangThai = request.TrangThai;
-
-        await _service.UpdateAsync(existingStudent);
+        await LogUpdateAsync(hocVien, updatedStudent);
 
         return Ok(new 
         { 
             success = true, 
             message = "Cập nhật học viên thành công",
-            data = existingStudent
+            data = updatedStudent
         });
     }
 
@@ -133,7 +95,15 @@ public class HocVienController : BaseController<HocVien>
                 message = "Không tìm thấy học viên" 
             });
         
-        await _service.DeleteAsync(entity);
+        var deleted = await _service.DeleteAsync(id);
+        if (!deleted)
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Không thể xóa học viên" 
+            });
+
+        await LogDeleteAsync(entity);
 
         return Ok(new 
         { 
@@ -142,3 +112,5 @@ public class HocVienController : BaseController<HocVien>
         });
     }
 }
+
+

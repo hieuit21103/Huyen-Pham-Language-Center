@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Interfaces.System;
+using MsHuyenLC.Application.Interfaces.Repositories;
+using MsHuyenLC.Application.Interfaces.Services;
+using MsHuyenLC.Application.Interfaces.Services.System;
 using System.Linq.Expressions;
 using System.Security.Claims;
 
@@ -10,79 +12,11 @@ namespace MsHuyenLC.API.Controller;
 [Route("api/[controller]")]
 public abstract class BaseController<TEntity> : ControllerBase where TEntity : class
 {
-    protected readonly IGenericService<TEntity> _service;
-    protected readonly ISystemLoggerService? _logService;
+    protected readonly ISystemLoggerService _logService;
 
-    public BaseController(IGenericService<TEntity> service)
+    public BaseController(ISystemLoggerService logService)
     {
-        _service = service;
-        _logService = null;
-    }
-
-    public BaseController(IGenericService<TEntity> service, ISystemLoggerService logService)
-    {
-        _service = service;
         _logService = logService;
-    }
-
-    /// <summary>
-    /// Get all entities with pagination
-    /// Example: GET /api/courses?pageNumber=1&pageSize=10&sortBy=name&sortOrder=asc
-    /// </summary>
-    [HttpGet]
-    public virtual async Task<IActionResult> GetAll(
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = int.MaxValue,
-        [FromQuery] string? sortBy = null,
-        [FromQuery] string? sortOrder = "asc"
-        // [FromQuery] string? search = null
-    )
-    {
-        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null;
-        // Expression<Func<TEntity, bool>>? filter = null;
-
-        if (!string.IsNullOrEmpty(sortBy))
-        {
-            orderBy = BuildOrderBy(sortBy, sortOrder);
-        }
-        
-        // if (!string.IsNullOrEmpty(search))
-        // {
-        //     filter = BuildFilter(search);
-        // }
-
-        var entities = await _service.GetAllAsync(pageNumber, pageSize, null, orderBy);
-        var totalItems = await _service.CountAsync(null);
-        return Ok(new
-        {
-            success = true,
-            message = "Lấy danh sách thành công",
-            count = totalItems,
-            data = entities
-        });
-    }
-
-    protected virtual Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? BuildOrderBy(string sortBy, string? sortOrder)
-    {
-        return null;
-    }
-
-    // protected virtual Expression<Func<TEntity, bool>>? BuildFilter(string search)
-    // {
-    //     return null;
-    // }
-
-    [HttpGet("{id}")]
-    public virtual async Task<IActionResult> GetById(string id)
-    {
-        var entity = await _service.GetByIdAsync(id);
-        if (entity == null) return NotFound();
-        return Ok(new
-        {
-            success = true,
-            message = "Lấy chi tiết thành công",
-            data = entity
-        });
     }
 
     #region Logging Helper Methods
@@ -148,3 +82,4 @@ public abstract class BaseController<TEntity> : ControllerBase where TEntity : c
 
     #endregion
 }
+

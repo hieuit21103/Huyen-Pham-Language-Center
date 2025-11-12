@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using MsHuyenLC.Application.Interfaces;
+using MsHuyenLC.Application.Interfaces.Services.Learning;
+using MsHuyenLC.Application.Interfaces.Services.System;
 using MsHuyenLC.Application.DTOs.Learning.PhanHoi;
+using MsHuyenLC.Domain.Entities.Learning;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
@@ -11,81 +13,55 @@ namespace MsHuyenLC.API.Controller.Learning;
 
 public class PhanHoiController : BaseController<PhanHoi>
 {
-    public PhanHoiController(IGenericService<PhanHoi> service) : base(service)
+    private readonly IFeedbackService _service;
+    
+    public PhanHoiController(IFeedbackService service, ISystemLoggerService logService) : base(logService)
     {
-    }
-
-    protected override Func<IQueryable<PhanHoi>, IOrderedQueryable<PhanHoi>>? BuildOrderBy(string sortBy, string? sortOrder)
-    {
-        return sortBy.ToLower() switch
-        {
-            "ngaytao" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(e => e.NgayTao))
-                : (q => q.OrderBy(e => e.NgayTao)),
-            _ => null
-        };
+        _service = service;
     }
 
     [HttpGet]
-    public override async Task<IActionResult> GetAll(
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
-        [FromQuery] string? sortBy = null,
-        [FromQuery] string? sortOrder = "asc"
-    )
+    public async Task<IActionResult> GetAll()
     {
-        var orderBy = BuildOrderBy(sortBy, sortOrder);
-        var entities = await _service.GetAllAsync(
-            pageNumber,
-            pageSize,
-            null,
-            orderBy
-        );
-        var response = entities.Select(e => new PhanHoiResponse
-        {
-            Id = e.Id,
-            HocVienId = e.HocVienId,
-            TenHocVien = e.HocVien?.HoTen,
-            LoaiPhanHoi = e.LoaiPhanHoi,
-            TieuDe = e.TieuDe,
-            NoiDung = e.NoiDung,
-            NgayTao = e.NgayTao
-        }).ToList();
+        var entities = await _service.GetAllAsync();
         var totalItems = await _service.CountAsync();
         return Ok(new
         {
             success = true,
             message = "Lấy danh sách phản hồi thành công",
             count = totalItems,
-            data = response
+            data = entities
         });
     }
 
     [HttpGet("{id}")]
-    public override async Task<IActionResult> GetById(string id)
+    public async Task<IActionResult> GetById(string id)
     {
-        var request = await _service.GetByIdAsync(id);
-        if (request == null) return NotFound(new 
+        var phanHoi = await _service.GetByIdAsync(id);
+        if (phanHoi == null) return NotFound(new 
         { 
             success = false, 
             message = "Không tìm thấy phản hồi" 
         });
 
-        var response = new PhanHoiResponse
-        {
-            Id = request.Id,
-            HocVienId = request.HocVienId,
-            TenHocVien = request.HocVien?.HoTen,
-            LoaiPhanHoi = request.LoaiPhanHoi,
-            TieuDe = request.TieuDe,
-            NoiDung = request.NoiDung,
-            NgayTao = request.NgayTao
-        };
         return Ok(new
         {
             success = true,
             message = "Lấy phản hồi thành công",
-            data = response
+            data = phanHoi
+        });
+    }
+
+    [HttpGet("hocvien/{hocVienId}")]
+    public async Task<IActionResult> GetByStudentId(string hocVienId)
+    {
+        var phanHois = await _service.GetByStudentIdAsync(hocVienId);
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy danh sách phản hồi thành công",
+            count = phanHois.Count(),
+            data = phanHois
         });
     }                   
 
@@ -101,14 +77,7 @@ public class PhanHoiController : BaseController<PhanHoi>
                 errors = ModelState
             });
         }
-        var phanHoi = new PhanHoi
-        {
-            HocVienId = request.HocVienId,
-            LoaiPhanHoi = request.LoaiPhanHoi,
-            TieuDe = request.TieuDe,
-            NoiDung = request.NoiDung,
-        };
-        var createdPhanHoi = await _service.AddAsync(phanHoi);
+        var createdPhanHoi = await _service.CreateAsync(request);
         if (createdPhanHoi == null)
         {
             return BadRequest(new 
@@ -117,46 +86,14 @@ public class PhanHoiController : BaseController<PhanHoi>
                 message = "Tạo phản hồi thất bại" 
             });
         }
+
+        await LogCreateAsync(createdPhanHoi);
+
         return Ok(new
         {
             success = true,
             message = "Tạo phản hồi thành công",
             data = createdPhanHoi
-        });
-    }
-
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, [FromBody] PhanHoiRequest request)
-    {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(new
-            {
-                success = false,
-                message = "Dữ liệu không hợp lệ",
-                errors = ModelState
-            });
-        }
-        var existingPhanHoi = await _service.GetByIdAsync(id);
-        if (existingPhanHoi == null)
-        {
-            return NotFound(new 
-            { 
-                success = false, 
-                message = "Không tìm thấy phản hồi" 
-            });
-        }
-        existingPhanHoi.HocVienId = request.HocVienId;
-        existingPhanHoi.LoaiPhanHoi = request.LoaiPhanHoi;
-        existingPhanHoi.TieuDe = request.TieuDe;
-        existingPhanHoi.NoiDung = request.NoiDung;
-
-        await _service.UpdateAsync(existingPhanHoi);
-        return Ok(new
-        {
-            success = true,
-            message = "Cập nhật phản hồi thành công",
-            data = existingPhanHoi
         });
     }
 
@@ -173,7 +110,17 @@ public class PhanHoiController : BaseController<PhanHoi>
             });
         }
 
-        await _service.DeleteAsync(existingPhanHoi);
+        await LogDeleteAsync(existingPhanHoi);
+        var deleted = await _service.DeleteAsync(id);
+        if (!deleted)
+        {
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Không thể xóa phản hồi" 
+            });
+        }
+
         return Ok(new 
         { 
             success = true, 
@@ -181,3 +128,4 @@ public class PhanHoiController : BaseController<PhanHoi>
         });
     }
 }
+

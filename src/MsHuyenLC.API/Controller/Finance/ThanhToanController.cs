@@ -1,12 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Interfaces.System;
+using MsHuyenLC.Application.Interfaces.Repositories;
+using MsHuyenLC.Application.Interfaces.Services;
+using MsHuyenLC.Application.Interfaces.Services.System;
 using MsHuyenLC.Infrastructure.Services;
-using MsHuyenLC.Application.Interfaces.Finance;
+using MsHuyenLC.Application.Interfaces.Services.Finance;
 using MsHuyenLC.Application.DTOs.Finance.VNPay;
 using MsHuyenLC.Domain.Enums;
 using Microsoft.Extensions.Logging;
+using MsHuyenLC.Application.Interfaces.Services.Learning;
+using MsHuyenLC.Application.DTOs.Learning.DangKy;
+using MsHuyenLC.Application.DTOs.Finance.ThanhToan;
 
 namespace MsHuyenLC.API.Controller.Finance;
 
@@ -17,20 +22,53 @@ public class ThanhToanController : BaseController<ThanhToan>
 {
 
     private readonly IVnpayService _vnpayService;
-    private readonly ILogger<ThanhToanController> _logger;
-    private readonly IGenericService<DangKy> _dangKyService;
+    private readonly IPaymentService _service;
 
     public ThanhToanController(
-        IGenericService<ThanhToan> service,
         ISystemLoggerService loggerService,
-        IVnpayService vnpayService,
-        ILogger<ThanhToanController> logger,
-        IGenericService<DangKy> dangKyService
-        ) : base(service, loggerService)
+        IPaymentService service,
+        IVnpayService vnpayService
+        ) : base(loggerService)
     {
+        _service = service;
         _vnpayService = vnpayService;
-        _logger = logger;
-        _dangKyService = dangKyService;
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "admin,giaovu")]
+    public async Task<IActionResult> GetAll()
+    {
+        var payments = await _service.GetAllAsync();
+
+        var totalItems = await _service.CountAsync();
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy danh sách thanh toán thành công",
+            count = totalItems,
+            data = payments
+        });
+    }
+
+    [HttpGet("{id}")]
+    [Authorize(Roles = "admin,giaovu")]
+    public async Task<IActionResult> GetById(string id)
+    {
+        var payment = await _service.GetByIdAsync(id);
+        if (payment == null)
+            return NotFound(new
+            {
+                success = false,
+                message = "Không tìm thấy thông tin thanh toán"
+            });
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy thông tin thanh toán thành công",
+            data = payment
+        });
     }
 
     [HttpGet("create/{id}")]
@@ -83,66 +121,43 @@ public class ThanhToanController : BaseController<ThanhToan>
     {
         try
         {
-            _logger.LogInformation("VNPay Return callback received for order: {OrderId}", callbackRequest.vnp_TxnRef);
+            var callbackResult = await _vnpayService.ProcessCallbackAsync(callbackRequest);
 
-            var result = await _vnpayService.ProcessCallbackAsync(callbackRequest);
-
-            if (!result.Success)
+            if (!callbackResult.Success)
             {
-                _logger.LogWarning("VNPay payment failed: {ErrorMessage}", result.ErrorMessage);
                 return BadRequest(new
                 {
                     success = false,
-                    message = result.ErrorMessage,
-                    data = result
+                    message = callbackResult.ErrorMessage,
+                    data = callbackResult
                 });
             }
 
-            // Cập nhật trạng thái thanh toán
-            if (Guid.TryParse(result.OrderId, out var orderId))
+            var payment = await _service.ProcessVNPayCallbackAsync(callbackResult);
+            
+            if (payment == null)
             {
-                var payment = await _service.GetByIdAsync(orderId.ToString());
-                if (payment != null)
+                return BadRequest(new
                 {
-                    payment.MaThanhToan = callbackRequest.vnp_TransactionNo;
-                    payment.TrangThai = TrangThaiThanhToan.dathanhtoan;
-                    payment.MaGiaoDichNganHang = result.TransactionId;
-                    payment.ThongTinNganHang = result.BankCode;
-                    payment.NgayThanhToan = DateOnly.FromDateTime(DateTime.Now);
-                    payment.CongThanhToan = "VNPay";
-
-                    await _service.UpdateAsync(payment);
-                    
-                    // Cập nhật trạng thái đăng ký sang "đã thanh toán"
-                    if (payment.DangKyId != Guid.Empty)
-                    {
-                        var dangKy = await _dangKyService.GetByIdAsync(payment.DangKyId.ToString());
-                        if (dangKy != null)
-                        {
-                            dangKy.TrangThai = TrangThaiDangKy.dathanhtoan; // 2 - đã thanh toán
-                            await _dangKyService.UpdateAsync(dangKy);
-                            _logger.LogInformation("Registration {DangKyId} status updated to dathanhtoan", payment.DangKyId);
-                        }
-                    }
-                    
-                    _logger.LogInformation("Payment {OrderId} updated successfully", orderId);
-                }
+                    success = false,
+                    message = "Không thể xử lý thanh toán"
+                });
             }
 
             return Ok(new
             {
                 success = true,
                 message = "Thanh toán thành công",
-                data = result
+                data = callbackResult
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing VNPay return callback");
             return StatusCode(500, new
             {
                 success = false,
-                message = "Lỗi xử lý callback từ VNPay"
+                message = "Lỗi xử lý callback từ VNPay",
+                error = ex.Message
             });
         }
     }
@@ -156,70 +171,82 @@ public class ThanhToanController : BaseController<ThanhToan>
     {
         try
         {
-            _logger.LogInformation("VNPay IPN received for order: {OrderId}", callbackRequest.vnp_TxnRef);
+            // Xác thực callback từ VNPay
+            var callbackResult = await _vnpayService.ProcessCallbackAsync(callbackRequest);
 
-            var result = await _vnpayService.ProcessCallbackAsync(callbackRequest);
-
-            if (!result.Success)
+            if (!callbackResult.Success)
             {
-                _logger.LogWarning("VNPay IPN validation failed: {ErrorMessage}", result.ErrorMessage);
-                return Ok(new { message = result.ErrorMessage });
+                return Ok(new 
+                { 
+                    RspCode = "97",
+                    Message = callbackResult.ErrorMessage 
+                });
             }
 
-            if (Guid.TryParse(result.OrderId, out var orderId))
+            if (Guid.TryParse(callbackResult.OrderId, out var orderId))
             {
                 var payment = await _service.GetByIdAsync(orderId.ToString());
-                
+
                 if (payment == null)
                 {
-                    _logger.LogWarning("Payment not found: {OrderId}", orderId);
-                    return Ok(new { message = "Không tìm thấy đơn hàng" });
+                    return Ok(new 
+                    { 
+                        RspCode = "01",
+                        Message = "Không tìm thấy đơn hàng" 
+                    });
                 }
 
                 if (payment.TrangThai == TrangThaiThanhToan.dathanhtoan)
                 {
-                    _logger.LogInformation("Payment {OrderId} already processed", orderId);
-                    return Ok(new { message = "Đơn hàng đã được thanh toán" });
+                    return Ok(new 
+                    { 
+                        RspCode = "02",
+                        Message = "Đơn hàng đã được thanh toán" 
+                    });
                 }
 
-                if (payment.SoTien != result.Amount)
+                if (payment.SoTien != callbackResult.Amount)
                 {
-                    _logger.LogWarning("Amount mismatch for order {OrderId}. Expected: {Expected}, Received: {Received}", 
-                        orderId, payment.SoTien, result.Amount);
-                    return Ok(new { message = "Số tiền không hợp lệ" });
+                    return Ok(new 
+                    { 
+                        RspCode = "04",
+                        Message = "Số tiền không hợp lệ" 
+                    });
                 }
 
-                payment.TrangThai = TrangThaiThanhToan.dathanhtoan;
-                payment.MaGiaoDichNganHang = result.TransactionId;
-                payment.ThongTinNganHang = result.BankCode;
-                payment.NgayThanhToan = DateOnly.FromDateTime(DateTime.Now);
-                payment.CongThanhToan = "VNPay";
-
-                await _service.UpdateAsync(payment);
-
-                // Cập nhật trạng thái đăng ký sang "đã thanh toán"
-                if (payment.DangKyId != Guid.Empty)
+                // Xử lý logic nghiệp vụ trong service layer
+                var processedPayment = await _service.ProcessVNPayCallbackAsync(callbackResult);
+                
+                if (processedPayment == null)
                 {
-                    var dangKy = await _dangKyService.GetByIdAsync(payment.DangKyId.ToString());
-                    if (dangKy != null)
-                    {
-                        dangKy.TrangThai = TrangThaiDangKy.dathanhtoan; // 2 - đã thanh toán
-                        await _dangKyService.UpdateAsync(dangKy);
-                        _logger.LogInformation("IPN: Registration {DangKyId} status updated to dathanhtoan", payment.DangKyId);
-                    }
+                    return Ok(new 
+                    { 
+                        RspCode = "99",
+                        Message = "Lỗi xử lý thanh toán" 
+                    });
                 }
 
-                _logger.LogInformation("Payment {OrderId} confirmed via IPN", orderId);
-
-                return Ok(new { message = "Xác nhận thành công" });
+                return Ok(new 
+                { 
+                    RspCode = "00",
+                    Message = "Xác nhận thành công" 
+                });
             }
 
-            return Ok(new { message = "Lỗi không xác định" });
+            return Ok(new 
+            { 
+                RspCode = "99",
+                Message = "Lỗi không xác định" 
+            });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _logger.LogError(ex, "Error processing VNPay IPN");
-            return Ok(new { message = "Lỗi hệ thống" });
+            return Ok(new 
+            { 
+                RspCode = "99",
+                Message = "Lỗi hệ thống" 
+            });
         }
     }
 }
+

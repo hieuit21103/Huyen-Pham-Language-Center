@@ -15,4 +15,5 @@ public class DangKyKhachUpdateRequest
     public Guid? KhoaHocId { get; set; }
     public TrangThaiDangKy? TrangThai { get; set; }
     public KetQuaDangKy? KetQua { get; set; }
+    public Guid? TaiKhoanXuLyId { get; set; }
 }

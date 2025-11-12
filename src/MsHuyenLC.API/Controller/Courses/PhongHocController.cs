@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using MsHuyenLC.Application.Interfaces;
+using MsHuyenLC.Application.Interfaces.Repositories;
+using MsHuyenLC.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Courses.PhongHoc;
-using MsHuyenLC.Application.Interfaces.System;
+using MsHuyenLC.Application.Interfaces.Services.System;
+using MsHuyenLC.Application.Interfaces.Services.Course;
 
 namespace MsHuyenLC.API.Controller.Courses;
 
@@ -12,26 +15,61 @@ namespace MsHuyenLC.API.Controller.Courses;
 [Authorize(Roles = "admin,giaovu")]
 public class PhongHocController : BaseController<PhongHoc>
 {
+    private readonly IRoomService _service;
     public PhongHocController(
-        IGenericService<PhongHoc> service,
-        ISystemLoggerService logService) : base(service, logService)
+        IRoomService service,
+        ISystemLoggerService logService) : base(logService)
     {
+        _service = service; 
     }
 
-    protected override Func<IQueryable<PhongHoc>, IOrderedQueryable<PhongHoc>>? BuildOrderBy(string sortBy, string? sortOrder)
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
     {
-        return sortBy?.ToLower() switch
+        var phongHocs = await _service.GetAllAsync();
+
+        var response = phongHocs.Select(ph => new PhongHocResponse
         {
-            "tenphong" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.TenPhong))
-                : (q => q.OrderBy(k => k.TenPhong)),
-            "soghe" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.SoGhe))
-                : (q => q.OrderBy(k => k.SoGhe)),
-            _ => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.Id))
-                : (q => q.OrderBy(k => k.Id)),
+            Id = ph.Id,
+            TenPhong = ph.TenPhong,
+            SoGhe = ph.SoGhe
+        });
+
+        var totalItems = await _service.CountAsync();
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy danh sách phòng học thành công",
+            count = totalItems,
+            data = response
+        });
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(string id)
+    {
+        var phongHoc = await _service.GetByIdAsync(id);
+        if (phongHoc == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy phòng học" 
+            });
+
+        var response = new PhongHocResponse
+        {
+            Id = phongHoc.Id,
+            TenPhong = phongHoc.TenPhong,
+            SoGhe = phongHoc.SoGhe
         };
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy thông tin phòng học thành công",
+            data = response
+        });
     }
 
     [HttpPost]
@@ -45,13 +83,7 @@ public class PhongHocController : BaseController<PhongHoc>
                 errors = ModelState
             });
 
-        var phongHoc = new PhongHoc
-        {
-            TenPhong = request.TenPhong,
-            SoGhe = request.SoGhe
-        };
-
-        var result = await _service.AddAsync(phongHoc);
+        var result = await _service.CreateAsync(request);
         if (result == null) return BadRequest(new
         {
             success = false,
@@ -87,10 +119,7 @@ public class PhongHocController : BaseController<PhongHoc>
             SoGhe = existingRoom.SoGhe
         };
 
-        existingRoom.TenPhong = request.TenPhong ?? existingRoom.TenPhong;
-        existingRoom.SoGhe = request.SoGhe != 0 ? request.SoGhe : existingRoom.SoGhe;
-
-        await _service.UpdateAsync(existingRoom);
+        await _service.UpdateAsync(id, request);
 
         await LogUpdateAsync(oldData, existingRoom);
         return Ok(new
@@ -107,9 +136,8 @@ public class PhongHocController : BaseController<PhongHoc>
         var existingRoom = await _service.GetByIdAsync(id);
         if (existingRoom == null) return NotFound();
 
-        await _service.DeleteAsync(existingRoom);
+        await _service.DeleteAsync(id);
         await LogDeleteAsync(existingRoom);
-
         return Ok(new
         {
             success = true,
@@ -117,3 +145,5 @@ public class PhongHocController : BaseController<PhongHoc>
         });
     }
 }
+
+

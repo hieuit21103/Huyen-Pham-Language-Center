@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Identity;
-using MsHuyenLC.Application.Interfaces.Auth;
+using MsHuyenLC.Application.Interfaces.Services.Auth;
 using MsHuyenLC.Infrastructure.Persistence;
 
 namespace MsHuyenLC.Infrastructure.Persistence.Seed;
 
-public class DefaultUserSeeder(MsHuyenLC.Application.Interfaces.Auth.IPasswordHasher passwordHasher)
+public class DefaultUserSeeder(IPasswordHasher passwordHasher)
 {
-    protected readonly MsHuyenLC.Application.Interfaces.Auth.IPasswordHasher _passwordHasher = passwordHasher;
+    protected readonly IPasswordHasher _passwordHasher = passwordHasher;
     public async Task SeedAsync(ApplicationDbContext context)
     {
         if (!context.TaiKhoans.Any())

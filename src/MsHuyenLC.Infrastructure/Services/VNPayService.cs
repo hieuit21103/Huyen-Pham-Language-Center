@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using MsHuyenLC.Application.DTOs.Finance.VNPay;
-using MsHuyenLC.Application.Interfaces.Finance;
+using MsHuyenLC.Application.Interfaces.Services.Finance;
 using Microsoft.Extensions.Configuration;
 using System.Net;
 using Microsoft.Extensions.Logging;

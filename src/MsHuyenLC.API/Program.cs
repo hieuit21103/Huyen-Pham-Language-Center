@@ -3,19 +3,27 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
 using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Interfaces.Auth;
-using MsHuyenLC.Application.Interfaces.System;
+using MsHuyenLC.Application.Interfaces.Repositories;
+using MsHuyenLC.Application.Interfaces.Repositories.Users;
+using MsHuyenLC.Application.Interfaces.Services;
+using MsHuyenLC.Application.Interfaces.Services.Auth;
+using MsHuyenLC.Application.Interfaces.Services.System;
+using MsHuyenLC.Application.Interfaces.Services.Email;
+using MsHuyenLC.Application.Interfaces.Services.Finance;
 using MsHuyenLC.Application.Services;
 using MsHuyenLC.Application.Services.System;
 using MsHuyenLC.Infrastructure.Repositories;
+using MsHuyenLC.Infrastructure.Repositories.Users;
 using MsHuyenLC.Infrastructure.Services;
 using MsHuyenLC.Infrastructure.Services.Email;
 using MsHuyenLC.Infrastructure.Persistence.Seed;
 using MsHuyenLC.Application.Services.Courses;
-using MsHuyenLC.Application.Services.Learnings;
+using MsHuyenLC.Application.Services.Learning;
+using MsHuyenLC.API.Middleware;
+using MsHuyenLC.Application.Validators.Users;
+using FluentValidation;
 using Microsoft.OpenApi.Models;
-using MsHuyenLC.Application.Interfaces.Email;
-using MsHuyenLC.Application.Interfaces.Finance;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -129,15 +137,22 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IVnpayService, VNPayService>();
+
+// Unit of Work & Repository Pattern
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// Services
 builder.Services.AddScoped<AssignmentService>();
 builder.Services.AddScoped<ScheduleService>();
 builder.Services.AddScoped<TestService>();
 builder.Services.AddScoped<QuestionService>();
 builder.Services.AddScoped<GroupQuestionService>();
-builder.Services.AddScoped<IGenericService<DeThi>, TestService>();
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-builder.Services.AddScoped(typeof(IGenericService<>), typeof(GenericService<>));
+builder.Services.AddScoped<TestService>();
 builder.Services.AddScoped<ISystemLoggerService, SystemLoggerService>();
+
+// FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<TaiKhoanRequestValidator>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -147,6 +162,7 @@ builder.Services.AddControllers()
     });
 
 var app = builder.Build();
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 // Enable Swagger in all environments
 app.UseSwagger();

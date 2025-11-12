@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Interfaces.System;
+using MsHuyenLC.Application.Interfaces.Repositories;
+using MsHuyenLC.Application.Interfaces.Services;
+using MsHuyenLC.Application.Interfaces.Services.System;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Users.GiaoVu;
 using System.Security.Claims;
+using MsHuyenLC.Application.Interfaces.Services.User;
 
 namespace MsHuyenLC.API.Controller.Users;
 
@@ -11,39 +14,34 @@ namespace MsHuyenLC.API.Controller.Users;
 [ApiController]
 public class GiaoVuController : BaseController<GiaoVu>
 {
-    public GiaoVuController(IGenericService<GiaoVu> service, ISystemLoggerService logService) 
-        : base(service, logService)
+    private readonly IAcademicStaffService _service;
+    public GiaoVuController(IAcademicStaffService service, ISystemLoggerService logService)
+        : base(logService)
     {
+        _service = service;
     }
 
-    protected override Func<IQueryable<GiaoVu>, IOrderedQueryable<GiaoVu>>? BuildOrderBy(string sortBy, string? sortOrder)
+    [HttpGet]
+    [Authorize(Roles = "admin,giaovu")]
+    public async Task<IActionResult> GetAll()
     {
-        return sortBy?.ToLower() switch
+        var entities = await _service.GetAllAsync();
+        var totalItems = await _service.CountAsync();
+        return Ok(new
         {
-            "hoten" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.HoTen))
-                : (q => q.OrderBy(k => k.HoTen)),
-            "bophan" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.BoPhan))
-                : (q => q.OrderBy(k => k.BoPhan)),
-            _ => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.Id))
-                : (q => q.OrderBy(k => k.Id)),
-        };
+            success = true,
+            message = "Lấy danh sách giáo vụ thành công",
+            count = totalItems,
+            data = entities
+        });
     }
 
-    [Authorize]
-    [HttpGet("taikhoan/{id}")]
-    public async Task<IActionResult> GetByAccountId(string id)
+    [HttpGet("{id}")]
+    [Authorize(Roles = "admin,giaovu")]
+    public async Task<IActionResult> GetById(string id)
     {
-        var result = await _service.GetAllAsync(
-            PageNumber: 1,
-            PageSize: 1,
-            Filter: gv => gv.TaiKhoanId.ToString() == id
-        );
-
-        var giaoVu = result.FirstOrDefault();
-        if (giaoVu == null) 
+        var result = await _service.GetByIdAsync(id);
+        if (result == null) 
             return NotFound(new 
             { 
                 success = false, 
@@ -54,7 +52,26 @@ public class GiaoVuController : BaseController<GiaoVu>
         {
             success = true,
             message = "Lấy thông tin giáo vụ thành công",
-            data = giaoVu
+            data = result
+        });
+    }
+
+    [HttpGet("taikhoan/{id}")]
+    public async Task<IActionResult> GetByAccountId(string id)
+    {
+        var result = await _service.GetByAccountIdAsync(id);
+        if (result == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy giáo vụ" 
+            });
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy thông tin giáo vụ thành công",
+            data = result
         });
     }
 
@@ -70,14 +87,7 @@ public class GiaoVuController : BaseController<GiaoVu>
                 errors = ModelState 
             });
 
-        var giaoVu = new GiaoVu
-        {
-            HoTen = request.HoTen,
-            BoPhan = request.BoPhan,
-            TaiKhoanId = request.TaiKhoanId
-        };
-
-        var result = await _service.AddAsync(giaoVu);
+        var result = await _service.CreateAsync(request);
         if (result == null)
             return BadRequest(new 
             { 
@@ -97,7 +107,7 @@ public class GiaoVuController : BaseController<GiaoVu>
 
     [Authorize(Roles = "admin,giaovu")]
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, [FromBody] GiaoVuRequest request)
+    public async Task<IActionResult> Update(string id, [FromBody] GiaoVuUpdateRequest request)
     {
         if (!ModelState.IsValid) 
             return BadRequest(new 
@@ -130,11 +140,7 @@ public class GiaoVuController : BaseController<GiaoVu>
             TaiKhoanId = giaoVu.TaiKhoanId
         };
 
-        giaoVu.HoTen = request.HoTen;
-        giaoVu.BoPhan = request.BoPhan;
-        giaoVu.TaiKhoanId = request.TaiKhoanId;
-
-        await _service.UpdateAsync(giaoVu);
+        await _service.UpdateAsync(id, request);
         await LogUpdateAsync(oldData, giaoVu);
 
         return Ok(new 
@@ -157,7 +163,7 @@ public class GiaoVuController : BaseController<GiaoVu>
                 message = "Không tìm thấy giáo vụ" 
             });
         
-        await _service.DeleteAsync(entity);
+        await _service.DeleteAsync(id);
         await LogDeleteAsync(entity);
 
         return Ok(new 
@@ -167,3 +173,5 @@ public class GiaoVuController : BaseController<GiaoVu>
         });
     }
 }
+
+

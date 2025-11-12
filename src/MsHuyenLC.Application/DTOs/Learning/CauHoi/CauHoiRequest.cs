@@ -14,6 +14,6 @@ public class CauHoiRequest
     public string? LoiThoai { get; set; }
     public CapDo CapDo { get; set; } = CapDo.A1;
     public DoKho DoKho { get; set; } = DoKho.de;
-    public ICollection<DapAnRequest>? DapAnCauHois { get; set; }
-    public ICollection<NhomCauHoiChiTietRequest>? NhomCauHoiChiTiets { get; set; }
+    public ICollection<DapAnRequest>? CacDapAn { get; set; }
+    public ICollection<NhomCauHoiChiTietRequest>? CacNhomCauHoiChiTiet { get; set; }
 }

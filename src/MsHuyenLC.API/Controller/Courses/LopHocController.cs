@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Interfaces.System;
+using MsHuyenLC.Application.Interfaces.Services.System;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Courses.LopHoc;
-using MsHuyenLC.Application.Services;
+using MsHuyenLC.Application.Interfaces.Services.Course;
+using MsHuyenLC.Domain.Entities.Courses;
 
 namespace MsHuyenLC.API.Controller.Courses;
 
@@ -11,70 +11,110 @@ namespace MsHuyenLC.API.Controller.Courses;
 [ApiController]
 public class LopHocController : BaseController<LopHoc>
 {
-    protected readonly IGenericService<KhoaHoc> _courseService;
-    protected readonly IGenericService<PhongHoc> _roomService;
-    protected readonly IGenericService<DangKy> _registrationService;
-    protected readonly IGenericService<PhanCong> _assignmentService;
+    private readonly IClassService _service;
     public LopHocController(
-        IGenericService<LopHoc> service,
-        ISystemLoggerService logService,
-        IGenericService<KhoaHoc> courseService,
-        IGenericService<PhongHoc> roomService,
-        IGenericService<DangKy> registrationService,
-        IGenericService<PhanCong> assignmentService) : base(service, logService)
+        IClassService service,
+        ISystemLoggerService logService) : base(logService)
     {
-        _courseService = courseService;
-        _roomService = roomService;
-        _registrationService = registrationService;
-        _assignmentService = assignmentService;
+        _service = service;
     }
 
-    protected override Func<IQueryable<LopHoc>, IOrderedQueryable<LopHoc>>? BuildOrderBy(string sortBy, string? sortOrder)
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
     {
-        return sortBy?.ToLower() switch
+        var lopHocs = await _service.GetAllAsync();
+
+        var response = lopHocs.Select(lh => new LopHocResponse
         {
-            "tenlop" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.TenLop))
-                : (q => q.OrderBy(k => k.TenLop)),
-            _ => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.Id))
-                : (q => q.OrderBy(k => k.Id)),
+            Id = lh.Id,
+            TenLop = lh.TenLop,
+            SiSoToiDa = lh.SiSoToiDa,
+            SiSoHienTai = lh.SiSoHienTai,
+            TrangThai = lh.TrangThai,
+            KhoaHocId = lh.KhoaHocId
+        });
+
+        var totalItems = await _service.CountAsync();
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy danh sách lớp học thành công",
+            count = totalItems,
+            data = response
+        });
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(string id)
+    {
+        var lopHoc = await _service.GetByIdAsync(id);
+        if (lopHoc == null)
+            return NotFound(new
+            {
+                success = false,
+                message = "Không tìm thấy lớp học"
+            });
+
+        var response = new LopHocResponse
+        {
+            Id = lopHoc.Id,
+            TenLop = lopHoc.TenLop,
+            SiSoToiDa = lopHoc.SiSoToiDa,
+            SiSoHienTai = lopHoc.SiSoHienTai,
+            TrangThai = lopHoc.TrangThai,
+            KhoaHocId = lopHoc.KhoaHocId
         };
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy thông tin lớp học thành công",
+            data = response
+        });
+    }
+
+    [HttpGet("course/{courseId}")]
+    public async Task<IActionResult> GetByCourseId(string courseId)
+    {
+        var lopHocs = await _service.GetByCourseIdAsync(courseId);
+
+        var response = lopHocs.Select(lh => new LopHocResponse
+        {
+            Id = lh.Id,
+            TenLop = lh.TenLop,
+            SiSoToiDa = lh.SiSoToiDa,
+            SiSoHienTai = lh.SiSoHienTai,
+            TrangThai = lh.TrangThai,
+            KhoaHocId = lh.KhoaHocId
+        });
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy danh sách lớp học theo khóa học thành công",
+            data = response
+        });
     }
 
     [Authorize(Roles = "admin,giaovu")]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] LopHocRequest request)
     {
-        if (!ModelState.IsValid) 
-            return BadRequest(new 
-            { 
-                success = false, 
+        if (!ModelState.IsValid)
+            return BadRequest(new
+            {
+                success = false,
                 message = "Dữ liệu không hợp lệ",
-                errors = ModelState 
+                errors = ModelState
             });
 
-        var khoaHoc = await _courseService.GetByIdAsync(request.KhoaHocId.ToString());
-        if (khoaHoc == null) 
-            return BadRequest(new 
-            { 
-                success = false, 
-                message = "Khóa học không tồn tại" 
-            });
-
-        var lopHoc = new LopHoc
-        {
-            TenLop = request.TenLop,
-            SiSoToiDa = request.SiSoToiDa,
-            KhoaHocId = request.KhoaHocId
-        };
-
-        var result = await _service.AddAsync(lopHoc);
-        if (result == null) 
-            return BadRequest(new 
-            { 
-                success = false, 
-                message = "Tạo lớp học thất bại" 
+        var result = await _service.CreateAsync(request);
+        if (result == null)
+            return BadRequest(new
+            {
+                success = false,
+                message = "Tạo lớp học thất bại"
             });
 
         await LogCreateAsync(result);
@@ -87,7 +127,6 @@ public class LopHocController : BaseController<LopHoc>
             SiSoHienTai = result.SiSoHienTai,
             TrangThai = result.TrangThai,
             KhoaHocId = result.KhoaHocId,
-            TenKhoaHoc = khoaHoc.TenKhoaHoc
         };
 
         return Ok(new
@@ -128,18 +167,31 @@ public class LopHocController : BaseController<LopHoc>
             KhoaHocId = existingLopHoc.KhoaHocId
         };
 
-        existingLopHoc.TenLop = request.TenLop;
-        existingLopHoc.SiSoToiDa = request.SiSoToiDa;
-        existingLopHoc.TrangThai = request.TrangThai;
+        var result = await _service.UpdateAsync(id, request);
+        if (result == null)
+            return BadRequest(new
+            {
+                success = false,
+                message = "Cập nhật lớp học thất bại"
+            });
 
-        await _service.UpdateAsync(existingLopHoc);
-        await LogUpdateAsync(oldData, existingLopHoc);
+        await LogUpdateAsync(oldData, result);
+
+        var response = new LopHocResponse
+        {
+            Id = result.Id,
+            TenLop = result.TenLop,
+            SiSoToiDa = result.SiSoToiDa,
+            SiSoHienTai = result.SiSoHienTai,
+            TrangThai = result.TrangThai,
+            KhoaHocId = result.KhoaHocId
+        };
 
         return Ok(new
         {
             success = true,
             message = "Cập nhật lớp học thành công",
-            data = existingLopHoc
+            data = response
         });
     }
 
@@ -155,8 +207,15 @@ public class LopHocController : BaseController<LopHoc>
                 message = "Không tìm thấy lớp học" 
             });
         
-        await _service.DeleteAsync(entity);
         await LogDeleteAsync(entity);
+        
+        var result = await _service.DeleteAsync(id);
+        if (!result)
+            return BadRequest(new
+            {
+                success = false,
+                message = "Xóa lớp học thất bại"
+            });
 
         return Ok(new
         {
@@ -164,66 +223,6 @@ public class LopHocController : BaseController<LopHoc>
             message = "Xóa lớp học thành công"
         });
     }
-
-    [HttpGet("{id}/students")]
-    [Authorize(Roles = "admin,giaovu,giaovien")]
-    public async Task<IActionResult> GetStudentsInClass(string id)
-    {
-        var lopHoc = await _service.GetByIdAsync(id);
-        if (lopHoc == null)
-            return NotFound(new 
-            { 
-                success = false, 
-                message = "Không tìm thấy lớp học" 
-            });
-        
-        var assignment = (await _assignmentService.GetAllAsync(
-            1,
-            int.MaxValue,
-            Filter: pc => pc.LopHocId.ToString() == id
-        )).ToList();
-        
-        if (!assignment.Any())
-            return BadRequest(new 
-            { 
-                success = false, 
-                message = "Lớp học chưa được phân công giáo viên" 
-            });
-
-        var currentUserId = User.FindFirst("id")?.Value;
-        if (!User.IsInRole("admin") && !User.IsInRole("giaovu") && 
-            assignment.First().GiaoVienId.ToString() != currentUserId)
-        {
-            return Forbid();
-        }
-
-        var hocViens = await _registrationService.GetAllAsync(
-            1,
-            int.MaxValue,
-            Filter: dk => dk.LopHocId.ToString() == id,
-            Includes: dk => dk.HocVien
-        );
-        var DanhSachHocVien = hocViens
-            .Select(dk => new HocVienLopResponse
-            {
-                Id = dk.HocVien.Id.ToString(),
-                HoTen = dk.HocVien.HoTen,
-                Email = dk.HocVien.TaiKhoan.Email ?? "",
-                Sdt = dk.HocVien.TaiKhoan.Sdt ?? "",
-                GioiTinh = dk.HocVien.GioiTinh ?? 0
-            })
-            .ToList();
-        var response = new DanhSachLopResponse
-        {
-            Id = lopHoc.Id.ToString(),
-            TenLop = lopHoc.TenLop,
-            DanhSachHocVien = DanhSachHocVien
-        };
-
-        return Ok(new {
-            success = true,
-            message = "Lấy danh sách học viên thành công",
-            data = response
-        });
-    }
 }
+
+

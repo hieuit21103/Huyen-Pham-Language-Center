@@ -1,12 +1,10 @@
 using MsHuyenLC.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using MsHuyenLC.Application.DTOs.Learning.CauHoi;
-using MsHuyenLC.Application.Interfaces.System;
+using MsHuyenLC.Application.Interfaces.Services.System;
 using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
-using MsHuyenLC.Application.Services.Learnings;
+using MsHuyenLC.Application.Interfaces.Services.Learning;
 using MsHuyenLC.Application.DTOs.Learning.NhomCauHoi;
-using System.Text.RegularExpressions;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
@@ -15,39 +13,32 @@ namespace MsHuyenLC.API.Controller.Learning;
 [Authorize(Roles = "admin,giaovu")]
 public class NhomCauHoiController : BaseController<NhomCauHoi>
 {
-    private readonly ISystemLoggerService _systemLoggerService;
-    private readonly GroupQuestionService _groupQuestionService;
-    public NhomCauHoiController(
-        IGenericService<NhomCauHoi> service,
-        ISystemLoggerService systemLoggerService,
-        GroupQuestionService groupQuestionService
-        ) : base(service)
-    {
-        _systemLoggerService = systemLoggerService;
-        _groupQuestionService = groupQuestionService;
-    }
+    private readonly IGroupQuestionService _service;
 
-    protected override Func<IQueryable<NhomCauHoi>, IOrderedQueryable<NhomCauHoi>>? BuildOrderBy(string sortBy, string? sortOrder)
+    public NhomCauHoiController(
+        ISystemLoggerService systemLoggerService,
+        IGroupQuestionService service
+        ) : base(systemLoggerService)
     {
-        return sortBy?.ToLower() switch
+        _service = service;
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var groups = await _service.GetAllAsync();
+        return Ok(new
         {
-            "capdo" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.CapDo))
-                : (q => q.OrderBy(k => k.CapDo)),
-            "dokho" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.DoKho))
-                : (q => q.OrderBy(k => k.DoKho)),
-            _ => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.Id))
-                : (q => q.OrderBy(k => k.Id)),
-        };
+            success = true,
+            data = groups
+        });
     }
 
     [HttpGet("{id}/questions")]
     public async Task<IActionResult> GetQuestions(string id)
     {
-        var questions = await _groupQuestionService.GetQuestionsByGroupId(id);
-        if (questions == null)
+        var questions = await _service.GetQuestionsByGroupIdAsync(id);
+        if (questions == null || !questions.Any())
         {
             return NotFound(new
             {
@@ -75,31 +66,15 @@ public class NhomCauHoiController : BaseController<NhomCauHoi>
                 errors = ModelState
             });
         }
-        var nhomCauHoi = new NhomCauHoi
-        {
-            UrlHinhAnh = request.UrlHinhAnh,
-            UrlAmThanh = request.UrlAmThanh,
-            NoiDung = request.NoiDung,
-            TieuDe = request.TieuDe,
-            SoLuongCauHoi = request.SoLuongCauHoi,
-            CapDo = request.CapDo,
-            DoKho = request.DoKho,
-        };
-        var result = await _service.AddAsync(nhomCauHoi);
-        await _systemLoggerService.LogCreateAsync(GetCurrentUserId(), nhomCauHoi, GetClientIpAddress());
-        if (result == null)
-        {
-            return BadRequest(new
-            {
-                success = false,
-                message = "Không thể tạo nhóm câu hỏi"
-            });
-        }
+
+        var result = await _service.CreateAsync(request);
+        await _logService.LogCreateAsync(GetCurrentUserId(), result, GetClientIpAddress());
+        
         return Ok(new
         {
             success = true,
             message = "Tạo nhóm câu hỏi thành công",
-            data = nhomCauHoi
+            data = result
         });
     }
 
@@ -116,7 +91,7 @@ public class NhomCauHoiController : BaseController<NhomCauHoi>
             });
         }
     
-        var result = await _groupQuestionService.AddQuestionToGroup(id, request.cauHoiId, request.thuTu);
+        var result = await _service.AddQuestionToGroupAsync(id, request.cauHoiId, request.thuTu);
         if (result == null)
         {
             return BadRequest(new
@@ -157,46 +132,15 @@ public class NhomCauHoiController : BaseController<NhomCauHoi>
             });
         }
 
-        var oldData = new NhomCauHoi
-        {
-            Id = existingNhomCauHoi.Id,
-            NoiDung = existingNhomCauHoi.NoiDung,
-            TieuDe = existingNhomCauHoi.TieuDe,
-            SoLuongCauHoi = existingNhomCauHoi.SoLuongCauHoi,
-            UrlHinhAnh = existingNhomCauHoi.UrlHinhAnh,
-            UrlAmThanh = existingNhomCauHoi.UrlAmThanh,
-            CapDo = existingNhomCauHoi.CapDo,
-            DoKho = existingNhomCauHoi.DoKho
-        };
-
-        if (!string.IsNullOrWhiteSpace(request.NoiDung))
-            existingNhomCauHoi.NoiDung = request.NoiDung;
-
-        if (!string.IsNullOrWhiteSpace(request.TieuDe))
-            existingNhomCauHoi.TieuDe = request.TieuDe;
-
-        if (request.SoLuongCauHoi.HasValue)
-            existingNhomCauHoi.SoLuongCauHoi = request.SoLuongCauHoi.Value;
-
-        if (!string.IsNullOrWhiteSpace(request.UrlHinhAnh))
-            existingNhomCauHoi.UrlHinhAnh = request.UrlHinhAnh;
-
-        if (!string.IsNullOrWhiteSpace(request.UrlAmThanh))
-            existingNhomCauHoi.UrlAmThanh = request.UrlAmThanh;
-
-        if (request.CapDo.HasValue)
-            existingNhomCauHoi.CapDo = request.CapDo.Value;
-
-        if (request.DoKho.HasValue)
-            existingNhomCauHoi.DoKho = request.DoKho.Value;
-
-        await _service.UpdateAsync(existingNhomCauHoi);
-        await _systemLoggerService.LogUpdateAsync(GetCurrentUserId(), oldData, existingNhomCauHoi, GetClientIpAddress());
+        var oldData = existingNhomCauHoi;
+        var result = await _service.UpdateAsync(id, request);
+        await _logService.LogUpdateAsync(GetCurrentUserId(), oldData, result, GetClientIpAddress());
+        
         return Ok(new
         {
             success = true,
             message = "Cập nhật nhóm câu hỏi thành công",
-            data = existingNhomCauHoi
+            data = result
         });
     }
 
@@ -213,8 +157,8 @@ public class NhomCauHoiController : BaseController<NhomCauHoi>
             });
         }
 
-        await _service.DeleteAsync(existingNhomCauHoi);
-        await _systemLoggerService.LogDeleteAsync(GetCurrentUserId(), existingNhomCauHoi, GetClientIpAddress());
+        await _service.DeleteAsync(id);
+        await _logService.LogDeleteAsync(GetCurrentUserId(), existingNhomCauHoi, GetClientIpAddress());
         return Ok(new
         {
             success = true,
@@ -222,3 +166,4 @@ public class NhomCauHoiController : BaseController<NhomCauHoi>
         });
     }
 }
+

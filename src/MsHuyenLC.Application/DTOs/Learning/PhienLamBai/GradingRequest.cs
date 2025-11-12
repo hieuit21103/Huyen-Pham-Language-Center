@@ -1,4 +1,4 @@
-namespace MsHuyenLC.Domain.Entities.Learning;
+namespace MsHuyenLC.Application.DTOs.Learning.PhienLamBai;
 
 public class GradingRequest
 {

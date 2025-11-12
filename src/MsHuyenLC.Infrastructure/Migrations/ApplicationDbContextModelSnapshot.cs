@@ -634,6 +634,9 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.Property<Guid>("NguoiGuiId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("NguoiNhanId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("NoiDung")
                         .IsRequired()
                         .HasColumnType("text");
@@ -645,6 +648,8 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("NguoiGuiId");
+
+                    b.HasIndex("NguoiNhanId");
 
                     b.ToTable("ThongBao", (string)null);
                 });
@@ -1091,7 +1096,13 @@ namespace MsHuyenLC.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("MsHuyenLC.Domain.Entities.Users.TaiKhoan", "NguoiNhan")
+                        .WithMany()
+                        .HasForeignKey("NguoiNhanId");
+
                     b.Navigation("NguoiGui");
+
+                    b.Navigation("NguoiNhan");
                 });
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.System.NhatKyHeThong", b =>

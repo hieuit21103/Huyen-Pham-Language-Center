@@ -1,27 +1,33 @@
 import { useState, useEffect } from "react";
-import { Bell, Plus, Edit, Trash2, Send, X, Search } from "lucide-react";
+import { Bell, Plus, Edit, Trash2, Send, X, Search, Users, User } from "lucide-react";
 import { 
   getThongBaos, 
   createThongBao, 
   updateThongBao, 
-  deleteThongBao,
-  type ThongBaoNguoiNhanResponse 
+  deleteThongBao, 
 } from "~/apis/ThongBao";
+import { getLopHocs, getLopHocStudents } from "~/apis/LopHoc";
 import { formatDateTime } from "~/utils/date-utils";
 import { setLightTheme } from "./_layout";
 import Pagination from "~/components/Pagination";
 
 export default function ThongBaoAdmin() {
-  const [thongBaos, setThongBaos] = useState<ThongBaoNguoiNhanResponse[]>([]);
+  const [thongBaos, setThongBaos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
+  
+  const [classes, setClasses] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [sendType, setSendType] = useState<'all' | 'class' | 'individual'>('all');
+  const [selectedClassId, setSelectedClassId] = useState<string>("");
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   
   const [formData, setFormData] = useState({
     tieuDe: "",
@@ -31,11 +37,21 @@ export default function ThongBaoAdmin() {
   useEffect(() => {
     setLightTheme();
     loadThongBaos();
+    loadClasses();
   }, []);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
+
+  useEffect(() => {
+    if (selectedClassId) {
+      loadStudents(selectedClassId);
+    } else {
+      setStudents([]);
+      setSelectedStudentIds([]);
+    }
+  }, [selectedClassId]);
 
   const loadThongBaos = async () => {
     setLoading(true);
@@ -51,6 +67,40 @@ export default function ThongBaoAdmin() {
     }
   };
 
+  const loadClasses = async () => {
+    try {
+      const result = await getLopHocs({ 
+        pageNumber: 1, 
+        pageSize: 1000,
+        sortBy: "tenLop",
+        sortOrder: "asc"
+      });
+      if (result.success && result.data) {
+        setClasses(result.data);
+      }
+    } catch (error) {
+      console.error("Error loading classes:", error);
+    }
+  };
+
+  const loadStudents = async (lopHocId: string) => {
+    setLoadingStudents(true);
+    try {
+      const result = await getLopHocStudents(lopHocId);
+      if (result.success && result.data) {
+        const danhSach = result.data.danhSachHocVien || [];
+        setStudents(Array.isArray(danhSach) ? danhSach : []);
+      } else {
+        setStudents([]);
+      }
+    } catch (error) {
+      console.error("Error loading students:", error);
+      setStudents([]);
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
@@ -60,40 +110,86 @@ export default function ThongBaoAdmin() {
       return;
     }
 
+    if (sendType === 'class' && !selectedClassId) {
+      setMessage("Vui lòng chọn lớp học");
+      return;
+    }
+
+    if (sendType === 'individual' && selectedStudentIds.length === 0) {
+      setMessage("Vui lòng chọn ít nhất một học viên");
+      return;
+    }
+
     try {
-      if (editingId) {
-        // Update
-        const result = await updateThongBao(editingId, formData);
+      setMessage("Đang gửi thông báo...");
+
+      if (sendType === 'all') {
+        const requestData: any = {
+          tieuDe: formData.tieuDe,
+          noiDung: formData.noiDung,
+        };
+
+        const result = await createThongBao(requestData);
         if (result.success) {
-          setMessage("Cập nhật thông báo thành công");
+          setMessage("Gửi thông báo thành công đến tất cả người dùng");
           loadThongBaos();
           setTimeout(() => {
             setShowModal(false);
             resetForm();
-          }, 1500);
-        } else {
-          setMessage(result.message || "Cập nhật thất bại");
-        }
-      } else {
-        // Create
-        const result = await createThongBao(formData);
-        if (result.success) {
-          setMessage("Gửi thông báo thành công");
-          loadThongBaos();
-          setTimeout(() => {
-            setShowModal(false);
-            resetForm();
-          }, 1500);
+          }, 2000);
         } else {
           setMessage(result.message || "Gửi thông báo thất bại");
         }
+      } else {
+        let recipientIds: string[] = [];
+        
+        if (sendType === 'class') {
+          recipientIds = students.map(s => s.id);
+        } else if (sendType === 'individual') {
+          recipientIds = selectedStudentIds;
+        }
+
+        if (recipientIds.length === 0) {
+          setMessage("Không có người nhận nào được chọn");
+          return;
+        }
+
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const recipientId of recipientIds) {
+          const requestData = {
+            nguoiNhanId: recipientId,
+            tieuDe: formData.tieuDe,
+            noiDung: formData.noiDung,
+          };
+
+          const result = await createThongBao(requestData);
+          if (result.success) {
+            successCount++;
+          } else {
+            failCount++;
+          }
+        }
+
+        if (successCount > 0) {
+          setMessage(`Gửi thông báo thành công đến ${successCount} người${failCount > 0 ? ` (${failCount} thất bại)` : ''}`);
+          loadThongBaos();
+          setTimeout(() => {
+            setShowModal(false);
+            resetForm();
+          }, 2000);
+        } else {
+          setMessage("Gửi thông báo thất bại");
+        }
       }
     } catch (error) {
-      setMessage("Có lỗi xảy ra");
+      console.error("Error sending notification:", error);
+      setMessage("Có lỗi xảy ra khi gửi thông báo");
     }
   };
 
-  const handleEdit = (thongBao: ThongBaoNguoiNhanResponse) => {
+  const handleEdit = (thongBao: any) => {
     // Editing not available since GetAll doesn't return IDs
     // This function is kept for potential future use
     setFormData({
@@ -124,6 +220,28 @@ export default function ThongBaoAdmin() {
     setFormData({ tieuDe: "", noiDung: "" });
     setEditingId(null);
     setMessage("");
+    setSendType('all');
+    setSelectedClassId("");
+    setSelectedStudentIds([]);
+    setStudents([]);
+  };
+
+  const toggleStudentSelection = (studentId: string) => {
+    setSelectedStudentIds(prev => {
+      if (prev.includes(studentId)) {
+        return prev.filter(id => id !== studentId);
+      } else {
+        return [...prev, studentId];
+      }
+    });
+  };
+
+  const toggleAllStudents = () => {
+    if (selectedStudentIds.length === students.length) {
+      setSelectedStudentIds([]);
+    } else {
+      setSelectedStudentIds(students.map(s => s.id));
+    }
   };
 
   const filteredThongBaos = thongBaos.filter(tb =>
@@ -278,6 +396,148 @@ export default function ThongBaoAdmin() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              {/* Chọn loại gửi */}
+              {!editingId && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Gửi đến <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSendType('all');
+                        setSelectedClassId("");
+                        setSelectedStudentIds([]);
+                      }}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        sendType === 'all'
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      <Users className={`w-6 h-6 mx-auto mb-2 ${sendType === 'all' ? 'text-blue-600' : 'text-gray-600'}`} />
+                      <p className={`text-sm font-medium ${sendType === 'all' ? 'text-blue-900' : 'text-gray-700'}`}>
+                        Tất cả
+                      </p>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSendType('class');
+                        setSelectedStudentIds([]);
+                      }}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        sendType === 'class'
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      <Users className={`w-6 h-6 mx-auto mb-2 ${sendType === 'class' ? 'text-blue-600' : 'text-gray-600'}`} />
+                      <p className={`text-sm font-medium ${sendType === 'class' ? 'text-blue-900' : 'text-gray-700'}`}>
+                        Theo lớp
+                      </p>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => setSendType('individual')}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        sendType === 'individual'
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      <User className={`w-6 h-6 mx-auto mb-2 ${sendType === 'individual' ? 'text-blue-600' : 'text-gray-600'}`} />
+                      <p className={`text-sm font-medium ${sendType === 'individual' ? 'text-blue-900' : 'text-gray-700'}`}>
+                        Chọn học viên
+                      </p>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Chọn lớp */}
+              {!editingId && (sendType === 'class' || sendType === 'individual') && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Chọn lớp học <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={selectedClassId}
+                    onChange={(e) => setSelectedClassId(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">-- Chọn lớp học --</option>
+                    {classes.map((cls) => (
+                      <option key={cls.id} value={cls.id}>
+                        {cls.tenLop} ({cls.siSoHienTai || 0} học viên)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Chọn học viên */}
+              {!editingId && sendType === 'individual' && selectedClassId && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-semibold text-gray-700">
+                      Chọn học viên <span className="text-red-500">*</span>
+                    </label>
+                    {students.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={toggleAllStudents}
+                        className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        {selectedStudentIds.length === students.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="border border-gray-300 rounded-lg max-h-64 overflow-y-auto">
+                    {loadingStudents ? (
+                      <div className="p-8 text-center">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                        <p className="text-sm text-gray-600 mt-2">Đang tải danh sách học viên...</p>
+                      </div>
+                    ) : students.length === 0 ? (
+                      <div className="p-8 text-center text-gray-500">
+                        Không có học viên nào trong lớp
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-gray-200">
+                        {students.map((student) => (
+                          <label
+                            key={student.id}
+                            className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedStudentIds.includes(student.id)}
+                              onChange={() => toggleStudentSelection(student.id)}
+                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <div className="ml-3 flex-1">
+                              <p className="text-sm font-medium text-gray-900">{student.hoTen}</p>
+                              <p className="text-xs text-gray-500">{student.email}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {selectedStudentIds.length > 0 && (
+                    <p className="text-xs text-gray-600 mt-2">
+                      Đã chọn {selectedStudentIds.length} / {students.length} học viên
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Tiêu đề <span className="text-red-500">*</span>
@@ -312,7 +572,13 @@ export default function ThongBaoAdmin() {
               {!editingId && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-800">
-                    <strong>Lưu ý:</strong> Thông báo sẽ được gửi đến tất cả học viên trong hệ thống.
+                    <strong>Lưu ý:</strong> {
+                      sendType === 'all' 
+                        ? 'Thông báo sẽ được gửi đến tất cả học viên trong hệ thống.'
+                        : sendType === 'class'
+                        ? `Thông báo sẽ được gửi đến tất cả học viên trong lớp đã chọn.`
+                        : `Thông báo sẽ được gửi đến ${selectedStudentIds.length} học viên đã chọn.`
+                    }
                   </p>
                 </div>
               )}

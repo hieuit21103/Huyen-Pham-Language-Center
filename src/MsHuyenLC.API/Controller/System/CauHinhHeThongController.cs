@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Interfaces.System;
+using MsHuyenLC.Application.Interfaces.Repositories;
+using MsHuyenLC.Application.Interfaces.Services;
+using MsHuyenLC.Application.Interfaces.Services.System;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.System.CauHinhHeThong;
 
@@ -11,41 +13,24 @@ namespace MsHuyenLC.API.Controller.System;
 [Authorize(Roles = "admin")]
 public class CauHinhHeThongController : BaseController<CauHinhHeThong>
 {
+    private readonly ISystemConfigService _service;
     public CauHinhHeThongController(
-        IGenericService<CauHinhHeThong> service, 
+        ISystemConfigService service, 
         ISystemLoggerService logService) 
-        : base(service, logService)
+        : base(logService)
     {
-    }
-
-    protected override Func<IQueryable<CauHinhHeThong>, IOrderedQueryable<CauHinhHeThong>>? BuildOrderBy(string sortBy, string? sortOrder)
-    {
-        return sortBy?.ToLower() switch
-        {
-            "ten" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.Ten))
-                : (q => q.OrderBy(k => k.Ten)),
-            _ => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(k => k.Id))
-                : (q => q.OrderBy(k => k.Id)),
-        };
+        _service = service;
     }
 
     /// <summary>
     /// Lấy cấu hình theo tên
     /// </summary>
-    [HttpGet("by-name/{ten}")]
+    [HttpGet("by-name/{name}")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetByName(string ten)
+    public async Task<IActionResult> GetByName(string name)
     {
-        var result = await _service.GetAllAsync(
-            PageNumber: 1,
-            PageSize: 1,
-            Filter: ch => ch.Ten == ten
-        );
-
-        var cauHinh = result.FirstOrDefault();
-        if (cauHinh == null) 
+        var result = await _service.GetByNameAsync(name);
+        if (result == null) 
             return NotFound(new 
             { 
                 success = false, 
@@ -58,9 +43,9 @@ public class CauHinhHeThongController : BaseController<CauHinhHeThong>
             message = "Lấy cấu hình thành công",
             data = new CauHinhHeThongResponse
             {
-                Id = cauHinh.Id,
-                Ten = cauHinh.Ten,
-                GiaTri = cauHinh.GiaTri
+                Id = result.Id,
+                Ten = result.Ten,
+                GiaTri = result.GiaTri
             }
         });
     }
@@ -79,27 +64,7 @@ public class CauHinhHeThongController : BaseController<CauHinhHeThong>
                 errors = ModelState 
             });
 
-        // Kiểm tra tên cấu hình đã tồn tại chưa
-        var existing = await _service.GetAllAsync(
-            PageNumber: 1,
-            PageSize: 1,
-            Filter: ch => ch.Ten == request.Ten
-        );
-
-        if (existing.Any())
-            return Conflict(new 
-            { 
-                success = false, 
-                message = "Tên cấu hình đã tồn tại" 
-            });
-
-        var cauHinh = new CauHinhHeThong
-        {
-            Ten = request.Ten,
-            GiaTri = request.GiaTri
-        };
-
-        var result = await _service.AddAsync(cauHinh);
+        var result = await _service.CreateAsync(request);
         if (result == null)
             return BadRequest(new 
             { 
@@ -144,23 +109,6 @@ public class CauHinhHeThongController : BaseController<CauHinhHeThong>
                 message = "Không tìm thấy cấu hình" 
             });
 
-        // Kiểm tra tên mới có trùng không (nếu đổi tên)
-        if (!string.IsNullOrWhiteSpace(request.Ten) && request.Ten != cauHinh.Ten)
-        {
-            var existing = await _service.GetAllAsync(
-                PageNumber: 1,
-                PageSize: 1,
-                Filter: ch => ch.Ten == request.Ten
-            );
-
-            if (existing.Any())
-                return Conflict(new 
-                { 
-                    success = false, 
-                    message = "Tên cấu hình đã tồn tại" 
-                });
-        }
-
         var oldData = new CauHinhHeThong
         {
             Id = cauHinh.Id,
@@ -168,13 +116,7 @@ public class CauHinhHeThongController : BaseController<CauHinhHeThong>
             GiaTri = cauHinh.GiaTri
         };
 
-        if (!string.IsNullOrWhiteSpace(request.Ten))
-            cauHinh.Ten = request.Ten;
-        
-        if (!string.IsNullOrWhiteSpace(request.GiaTri))
-            cauHinh.GiaTri = request.GiaTri;
-
-        await _service.UpdateAsync(cauHinh);
+        await _service.UpdateAsync(id, request);
         await LogUpdateAsync(oldData, cauHinh);
 
         return Ok(new 
@@ -204,7 +146,7 @@ public class CauHinhHeThongController : BaseController<CauHinhHeThong>
                 message = "Không tìm thấy cấu hình" 
             });
         
-        await _service.DeleteAsync(entity);
+        await _service.DeleteAsync(id);
         await LogDeleteAsync(entity);
 
         return Ok(new 
@@ -214,3 +156,5 @@ public class CauHinhHeThongController : BaseController<CauHinhHeThong>
         });
     }
 }
+
+

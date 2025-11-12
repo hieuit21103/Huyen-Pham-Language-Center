@@ -1,4 +1,4 @@
-namespace MsHuyenLC.Domain.Entities.Learning;
+namespace MsHuyenLC.Domain.Entities.Learning.OnlineExam;
 
 public class DeThi
 {

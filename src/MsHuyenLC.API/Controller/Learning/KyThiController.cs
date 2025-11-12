@@ -1,30 +1,58 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Learning.KyThi;
 using MsHuyenLC.Application.Interfaces;
+using MsHuyenLC.Application.Interfaces.Repositories;
+using MsHuyenLC.Application.Interfaces.Services;
+using MsHuyenLC.Application.Interfaces.Services.Learning;
+using MsHuyenLC.Application.Interfaces.Services.System;
 using MsHuyenLC.Domain.Entities.Learning;
 using MsHuyenLC.Domain.Enums;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
-/// <summary>
-/// Controller quản lý kỳ thi
-/// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "admin,giaovu")]
 public class KyThiController : BaseController<KyThi>
 {
-    public KyThiController(IGenericService<KyThi> service) : base(service)
+    private readonly IExamSessionService _service;
+    public KyThiController(ISystemLoggerService loggerService, IExamSessionService service) : base(loggerService)
     {
+        _service = service;
     }
 
-    /// <summary>
-    /// Tạo kỳ thi mới
-    /// </summary>
-    /// <param name="request">Thông tin kỳ thi</param>
-    /// <returns>Kỳ thi đã tạo</returns>
-    /// <response code="200">Tạo kỳ thi thành công</response>
-    /// <response code="400">Dữ liệu không hợp lệ</response>
-    /// <response code="500">Lỗi server</response>
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<KyThi>>> GetAll()
+    {
+        var kyThis = await _service.GetAllAsync();
+        return Ok(new
+        {
+            success = true,
+            data = kyThis
+        });
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<KyThi>> GetById(string id)
+    {
+        var kyThi = await _service.GetByIdAsync(id);
+        if (kyThi == null)
+        {
+            return NotFound(new
+            {
+                success = false,
+                message = "Không tìm thấy kỳ thi"
+            });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            data = kyThi
+        });
+    }
+
     [HttpPost]
     public async Task<ActionResult> Create([FromBody] KyThiRequest request)
     {
@@ -40,16 +68,7 @@ public class KyThiController : BaseController<KyThi>
                 });
             }
 
-            var kyThi = new KyThi
-            {
-                TenKyThi = request.TenKyThi,
-                NgayThi = request.NgayThi,
-                ThoiLuong = request.ThoiLuong,
-                LopHocId = request.LopHocId,
-                TrangThai = TrangThaiKyThi.sapdienra
-            };
-
-            var createdKyThi = await _service.AddAsync(kyThi);
+            var createdKyThi = await _service.CreateAsync(request);
 
             return Ok(new
             {
@@ -77,16 +96,6 @@ public class KyThiController : BaseController<KyThi>
         }
     }
 
-    /// <summary>
-    /// Cập nhật thông tin kỳ thi
-    /// </summary>
-    /// <param name="id">ID kỳ thi</param>
-    /// <param name="request">Thông tin cập nhật</param>
-    /// <returns>Kỳ thi đã cập nhật</returns>
-    /// <response code="200">Cập nhật thành công</response>
-    /// <response code="404">Không tìm thấy kỳ thi</response>
-    /// <response code="400">Dữ liệu không hợp lệ</response>
-    /// <response code="500">Lỗi server</response>
     [HttpPut("{id}")]
     public async Task<ActionResult> Update(string id, [FromBody] KyThiUpdateRequest request)
     {
@@ -111,31 +120,43 @@ public class KyThiController : BaseController<KyThi>
                     message = "Không tìm thấy kỳ thi"
                 });
             }
+            var oldData = new KyThi
+            {
+                Id = existingKyThi.Id,
+                TenKyThi = existingKyThi.TenKyThi,
+                NgayThi = existingKyThi.NgayThi,
+                GioBatDau = existingKyThi.GioBatDau,
+                GioKetThuc = existingKyThi.GioKetThuc,
+                ThoiLuong = existingKyThi.ThoiLuong,
+                LopHocId = existingKyThi.LopHocId,
+                TrangThai = existingKyThi.TrangThai
+            };
 
-            existingKyThi.TenKyThi = request.TenKyThi;
-            existingKyThi.NgayThi = request.NgayThi;
-            existingKyThi.GioBatDau = request.GioBatDau;
-            existingKyThi.GioKetThuc = request.GioKetThuc;
-            existingKyThi.ThoiLuong = request.ThoiLuong;
-            existingKyThi.LopHocId = request.LopHocId;
-            existingKyThi.TrangThai = request.TrangThai;
-
-            await _service.UpdateAsync(existingKyThi);
+            var result = await _service.UpdateAsync(id, request);
+            if (result == null)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Cập nhật kỳ thi thất bại"
+                });
+            }
+            await _logService.LogUpdateAsync(GetCurrentUserId(), oldData, result, GetClientIpAddress());
 
             return Ok(new
             {
                 success = true,
                 message = "Cập nhật kỳ thi thành công",
-                data = new
+                data = new KyThiResponse
                 {
-                    id = existingKyThi.Id,
-                    tenKyThi = existingKyThi.TenKyThi,
-                    ngayThi = existingKyThi.NgayThi,
-                    gioBatDau = existingKyThi.GioBatDau,
-                    gioKetThuc = existingKyThi.GioKetThuc,
-                    thoiLuong = existingKyThi.ThoiLuong,
-                    lopHocId = existingKyThi.LopHocId,
-                    trangThai = existingKyThi.TrangThai
+                    Id = existingKyThi.Id,
+                    TenKyThi = existingKyThi.TenKyThi,
+                    NgayThi = existingKyThi.NgayThi,
+                    GioBatDau = existingKyThi.GioBatDau,
+                    GioKetThuc = existingKyThi.GioKetThuc,
+                    ThoiLuong = existingKyThi.ThoiLuong,
+                    LopHocId = existingKyThi.LopHocId,
+                    TrangThai = existingKyThi.TrangThai
                 }
             });
         }
@@ -150,14 +171,6 @@ public class KyThiController : BaseController<KyThi>
         }
     }
 
-    /// <summary>
-    /// Xóa kỳ thi
-    /// </summary>
-    /// <param name="id">ID kỳ thi</param>
-    /// <returns>Kết quả xóa</returns>
-    /// <response code="200">Xóa thành công</response>
-    /// <response code="404">Không tìm thấy kỳ thi</response>
-    /// <response code="500">Lỗi server</response>
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(string id)
     {
@@ -173,7 +186,7 @@ public class KyThiController : BaseController<KyThi>
                 });
             }
 
-            await _service.DeleteAsync(kyThi);
+            await _service.DeleteAsync(id);
 
             return Ok(new
             {
@@ -192,15 +205,6 @@ public class KyThiController : BaseController<KyThi>
         }
     }
 
-    /// <summary>
-    /// Cập nhật trạng thái kỳ thi
-    /// </summary>
-    /// <param name="id">ID kỳ thi</param>
-    /// <param name="trangThai">Trạng thái mới (0=SapDienRa, 1=DangDienRa, 2=KetThuc)</param>
-    /// <returns>Kỳ thi với trạng thái mới</returns>
-    /// <response code="200">Cập nhật trạng thái thành công</response>
-    /// <response code="404">Không tìm thấy kỳ thi</response>
-    /// <response code="500">Lỗi server</response>
     [HttpPatch("{id}/status")]
     public async Task<ActionResult> UpdateStatus(string id, [FromBody] TrangThaiKyThi trangThai)
     {
@@ -216,17 +220,20 @@ public class KyThiController : BaseController<KyThi>
                 });
             }
 
-            kyThi.TrangThai = trangThai;
-            await _service.UpdateAsync(kyThi);
+            var request = new KyThiUpdateRequest
+            {
+                TrangThai = trangThai
+            };
+            await _service.UpdateAsync(id, request);
 
             return Ok(new
             {
                 success = true,
                 message = "Cập nhật trạng thái kỳ thi thành công",
-                data = new
+                data = new KyThiResponse
                 {
-                    id = kyThi.Id,
-                    trangThai = kyThi.TrangThai
+                    Id = kyThi.Id,
+                    TrangThai = kyThi.TrangThai
                 }
             });
         }
@@ -241,34 +248,23 @@ public class KyThiController : BaseController<KyThi>
         }
     }
 
-    /// <summary>
-    /// Lấy danh sách kỳ thi theo lớp học
-    /// </summary>
-    /// <param name="lopHocId">ID lớp học</param>
-    /// <returns>Danh sách kỳ thi của lớp</returns>
-    /// <response code="200">Lấy danh sách thành công</response>
-    /// <response code="500">Lỗi server</response>
     [HttpGet("lop/{lopHocId}")]
     public async Task<ActionResult> GetByLopHoc(string lopHocId)
     {
         try
         {
-            var kyThis = await _service.GetAllAsync(
-                PageNumber: 1,
-                PageSize: 100,
-                Filter: kt => kt.LopHocId.ToString() == lopHocId
-            );
+            var kyThis = await _service.GetByClassIdAsync(lopHocId);
 
             return Ok(new
             {
                 success = true,
-                data = kyThis.Select(kt => new
+                data = kyThis.Select(kt => new KyThiResponse
                 {
-                    id = kt.Id,
-                    tenKyThi = kt.TenKyThi,
-                    ngayThi = kt.NgayThi,
-                    thoiLuong = kt.ThoiLuong,
-                    trangThai = kt.TrangThai
+                    Id = kt.Id,
+                    TenKyThi = kt.TenKyThi,
+                    NgayThi = kt.NgayThi,
+                    ThoiLuong = kt.ThoiLuong,
+                    TrangThai = kt.TrangThai
                 }),
                 total = kyThis.Count()
             });
@@ -284,3 +280,5 @@ public class KyThiController : BaseController<KyThi>
         }
     }
 }
+
+

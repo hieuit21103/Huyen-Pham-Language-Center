@@ -7,5 +7,7 @@ public class ThongBao
     public string NoiDung { get; set; } = null!;
     public Guid NguoiGuiId { get; set; }
     public TaiKhoan NguoiGui { get; set; } = null!;
+    public Guid? NguoiNhanId { get; set; }
+    public TaiKhoan NguoiNhan { get; set; } = null!;
     public DateTime NgayTao { get; set; } = DateTime.UtcNow;
 }

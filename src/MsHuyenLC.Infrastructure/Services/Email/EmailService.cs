@@ -1,5 +1,5 @@
 using System.Net.Mail;
-using MsHuyenLC.Application.Interfaces.Email;
+using MsHuyenLC.Application.Interfaces.Services.Email;
 using MsHuyenLC.Infrastructure.Templates;
 
 namespace MsHuyenLC.Infrastructure.Services.Email;

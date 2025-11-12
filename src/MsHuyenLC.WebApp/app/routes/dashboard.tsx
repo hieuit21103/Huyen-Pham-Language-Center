@@ -2,19 +2,17 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { getProfile, updateProfile } from "~/apis/Profile";
 import { getByTaiKhoanId, updateHocVien } from "~/apis/HocVien";
-import { GioiTinh, TrangThaiTaiKhoan, VaiTro, type DeThi, type HocVien, type Profile, type TaiKhoan, type KyThi, type LichHoc, type PhienLamBai} from "~/types/index";
-import { getLichHocByStudent, getLichHocByTeacher } from "~/apis/LichHoc";
+import { GioiTinh, VaiTro, type HocVien, type Profile, type KyThi, type LichHoc, type PhienLamBai} from "~/types/index";
+import { getLichHocByStudent } from "~/apis/LichHoc";
 import { getPhanCongByLopHoc } from "~/apis/PhanCong";
 import { getPhienLamBaiByHocVien } from "~/apis/PhienLamBai";
 import { uploadAvatar } from "~/apis/Upload";
-import { createThongBao } from "~/apis/ThongBao";
-import { getHocViens } from "~/apis/HocVien";
 import { getKyThis } from "~/apis/KyThi";
 import {
   User, Calendar, BookOpen, Trophy, Clock,
   Mail, Phone, MapPin, CheckCircle,
-  TrendingUp, Book, GraduationCap, Edit, X, Camera,
-  TextCursor, Bell, Send, FileText
+  TrendingUp, Book, Edit, X, Camera,
+  FileText
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -39,13 +37,6 @@ export default function Dashboard() {
     gioiTinh: 0,
     avatar: ""
   });
-  
-  // Teacher notification states
-  const [showNotificationModal, setShowNotificationModal] = useState(false);
-  const [notificationForm, setNotificationForm] = useState({
-    title: "",
-    message: ""
-  });
 
   useEffect(() => {
     loadDashboardData();
@@ -64,6 +55,11 @@ export default function Dashboard() {
 
     if (profileRes.data.vaiTro === VaiTro.Admin || profileRes.data.vaiTro === VaiTro.GiaoVu) {
       navigate("/admin");
+      return;
+    }
+
+    if (profileRes.data.vaiTro === VaiTro.GiaoVien) {
+      navigate("/dashboard-giao-vien");
       return;
     }
 
@@ -110,12 +106,6 @@ export default function Dashboard() {
       const phienLamBai = await getPhienLamBaiByHocVien(hocVienRes.data.id!);
       if (phienLamBai.success && Array.isArray(phienLamBai.data)) {
         setPhienLamBais(phienLamBai.data);
-      }
-
-    } else if (profileRes.data.vaiTro === VaiTro.GiaoVien) {
-      const lichDayRes = await getLichHocByTeacher(profileRes.data.id!);
-      if (lichDayRes.success && Array.isArray(lichDayRes.data)) {
-        setLichHocs(lichDayRes.data);
       }
     }
 
@@ -280,58 +270,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleSendNotification = async () => {
-    if (!notificationForm.title.trim() || !notificationForm.message.trim()) {
-      setMessage("Vui lòng nhập đầy đủ tiêu đề và nội dung thông báo");
-      return;
-    }
-
-    setSaving(true);
-    setMessage("");
-
-    try {
-      // Get all students to send notification
-      const studentsRes = await getHocViens({ pageNumber: 1, pageSize: 1000 });
-      if (!studentsRes.success || !studentsRes.data || studentsRes.data.length === 0) {
-        setMessage("Không tìm thấy học viên nào để gửi thông báo");
-        setSaving(false);
-        return;
-      }
-
-      // Get student IDs (TaiKhoanId)
-      const studentIds = studentsRes.data
-        .filter((s: any) => s.taiKhoanId)
-        .map((s: any) => s.taiKhoanId!);
-
-      if (studentIds.length === 0) {
-        setMessage("Không có học viên nào để gửi thông báo");
-        setSaving(false);
-        return;
-      }
-
-      // Send notification via API
-      const result = await createThongBao({
-        tieuDe: notificationForm.title,
-        noiDung: notificationForm.message,
-      });
-
-      if (result.success) {
-        setMessage("Gửi thông báo thành công!");
-        setTimeout(() => {
-          setShowNotificationModal(false);
-          setNotificationForm({ title: "", message: "" });
-          setMessage("");
-        }, 1500);
-      } else {
-        setMessage(result.message || "Gửi thông báo thất bại");
-      }
-    } catch (error) {
-      setMessage("Có lỗi xảy ra khi gửi thông báo");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -362,8 +300,6 @@ export default function Dashboard() {
   });
 
   const isStudent = profile.vaiTro === VaiTro.HocVien;
-  const isTeacher = profile.vaiTro === VaiTro.GiaoVien;
-
 
   // Thống kê bài thi (cho học sinh)
   const completedExams = phienLamBais.length;
@@ -476,61 +412,15 @@ export default function Dashboard() {
               </div>
             </div>
           )}
-
-          {/* Thống kê cho giáo viên */}
-          {isTeacher && (
-            <>
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                  <GraduationCap className="w-5 h-5 mr-2" />
-                  Thống kê giảng dạy
-                </h2>
-                <div className="space-y-4">
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-blue-700">Tổng buổi dạy</span>
-                      <Calendar className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <p className="text-2xl font-bold text-blue-900">{lichHocs.length}</p>
-                  </div>
-                  <div className="bg-green-50 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-green-700">Buổi sắp tới</span>
-                      <Clock className="w-5 h-5 text-green-600" />
-                    </div>
-                    <p className="text-2xl font-bold text-green-900">{upcomingSchedules.length}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Gửi thông báo */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                  <Bell className="w-5 h-5 mr-2" />
-                  Thông báo
-                </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  Gửi thông báo đến học viên trong lớp của bạn
-                </p>
-                <button
-                  onClick={() => setShowNotificationModal(true)}
-                  className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-                >
-                  <Send className="w-5 h-5 mr-2" />
-                  Gửi thông báo mới
-                </button>
-              </div>
-            </>
-          )}
         </div>
 
-        {/* Lịch học/dạy và bài thi */}
+        {/* Lịch học và bài thi */}
         <div className="lg:col-span-2 space-y-6">
           {/* Lịch học/dạy */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
               <Calendar className="w-5 h-5 mr-2" />
-              {isStudent ? "Lịch học sắp tới" : "Lịch dạy sắp tới"}
+              Lịch học sắp tới
             </h2>
 
             {upcomingSchedules.length === 0 ? (
@@ -885,95 +775,6 @@ export default function Dashboard() {
                   disabled={saving || uploading}
                 >
                   {saving ? "Đang lưu..." : "Lưu thay đổi"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Notification Modal for Teachers */}
-      {showNotificationModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                <Bell className="w-6 h-6 mr-2 text-blue-600" />
-                Gửi thông báo
-              </h2>
-              <button
-                onClick={() => setShowNotificationModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Title */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Tiêu đề thông báo <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={notificationForm.title}
-                  onChange={(e) => setNotificationForm(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Nhập tiêu đề thông báo"
-                />
-              </div>
-
-              {/* Message */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Nội dung <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={notificationForm.message}
-                  onChange={(e) => setNotificationForm(prev => ({ ...prev, message: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  rows={6}
-                  placeholder="Nhập nội dung thông báo..."
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  {notificationForm.message.length} ký tự
-                </p>
-              </div>
-
-              {/* Info box */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800">
-                  <strong>Lưu ý:</strong> Thông báo sẽ được gửi đến tất cả học viên trong các lớp mà bạn đang giảng dạy.
-                </p>
-              </div>
-
-              {/* Message */}
-              {message && (
-                <div className={`p-4 rounded-lg ${message.includes("thành công")
-                    ? "bg-green-50 text-green-800 border border-green-200"
-                    : "bg-red-50 text-red-800 border border-red-200"
-                  }`}>
-                  {message}
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => setShowNotificationModal(false)}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  disabled={saving}
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleSendNotification}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                  disabled={saving || !notificationForm.title.trim() || !notificationForm.message.trim()}
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  {saving ? "Đang gửi..." : "Gửi thông báo"}
                 </button>
               </div>
             </div>

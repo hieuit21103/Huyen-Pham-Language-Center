@@ -1,34 +1,14 @@
 import { getJwtToken } from "./Auth";
 import type { ApiResponse } from "~/types/index";
 import { NotificationApiUrl } from "~/constants/apis-url";
+import type { ThongBaoRequest, ThongBaoResponse } from "~/types/notification.types";
 
-export interface ThongBaoRequest {
-  tieuDe: string;
-  noiDung: string;
-}
-
-export interface ThongBaoResponse {
-  id?: string;
-  nguoiGuiId?: string;
-  tieuDe?: string;
-  noiDung?: string;
-  ngayTao?: string;
-}
-
-export interface ThongBaoNguoiNhanResponse {
-  tenNguoiGui?: string;
-  tieuDe?: string;
-  noiDung?: string;
-  ngayTao?: string;
-}
-
-// Lấy tất cả thông báo (GetAll) - Trả về danh sách ThongBaoNguoiNhanResponse
 export const getThongBaos = async (
   pageNumber: number = 1,
   pageSize: number = 10,
   sortBy?: string,
   sortOrder: string = "desc"
-): Promise<ApiResponse<ThongBaoNguoiNhanResponse[]>> => {
+): Promise<ApiResponse<ThongBaoResponse[]>> => {
   try {
     const token = getJwtToken();
     const params = new URLSearchParams({
@@ -120,5 +100,22 @@ export const deleteThongBao = async (id: string): Promise<ApiResponse> => {
     return await response.json();
   } catch (error) {
     return { success: false, message: "Có lỗi xảy ra khi xóa thông báo" };
+  }
+};
+
+export const getThongBaoByTaiKhoanId = async (taiKhoanId: string): Promise<ApiResponse<ThongBaoResponse[]>> => {
+  try {
+    const token = getJwtToken();
+    const response = await fetch(`${NotificationApiUrl()}/nguoi-nhan/${taiKhoanId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { "Authorization": `Bearer ${token}` }),
+      },
+    });
+
+    return await response.json();
+  } catch (error) {
+    return { success: false, message: "Có lỗi xảy ra khi lấy thông báo theo tài khoản" };
   }
 };
