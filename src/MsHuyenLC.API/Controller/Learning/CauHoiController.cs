@@ -13,7 +13,7 @@ namespace MsHuyenLC.API.Controller.Learning;
 public class CauHoiController : BaseController
 {
     private readonly IQuestionService _service;
-    
+
     public CauHoiController(
         IQuestionService service,
         ISystemLoggerService loggerService
@@ -168,6 +168,99 @@ public class CauHoiController : BaseController
             success = true,
             message = "Xóa câu hỏi thành công"
         });
+    }
+
+    [HttpPost("bulk-delete")]
+    public async Task<IActionResult> BulkDelete([FromBody] List<string> ids)
+    {
+        if (ids == null || !ids.Any())
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Danh sách ID rỗng"
+            });
+        }
+
+        var deletedCauHois = new List<CauHoi>();
+        foreach (var id in ids)
+        {
+            var existingCauHoi = await _service.GetByIdAsync(id);
+            if (existingCauHoi != null)
+            {
+                await _service.DeleteAsync(id);
+                await _logService.LogDeleteAsync(GetCurrentUserId(), existingCauHoi, GetClientIpAddress());
+                deletedCauHois.Add(existingCauHoi);
+            }
+        }
+
+        return Ok(new
+        {
+            success = true,
+            message = $"Xóa thành công {deletedCauHois.Count} câu hỏi",
+            data = deletedCauHois
+        });
+    }
+
+    [HttpGet("download-template")]
+    public async Task<IActionResult> DownloadTemplate()
+    {
+        var memory = new MemoryStream();
+        await _service.DownloadQuestionsTemplateAsync(memory);
+        memory.Position = 0;
+        var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        var fileName = "CauHoi_Template.xlsx";
+        return File(memory, contentType, fileName);
+    }
+
+    [HttpPost("import")]
+    public async Task<IActionResult> ImportQuestions(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Vui lòng chọn file để import"
+            });
+        }
+
+        if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase) &&
+            !file.FileName.EndsWith(".xls", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "File phải có định dạng Excel (.xlsx hoặc .xls)"
+            });
+        }
+
+        try
+        {
+            using var stream = file.OpenReadStream();
+            var result = await _service.ImportQuestionsAsync(stream);
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Import thành công {result.ThanhCong}/{result.TongSo} câu hỏi",
+                data = new
+                {
+                    total = result.TongSo,
+                    success = result.ThanhCong,
+                    failed = result.ThatBai,
+                    errors = result.LoiChiTiet.Take(10)
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = $"Lỗi khi import: {ex.Message}"
+            });
+        }
     }
 }
 

@@ -18,4 +18,6 @@ public interface IQuestionService
     Task<IEnumerable<CauHoi>> GetByTypeAsync(LoaiCauHoi type);
     Task<CauHoi> AddAnswerToQuestionAsync(string questionId, DapAnRequest answerRequest);
     Task<CauHoi?> GetQuestionWithAnswersAsync(string id);
+    Task<CauHoiImportResult> ImportQuestionsAsync(Stream fileStream);
+    Task DownloadQuestionsTemplateAsync(Stream outputStream);
 }

@@ -8,6 +8,7 @@ using MsHuyenLC.Application.Interfaces.Repositories.Users;
 using MsHuyenLC.Application.Interfaces.Services.Auth;
 using MsHuyenLC.Application.Interfaces.Services.System;
 using MsHuyenLC.Application.Interfaces.Services.Email;
+using MsHuyenLC.Application.Interfaces.Services.Excel;
 using MsHuyenLC.Application.Interfaces.Services.Finance;
 using MsHuyenLC.Application.Interfaces.Services.User;
 using MsHuyenLC.Application.Interfaces.Services.Course;
@@ -23,6 +24,7 @@ using MsHuyenLC.Infrastructure.Repositories;
 using MsHuyenLC.Infrastructure.Repositories.Users;
 using MsHuyenLC.Infrastructure.Services;
 using MsHuyenLC.Infrastructure.Services.Email;
+using MsHuyenLC.Infrastructure.Services.Excel;
 using MsHuyenLC.Infrastructure.Persistence;
 using MsHuyenLC.Infrastructure.Persistence.Seed;
 using MsHuyenLC.API.Middleware;
@@ -153,6 +155,9 @@ builder.Services.AddScoped<ISystemConfigService, SystemConfigService>();
 
 // ========== Email Services ==========
 builder.Services.AddScoped<IEmailService, EmailService>();
+
+// ========== Excel Services ==========
+builder.Services.AddScoped<IExcelService, ExcelService>();
 
 // ========== Finance Services ==========
 builder.Services.AddScoped<IVnpayService, VNPayService>();

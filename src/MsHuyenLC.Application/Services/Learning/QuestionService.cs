@@ -4,22 +4,26 @@ using MsHuyenLC.Application.Interfaces.Services.Learning;
 using MsHuyenLC.Application.DTOs.Learning.CauHoi;
 using MsHuyenLC.Domain.Enums;
 using FluentValidation;
+using MsHuyenLC.Application.Interfaces.Services.Excel;
 
 namespace MsHuyenLC.Application.Services.Learning;
 
 public class QuestionService : IQuestionService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IExcelService _excelService;
     private readonly IValidator<CauHoiRequest> _createValidator;
     private readonly IValidator<CauHoiUpdateRequest> _updateValidator;
 
     public QuestionService(
         IUnitOfWork unitOfWork,
+        IExcelService excelService,
         IValidator<CauHoiRequest> createValidator,
         IValidator<CauHoiUpdateRequest> updateValidator
     )
     {
         _unitOfWork = unitOfWork;
+        _excelService = excelService;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
     }
@@ -162,7 +166,6 @@ public class QuestionService : IQuestionService
         return questions.FirstOrDefault();
     }
 
-    // Các method cũ - giữ lại để tương thích ngược
     public async Task<CauHoi> AddCorrectAnswerToQuestionAsync(string questionId, DapAnCauHoi dapAnCauHoi)
     {
         var cauHoi = await _unitOfWork.CauHois.GetByIdAsync(questionId);
@@ -187,6 +190,118 @@ public class QuestionService : IQuestionService
         cauHoi.CacNhom.Add(nhomCauHoiChiTiet);
         await _unitOfWork.SaveChangesAsync();
         return cauHoi;
+    }
+
+    public async Task DownloadQuestionsTemplateAsync(Stream outputStream)
+    {
+        await _excelService.DownloadQuestionsTemplateAsync(outputStream);
+    }
+
+    public async Task<CauHoiImportResult> ImportQuestionsAsync(Stream fileStream)
+    {
+        var importRequests = await _excelService.ImportQuestionsFromExcelAsync(fileStream);
+        var result = new CauHoiImportResult
+        {
+            TongSo = 0,
+            ThanhCong = 0,
+            ThatBai = 0,
+            LoiChiTiet = new List<string>()
+        };
+
+        var importList = importRequests.ToList();
+        result.TongSo = importList.Count;
+
+        foreach (var importRequest in importList)
+        {
+            try
+            {
+                var request = ConvertImportRequestToCauHoiRequest(importRequest);
+                
+                await _createValidator.ValidateAndThrowAsync(request);
+                
+                await CreateAsync(request);
+                result.ThanhCong++;
+            }
+            catch (Exception ex)
+            {
+                result.ThatBai++;
+                var preview = importRequest.NoiDungCauHoi.Length > 30 
+                    ? importRequest.NoiDungCauHoi.Substring(0, 30) + "..." 
+                    : importRequest.NoiDungCauHoi;
+                result.LoiChiTiet.Add($"Câu hỏi '{preview}': {ex.Message}");
+            }
+        }
+
+        return result;
+    }
+
+    private CauHoiRequest ConvertImportRequestToCauHoiRequest(CauHoiImportRequest importRequest)
+    {
+        var request = new CauHoiRequest
+        {
+            NoiDungCauHoi = importRequest.NoiDungCauHoi,
+            LoaiCauHoi = Enum.Parse<LoaiCauHoi>(importRequest.LoaiCauHoi, true),
+            KyNang = Enum.Parse<KyNang>(importRequest.KyNang, true),
+            DoKho = Enum.Parse<DoKho>(importRequest.DoKho, true),
+            CapDo = Enum.Parse<CapDo>(importRequest.CapDo, true),
+            UrlAmThanh = importRequest.UrlAmThanh,
+            UrlHinhAnh = importRequest.UrlHinhAnh,
+            LoiThoai = importRequest.LoiThoai,
+            CacDapAn = new List<DapAnRequest>()
+        };
+
+        // Normalize đáp án đúng (A, B, C, D)
+        var dapAnDung = importRequest.DapAnDung.Trim().ToUpper();
+
+        // Thêm đáp án A
+        if (!string.IsNullOrWhiteSpace(importRequest.DapAnA))
+        {
+            request.CacDapAn.Add(new DapAnRequest
+            {
+                Nhan = "A",
+                NoiDung = importRequest.DapAnA,
+                Dung = dapAnDung == "A",
+                GiaiThich = dapAnDung == "A" ? importRequest.GiaiThich : null
+            });
+        }
+
+        // Thêm đáp án B
+        if (!string.IsNullOrWhiteSpace(importRequest.DapAnB))
+        {
+            request.CacDapAn.Add(new DapAnRequest
+            {
+                Nhan = "B",
+                NoiDung = importRequest.DapAnB,
+                Dung = dapAnDung == "B",
+                GiaiThich = dapAnDung == "B" ? importRequest.GiaiThich : null
+            });
+        }
+
+        // Thêm đáp án C
+        if (!string.IsNullOrWhiteSpace(importRequest.DapAnC))
+        {
+            request.CacDapAn.Add(new DapAnRequest
+            {
+                Nhan = "C",
+                NoiDung = importRequest.DapAnC,
+                Dung = dapAnDung == "C",
+                GiaiThich = dapAnDung == "C" ? importRequest.GiaiThich : null
+            });
+        }
+
+        // Thêm đáp án D
+        if (!string.IsNullOrWhiteSpace(importRequest.DapAnD))
+        {
+            request.CacDapAn.Add(new DapAnRequest
+            {
+                Nhan = "D",
+                NoiDung = importRequest.DapAnD,
+                Dung = dapAnDung == "D",
+                GiaiThich = dapAnDung == "D" ? importRequest.GiaiThich : null
+            });
+        }
+
+        return request;
     }
 }
 

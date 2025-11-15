@@ -154,61 +154,21 @@ export async function searchCauHois(filters: CauHoiFilterParams): Promise<ApiRes
     }
 }
 
-// /**
-//  * Import câu hỏi từ file Excel
-//  */
-// export async function importCauHoisFromExcel(file: File): Promise<ApiResponse> {
-//     try {
-//         const token = getJwtToken();
-//         const formData = new FormData();
-//         formData.append('file', file);
-
-//         const response = await fetch(CauHoiApiUrl('import'), {
-//             method: "POST",
-//             headers: {
-//                 ...(token && { "Authorization": `Bearer ${token}` }),
-//             },
-//             body: formData,
-//         });
-
-//         return await response.json();
-//     } catch (error) {
-//         return { success: false, message: `Lỗi: ${error}` };
-//     }
-// }
-
-// /**
-//  * Xuất template Excel để import câu hỏi
-//  */
-// export async function downloadImportTemplate(): Promise<ApiResponse> {
-//     try {
-//         const token = getJwtToken();
-//         const response = await fetch(CauHoiApiUrl('import/template'), {
-//             method: "GET",
-//             headers: {
-//                 ...(token && { "Authorization": `Bearer ${token}` }),
-//             },
-//         });
-
-//         const blob = await response.blob();
-//         return { success: true, data: blob };
-//     } catch (error) {
-//         return { success: false, message: `Lỗi: ${error}` };
-//     }
-// }
-
 /**
- * Sao chép câu hỏi
+ * Import câu hỏi từ file Excel
  */
-export async function copyCauHoi(id: string): Promise<ApiResponse> {
+export async function importCauHoisFromExcel(file: File): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
-        const response = await fetch(CauHoiApiUrl(`${id}/copy`), {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch(CauHoiApiUrl('import'), {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
                 ...(token && { "Authorization": `Bearer ${token}` }),
             },
+            body: formData,
         });
 
         return await response.json();
@@ -218,20 +178,20 @@ export async function copyCauHoi(id: string): Promise<ApiResponse> {
 }
 
 /**
- * Lấy thống kê câu hỏi theo loại
+ * Xuất template Excel để import câu hỏi
  */
-export async function getCauHoiStatistics(): Promise<ApiResponse> {
+export async function downloadImportTemplate(): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
-        const response = await fetch(CauHoiApiUrl('statistics'), {
+        const response = await fetch(CauHoiApiUrl('download-template'), {
             method: "GET",
             headers: {
-                "Content-Type": "application/json",
                 ...(token && { "Authorization": `Bearer ${token}` }),
             },
         });
 
-        return await response.json();
+        const blob = await response.blob();
+        return { success: true, data: blob };
     } catch (error) {
         return { success: false, message: `Lỗi: ${error}` };
     }
@@ -249,7 +209,7 @@ export async function deleteBulkCauHois(ids: string[]): Promise<ApiResponse> {
                 "Content-Type": "application/json",
                 ...(token && { "Authorization": `Bearer ${token}` }),
             },
-            body: JSON.stringify({ ids }),
+            body: JSON.stringify(ids),
         });
 
         return await response.json();

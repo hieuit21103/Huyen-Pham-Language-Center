@@ -6,11 +6,9 @@ import {
   updateCauHoi, 
   deleteCauHoi, 
   searchCauHois, 
-  copyCauHoi, 
-  getCauHoiStatistics, 
-  // importCauHoisFromExcel, 
-  // downloadImportTemplate,
-  deleteBulkCauHois 
+  deleteBulkCauHois,
+  importCauHoisFromExcel,
+  downloadImportTemplate
 } from "~/apis/CauHoi";
 import { getNhomCauHois } from "~/apis/NhomCauHoi";
 import { uploadImage, uploadAudio } from "~/apis/Upload";
@@ -227,15 +225,6 @@ export default function AdminQuestionBank() {
     }
   };
 
-  const handleCopy = async (id: string) => {
-    const response = await copyCauHoi(id);
-    setMessage(response.message || "");
-    if (response.success) {
-      loadQuestions();
-      setTimeout(() => setMessage(""), 3000);
-    }
-  };
-
   const handleBulkDelete = async () => {
     if (selectedQuestions.length === 0) {
       setMessage("Vui lòng chọn ít nhất một câu hỏi");
@@ -254,54 +243,43 @@ export default function AdminQuestionBank() {
     }
   };
 
-  const handleShowStatistics = async () => {
-    const response = await getCauHoiStatistics();
-    if (response.success) {
-      setStatistics(response.data);
-      setShowStatsModal(true);
+  const handleDownloadTemplate = async () => {
+    const response = await downloadImportTemplate();
+    if (response.success && response.data) {
+      const blob = response.data as Blob;
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Mau_Import_CauHoi.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     } else {
-      setMessage(response.message || "Lấy thống kê thất bại");
+      setMessage(response.message || "Tải template thất bại");
       setTimeout(() => setMessage(""), 3000);
     }
   };
 
-  // const handleDownloadTemplate = async () => {
-  //   const response = await downloadImportTemplate();
-  //   if (response.success && response.data) {
-  //     const blob = response.data as Blob;
-  //     const url = window.URL.createObjectURL(blob);
-  //     const a = document.createElement('a');
-  //     a.href = url;
-  //     a.download = 'Mau_Import_CauHoi.xlsx';
-  //     document.body.appendChild(a);
-  //     a.click();
-  //     window.URL.revokeObjectURL(url);
-  //     document.body.removeChild(a);
-  //   } else {
-  //     setMessage(response.message || "Tải template thất bại");
-  //     setTimeout(() => setMessage(""), 3000);
-  //   }
-  // };
+  const handleImportExcel = async () => {
+    if (!importFile) {
+      setMessage("Vui lòng chọn file Excel");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
 
-  // const handleImportExcel = async () => {
-  //   if (!importFile) {
-  //     setMessage("Vui lòng chọn file Excel");
-  //     setTimeout(() => setMessage(""), 3000);
-  //     return;
-  //   }
-
-  //   setLoading(true);
-  //   const response = await importCauHoisFromExcel(importFile);
-  //   setLoading(false);
-  //   setMessage(response.message || "");
+    setLoading(true);
+    const response = await importCauHoisFromExcel(importFile);
+    setLoading(false);
+    setMessage(response.message || "");
     
-  //   if (response.success) {
-  //     setShowImportModal(false);
-  //     setImportFile(null);
-  //     loadQuestions();
-  //   }
-  //   setTimeout(() => setMessage(""), 3000);
-  // };
+    if (response.success) {
+      setShowImportModal(false);
+      setImportFile(null);
+      loadQuestions();
+    }
+    setTimeout(() => setMessage(""), 3000);
+  };
 
   const toggleSelectQuestion = (id: string) => {
     setSelectedQuestions(prev =>
@@ -411,9 +389,9 @@ export default function AdminQuestionBank() {
 
   const getKyNangText = (kyNang?: KyNang) => {
     switch(kyNang) {
-      case 0: return "Reading";
-      case 1: return "Writing";
-      case 2: return "Listening";
+      case 0: return "Listening";
+      case 1: return "Reading";
+      case 2: return "Writing";
       default: return "—";
     }
   };
@@ -485,9 +463,9 @@ export default function AdminQuestionBank() {
     total: filteredQuestions.length,
     tracNghiem: filteredQuestions.filter(q => q.loaiCauHoi === 0).length,
     tuLuan: filteredQuestions.filter(q => q.loaiCauHoi === 1).length,
-    reading: filteredQuestions.filter(q => q.kyNang === 0).length,
-    writing: filteredQuestions.filter(q => q.kyNang === 1).length,
-    listening: filteredQuestions.filter(q => q.kyNang === 2).length,
+    reading: filteredQuestions.filter(q => q.kyNang === 1).length,
+    writing: filteredQuestions.filter(q => q.kyNang === 2).length,
+    listening: filteredQuestions.filter(q => q.kyNang === 0).length,
   };
 
   return (
@@ -513,13 +491,6 @@ export default function AdminQuestionBank() {
             <span>Nhóm câu hỏi</span>
           </a>
           <button 
-            onClick={handleShowStatistics}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-          >
-            <BarChart3 className="w-5 h-5" />
-            <span>Thống kê</span>
-          </button>
-          {/* <button 
             onClick={() => setShowImportModal(true)}
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
           >
@@ -532,7 +503,7 @@ export default function AdminQuestionBank() {
           >
             <Download className="w-5 h-5" />
             <span>Tải Template</span>
-          </button> */}
+          </button>
           {selectedQuestions.length > 0 && (
             <button 
               onClick={handleBulkDelete}
@@ -608,9 +579,9 @@ export default function AdminQuestionBank() {
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
           >
             <option value="">Tất cả kỹ năng</option>
-            <option value="0">Reading</option>
-            <option value="1">Writing</option>
-            <option value="2">Listening</option>
+            <option value="0">Listening</option>
+            <option value="1">Reading</option>
+            <option value="2">Writing</option>
           </select>
           <select
             value={filterCapDo}
@@ -718,13 +689,6 @@ export default function AdminQuestionBank() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
-                        <button
-                          onClick={() => handleCopy(question.id!)}
-                          className="text-green-600 hover:text-green-900 p-2 hover:bg-green-50 rounded-lg transition-colors"
-                          title="Sao chép câu hỏi"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </button>
                         <button
                           onClick={() => handleEdit(question)}
                           className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg transition-colors"
@@ -1125,7 +1089,7 @@ export default function AdminQuestionBank() {
       )}
 
       {/* Import Modal */}
-      {/* {showImportModal && (
+      {showImportModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-lg w-full">
             <div className="p-6">
@@ -1139,7 +1103,7 @@ export default function AdminQuestionBank() {
               <div className="space-y-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-800 mb-2">
-                    📌 Vui lòng tải template Excel và điền thông tin theo đúng định dạng.
+                    Vui lòng tải template Excel và điền thông tin theo đúng định dạng.
                   </p>
                   <button
                     onClick={handleDownloadTemplate}
@@ -1193,7 +1157,7 @@ export default function AdminQuestionBank() {
             </div>
           </div>
         </div>
-      )} */}
+      )}
     </div>
   );
 }
