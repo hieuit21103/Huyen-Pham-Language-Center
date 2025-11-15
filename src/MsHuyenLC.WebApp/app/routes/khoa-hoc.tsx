@@ -53,7 +53,7 @@ export default function KhoaHocPage() {
                     description: course.moTa || 'Chưa có mô tả',
                     level: 'Tất cả trình độ',
                     price: course.hocPhi ? `${course.hocPhi.toLocaleString('vi-VN')}đ` : 'Liên hệ',
-                    duration: course.thoiLuong ? `${course.thoiLuong} phút` : 'Liên hệ',
+                    duration: course.thoiLuong ? `${course.thoiLuong} buổi` : 'Liên hệ',
                     students: course.lopHocs?.length || 0
                 }));
                 setCourses(formattedCourses);

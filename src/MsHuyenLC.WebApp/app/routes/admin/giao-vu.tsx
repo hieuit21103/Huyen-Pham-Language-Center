@@ -145,22 +145,7 @@ export default function AdminGiaoVu() {
           <span>Thêm giáo vụ</span>
         </button>
       </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-blue-700 text-sm font-medium mb-1">Tổng số giáo vụ</p>
-              <p className="text-2xl font-bold text-blue-900">{totalCount}</p>
-            </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Briefcase className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
+      
       {/* Search */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="relative">

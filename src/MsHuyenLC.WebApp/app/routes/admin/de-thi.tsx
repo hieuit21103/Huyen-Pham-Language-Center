@@ -362,7 +362,7 @@ export default function AdminExams() {
   };
 
   const getKyNangText = (kyNang?: KyNang) => {
-    const texts = ["Reading", "Writing", "Listening"];
+    const texts = ["Listening", "Reading", "Writing", ];
     return texts[kyNang || 0];
   };
 

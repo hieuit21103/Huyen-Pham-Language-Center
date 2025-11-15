@@ -96,6 +96,9 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<LopHoc>()
             .Navigation(lh => lh.CacDangKy)
             .AutoInclude();
+        modelBuilder.Entity<LopHoc>()
+            .Navigation(lh => lh.KhoaHoc)
+            .AutoInclude();
         modelBuilder.Entity<LichHoc>().ToTable("LichHoc");
         modelBuilder.Entity<LichHoc>()
             .Navigation(lh => lh.LopHoc)

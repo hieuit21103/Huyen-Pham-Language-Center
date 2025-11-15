@@ -13,10 +13,6 @@ public class LichHocUpdateRequestValidator : AbstractValidator<LichHocUpdateRequ
     {
         _unitOfWork = unitOfWork;
 
-        RuleFor(x => x.LopHocId)
-            .NotEmpty().WithMessage("Lớp học không được để trống")
-            .MustAsync(LopHocExists).WithMessage("Lớp học không tồn tại");
-
         RuleFor(x => x.PhongHocId)
             .NotEmpty().WithMessage("Phòng học không được để trống")
             .MustAsync(PhongHocExists).WithMessage("Phòng học không tồn tại");

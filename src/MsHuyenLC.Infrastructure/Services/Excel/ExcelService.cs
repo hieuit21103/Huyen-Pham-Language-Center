@@ -1,6 +1,5 @@
 using MsHuyenLC.Application.Interfaces.Services.Excel;
 using MsHuyenLC.Application.DTOs.Learning.CauHoi;
-using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
 using ClosedXML.Excel;
 
 namespace MsHuyenLC.Infrastructure.Services.Excel;
@@ -15,7 +14,7 @@ public class ExcelService : IExcelService
         using (var workbook = new XLWorkbook(excelStream))
         {
             var worksheet = workbook.Worksheet(1);
-            var rows = worksheet.RowsUsed().Skip(1); // Skip header
+            var rows = worksheet.RowsUsed().Skip(1);
 
             foreach (var row in rows)
             {

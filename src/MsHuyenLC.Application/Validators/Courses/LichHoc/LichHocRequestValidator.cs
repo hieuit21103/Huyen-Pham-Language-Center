@@ -28,12 +28,6 @@ public class LichHocRequestValidator : AbstractValidator<LichHocRequest>
 
         RuleFor(x => x.GioKetThuc)
             .GreaterThan(x => x.GioBatDau).WithMessage("Giờ kết thúc phải lớn hơn giờ bắt đầu");
-
-        RuleFor(x => x.TuNgay)
-            .LessThanOrEqualTo(x => x.DenNgay).WithMessage("Từ ngày phải nhỏ hơn hoặc bằng đến ngày");
-
-        RuleFor(x => x.DenNgay)
-            .GreaterThanOrEqualTo(x => x.TuNgay).WithMessage("Đến ngày phải lớn hơn hoặc bằng từ ngày");
     }
 
     private async Task<bool> LopHocExists(Guid lopHocId, CancellationToken cancellationToken)
