@@ -14,6 +14,7 @@ namespace MsHuyenLC.API.Controller.Courses;
 public class LichHocController : BaseController
 {
     private readonly IScheduleService _service;
+    
     public LichHocController(
         ISystemLoggerService logService,
         IScheduleService service) : base(logService)
@@ -25,21 +26,7 @@ public class LichHocController : BaseController
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> GetAll()
     {
-        var lichHocs = await _service.GetAllAsync();
-
-        var response = lichHocs.Select(lh => new LichHocResponse
-        {
-            Id = lh.Id,
-            LopHocId = lh.LopHocId,
-            PhongHocId = lh.PhongHocId,
-            Thu = lh.Thu,
-            TuNgay = lh.TuNgay,
-            DenNgay = lh.DenNgay,
-            GioBatDau = lh.GioBatDau,
-            GioKetThuc = lh.GioKetThuc,
-            CoHieuLuc = lh.CoHieuLuc
-        });
-
+        var response = await _service.GetAllWithDetailsAsync();
         var totalItems = await _service.CountAsync();
 
         return Ok(new
@@ -55,26 +42,14 @@ public class LichHocController : BaseController
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> GetById(string id)
     {
-        var lichHoc = await _service.GetByIdAsync(id);
-        if (lichHoc == null)
+        var response = await _service.GetByIdWithDetailsAsync(id);
+        if (response == null)
             return NotFound(new
             {
                 success = false,
                 message = "Không tìm thấy lịch học"
             });
-
-        var response = new LichHocResponse
-        {
-            Id = lichHoc.Id,
-            LopHocId = lichHoc.LopHocId,
-            PhongHocId = lichHoc.PhongHocId,
-            Thu = lichHoc.Thu,
-            TuNgay = lichHoc.TuNgay,
-            DenNgay = lichHoc.DenNgay,
-            GioBatDau = lichHoc.GioBatDau,
-            GioKetThuc = lichHoc.GioKetThuc,
-            CoHieuLuc = lichHoc.CoHieuLuc
-        };
+        
         return Ok(new
         {
             success = true,
@@ -189,11 +164,8 @@ public class LichHocController : BaseController
             Id = existingLichHoc.Id,
             LopHocId = existingLichHoc.LopHocId,
             PhongHocId = existingLichHoc.PhongHocId,
-            Thu = existingLichHoc.Thu,
             TuNgay = existingLichHoc.TuNgay,
             DenNgay = existingLichHoc.DenNgay,
-            GioBatDau = existingLichHoc.GioBatDau,
-            GioKetThuc = existingLichHoc.GioKetThuc,
             CoHieuLuc = existingLichHoc.CoHieuLuc
         };
 

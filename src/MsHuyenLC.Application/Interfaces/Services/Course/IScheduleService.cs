@@ -6,7 +6,9 @@ namespace MsHuyenLC.Application.Interfaces.Services.Course;
 public interface IScheduleService
 {
     Task<LichHoc?> GetByIdAsync(string id);
+    Task<LichHocResponse?> GetByIdWithDetailsAsync(string id);
     Task<IEnumerable<LichHoc>> GetAllAsync();
+    Task<IEnumerable<LichHocResponse>> GetAllWithDetailsAsync();
     Task<IEnumerable<LichHoc>> GetByClassIdAsync(string classId);
     Task<IEnumerable<LichHoc>> GetTeacherSchedulesAsync(string teacherId);
     Task<IEnumerable<LichHoc>> GetStudentSchedulesAsync(string studentId);

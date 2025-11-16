@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using MsHuyenLC.Application.Interfaces.Repositories;
 using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.Interfaces.Repositories.Users;
+using MsHuyenLC.Domain.Entities.Courses;
 using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
 using MsHuyenLC.Infrastructure.Repositories;
 using MsHuyenLC.Infrastructure.Repositories.Users;
@@ -28,6 +29,7 @@ public class UnitOfWork : IUnitOfWork
     private IGenericRepository<KhoaHoc>? _khoaHocs;
     private IGenericRepository<LopHoc>? _lopHocs;
     private IGenericRepository<LichHoc>? _lichHocs;
+    private IGenericRepository<ThoiGianBieu>? _thoiGianBieus;
     private IGenericRepository<PhongHoc>? _phongHocs;
     private IGenericRepository<PhanCong>? _phanCongs;
     private IGenericRepository<ThanhToan>? _thanhToans;
@@ -99,6 +101,9 @@ public class UnitOfWork : IUnitOfWork
 
     public IGenericRepository<LichHoc> LichHocs => 
         _lichHocs ??= GetRepository<LichHoc>();
+
+    public IGenericRepository<ThoiGianBieu> ThoiGianBieus => 
+        _thoiGianBieus ??= GetRepository<ThoiGianBieu>();
 
     public IGenericRepository<PhanCong> PhanCongs =>
         _phanCongs ??= GetRepository<PhanCong>();

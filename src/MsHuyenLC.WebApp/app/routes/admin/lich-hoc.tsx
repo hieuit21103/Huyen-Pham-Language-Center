@@ -1,9 +1,9 @@
-import { Search, Plus, Edit, Trash2, Calendar, Clock, MapPin, Users, X } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Calendar, Clock, MapPin, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getLichHocs, createLichHoc, updateLichHoc, deleteLichHoc } from "~/apis/LichHoc";
 import { getLopHocs } from "~/apis/LopHoc";
 import { getPhongHocs } from "~/apis/PhongHoc";
-import type { LichHoc, LichHocRequest, LichHocUpdateRequest } from "~/types/schedule.types";
+import type { LichHoc, LichHocRequest, LichHocUpdateRequest, ThoiGianBieuRequest } from "~/types/schedule.types";
 import type { LopHoc } from "~/types/course.types";
 import type { PhongHoc } from "~/types/schedule.types";
 import { DayOfWeek } from "~/types/enums";
@@ -20,25 +20,24 @@ export default function AdminSchedule() {
   const [editingSchedule, setEditingSchedule] = useState<LichHoc | null>(null);
   const [message, setMessage] = useState("");
   
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   
   const [formData, setFormData] = useState<LichHocRequest>({
     lopHocId: "",
     phongHocId: "",
-    thu: DayOfWeek.Monday,
-    gioBatDau: "08:00",
-    gioKetThuc: "10:00",
-    tuNgay: "",
-    denNgay: "",
+    thoiGianBieus: [
+      {
+        thu: DayOfWeek.Monday,
+        gioBatDau: "08:00",
+        gioKetThuc: "10:00",
+      }
+    ],
   });
 
   useEffect(() => {
     setLightTheme();
     loadSchedules();
-    loadClasses();
-    loadRooms();
   }, []);
 
   useEffect(() => {
@@ -47,38 +46,74 @@ export default function AdminSchedule() {
 
   const loadSchedules = async () => {
     setLoading(true);
-    const response = await getLichHocs({ pageNumber: 1, pageSize: 1000 });
-    if (response.success && response.data) {
-      const dataArray = Array.isArray(response.data) ? response.data : (response.data.items || response.data.data || []);
-      setSchedules(dataArray);
+    try {
+      // Load schedules, classes, and rooms in parallel
+      const [scheduleResponse, classResponse, roomResponse] = await Promise.all([
+        getLichHocs({ 
+          pageNumber: 1, 
+          pageSize: 1000,
+          sortBy: "tuNgay",
+          sortOrder: "asc"
+        }),
+        getLopHocs({ pageNumber: 1, pageSize: 1000 }),
+        getPhongHocs({ pageNumber: 1, pageSize: 1000 })
+      ]);
+
+      console.log("Schedule Response:", scheduleResponse);
+      
+      if (scheduleResponse.success && scheduleResponse.data) {
+        const dataArray = Array.isArray(scheduleResponse.data) ? scheduleResponse.data : [];
+        
+        // Create lookup maps for classes and rooms
+        const classMap = new Map();
+        const roomMap = new Map();
+        
+        if (classResponse.success && classResponse.data) {
+          const classArray = Array.isArray(classResponse.data) ? classResponse.data : [];
+          classArray.forEach((c: any) => classMap.set(c.id, c.tenLop));
+          setClasses(classArray);
+        }
+        
+        if (roomResponse.success && roomResponse.data) {
+          const roomArray = Array.isArray(roomResponse.data) ? roomResponse.data : [];
+          roomArray.forEach((r: any) => roomMap.set(r.id, r.tenPhong));
+          setRooms(roomArray);
+        }
+        
+        // Enrich schedule data with class and room names
+        const enrichedSchedules = dataArray.map((schedule: any) => ({
+          ...schedule,
+          tenLop: schedule.tenLop || classMap.get(schedule.lopHocId) || "—",
+          tenPhong: schedule.tenPhong || roomMap.get(schedule.phongHocId) || "—"
+        }));
+        
+        console.log("Schedules loaded:", enrichedSchedules);
+        setSchedules(enrichedSchedules);
+      } else {
+        console.error("Failed to load schedules:", scheduleResponse.message);
+        setSchedules([]);
+      }
+    } catch (error) {
+      console.error("Error loading schedules:", error);
+      setSchedules([]);
     }
     setLoading(false);
   };
 
-  const loadClasses = async () => {
-    const response = await getLopHocs({ pageNumber: 1, pageSize: 1000 });
-    if (response.success && response.data) {
-      setClasses(response.data);
-    }
-  };
 
-  const loadRooms = async () => {
-    const response = await getPhongHocs({ pageNumber: 1, pageSize: 100 });
-    if (response.success && response.data) {
-      setRooms(response.data);
-    }
-  };
 
   const handleCreate = () => {
     setEditingSchedule(null);
     setFormData({
       lopHocId: "",
       phongHocId: "",
-      thu: DayOfWeek.Monday,
-      gioBatDau: "08:00",
-      gioKetThuc: "10:00",
-      tuNgay: "",
-      denNgay: "",
+      thoiGianBieus: [
+        {
+          thu: DayOfWeek.Monday,
+          gioBatDau: "08:00",
+          gioKetThuc: "10:00",
+        }
+      ],
     });
     setShowModal(true);
     setMessage("");
@@ -87,122 +122,32 @@ export default function AdminSchedule() {
   const handleEdit = (schedule: LichHoc) => {
     setEditingSchedule(schedule);
     setFormData({
-      lopHocId: schedule.lopHocId || "",
       phongHocId: schedule.phongHocId || "",
-      thu: schedule.thu || DayOfWeek.Monday,
-      gioBatDau: schedule.gioBatDau || "08:00",
-      gioKetThuc: schedule.gioKetThuc || "10:00",
-      tuNgay: schedule.tuNgay ? schedule.tuNgay.split('T')[0] : "",
-      denNgay: schedule.denNgay ? schedule.denNgay.split('T')[0] : "",
+      thoiGianBieus: schedule.thoiGianBieu?.map(tgb => ({
+        thu: tgb.thu || DayOfWeek.Monday,
+        gioBatDau: tgb.gioBatDau?.substring(0, 5) || "08:00",
+        gioKetThuc: tgb.gioKetThuc?.substring(0, 5) || "10:00",
+      })) || [
+        {
+          thu: DayOfWeek.Monday,
+          gioBatDau: "08:00",
+          gioKetThuc: "10:00",
+        }
+      ],
     });
     setShowModal(true);
     setMessage("");
   };
 
-  const checkScheduleConflict = () => {
-    const conflicts: string[] = [];
-    
-    // Parse time strings to compare
-    const parseTime = (timeStr: string) => {
-      const [hours, minutes] = timeStr.split(':').map(Number);
-      return hours * 60 + minutes;
-    };
-    
-    const newStart = parseTime(formData.gioBatDau || "00:00");
-    const newEnd = parseTime(formData.gioKetThuc || "00:00");
-    
-    // Check time overlap function
-    const isTimeOverlap = (start1: number, end1: number, start2: number, end2: number) => {
-      return start1 < end2 && start2 < end1;
-    };
-    
-    // Check date range overlap function
-    const isDateRangeOverlap = (start1: string, end1: string, start2?: string, end2?: string) => {
-      if (!start2 || !end2) return false;
-      const date1Start = new Date(start1);
-      const date1End = new Date(end1);
-      const date2Start = new Date(start2);
-      const date2End = new Date(end2);
-      return date1Start <= date2End && date2Start <= date1End;
-    };
-    
-    // Filter schedules for the same day and overlapping date range
-    const relevantSchedules = schedules.filter(schedule => {
-      // Skip the schedule being edited
-      if (editingSchedule && schedule.id === editingSchedule.id) return false;
-      
-      // Must be same day of week
-      if (schedule.thu !== formData.thu) return false;
-      
-      // Check if date ranges overlap
-      if (formData.tuNgay && formData.denNgay) {
-        return isDateRangeOverlap(formData.tuNgay, formData.denNgay, schedule.tuNgay, schedule.denNgay);
-      }
-      
-      return true;
-    });
-    
-    relevantSchedules.forEach(schedule => {
-      const scheduleStart = parseTime(schedule.gioBatDau || "00:00");
-      const scheduleEnd = parseTime(schedule.gioKetThuc || "00:00");
-      
-      if (isTimeOverlap(newStart, newEnd, scheduleStart, scheduleEnd)) {
-        // Check room conflict
-        if (schedule.phongHocId === formData.phongHocId) {
-          const roomName = rooms.find(r => r.id === formData.phongHocId)?.tenPhong || "phòng này";
-          const className = schedule.lopHoc?.tenLop || "một lớp khác";
-          const dateRange = schedule.tuNgay && schedule.denNgay 
-            ? ` (${formatDate(schedule.tuNgay)} - ${formatDate(schedule.denNgay)})`
-            : "";
-          conflicts.push(`Phòng ${roomName} đã có lịch học của ${className} vào ${getDayOfWeekText(schedule.thu)} ${schedule.gioBatDau}-${schedule.gioKetThuc}${dateRange}`);
-        }
-        
-        // Check class conflict
-        if (schedule.lopHocId === formData.lopHocId) {
-          const className = classes.find(c => c.id === formData.lopHocId)?.tenLop || "lớp này";
-          const roomName = schedule.phongHoc?.tenPhong || "một phòng khác";
-          const dateRange = schedule.tuNgay && schedule.denNgay 
-            ? ` (${formatDate(schedule.tuNgay)} - ${formatDate(schedule.denNgay)})`
-            : "";
-          conflicts.push(`Lớp ${className} đã có lịch học tại ${roomName} vào ${getDayOfWeekText(schedule.thu)} ${schedule.gioBatDau}-${schedule.gioKetThuc}${dateRange}`);
-        }
-      }
-    });
-    
-    return conflicts;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate time
-    if (formData.gioBatDau && formData.gioKetThuc && formData.gioBatDau >= formData.gioKetThuc) {
-      setMessage("❌ Thời gian kết thúc phải sau thời gian bắt đầu");
-      return;
-    }
-    
-    // Validate date range
-    if (formData.tuNgay && formData.denNgay && formData.tuNgay > formData.denNgay) {
-      setMessage("❌ Ngày kết thúc phải sau ngày bắt đầu");
-      return;
-    }
-    
-    // Check for conflicts
-    const conflicts = checkScheduleConflict();
-    if (conflicts.length > 0) {
-      setMessage("⚠️ Cảnh báo trùng lịch:\n" + conflicts.join("\n"));
-      return;
-    }
-    
+    setMessage("");
+
     if (editingSchedule) {
       const updateData: LichHocUpdateRequest = {
         phongHocId: formData.phongHocId,
-        thu: formData.thu,
-        gioBatDau: formData.gioBatDau,
-        gioKetThuc: formData.gioKetThuc,
-        tuNgay: formData.tuNgay,
-        denNgay: formData.denNgay,
         coHieuLuc: true,
+        thoiGianBieus: formData.thoiGianBieus,
       };
       const response = await updateLichHoc(editingSchedule.id!, updateData);
       setMessage(response.message || "");
@@ -230,184 +175,212 @@ export default function AdminSchedule() {
     }
   };
 
-  const getDayOfWeekText = (day?: DayOfWeek) => {
-    const days = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
-    return days[day || 0];
+  const addThoiGianBieu = () => {
+    setFormData({
+      ...formData,
+      thoiGianBieus: [
+        ...(formData.thoiGianBieus || []),
+        {
+          thu: DayOfWeek.Monday,
+          gioBatDau: "08:00",
+          gioKetThuc: "10:00",
+        }
+      ]
+    });
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "—";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("vi-VN");
+  const removeThoiGianBieu = (index: number) => {
+    setFormData({
+      ...formData,
+      thoiGianBieus: formData.thoiGianBieus?.filter((_, i) => i !== index)
+    });
   };
 
-  const formatTime = (timeString?: string) => {
-    if (!timeString) return "—";
-    // Handle both HH:mm:ss and HH:mm formats
-    return timeString.substring(0, 5);
+  const updateThoiGianBieu = (index: number, field: keyof ThoiGianBieuRequest, value: any) => {
+    const newThoiGianBieus = [...(formData.thoiGianBieus || [])];
+    newThoiGianBieus[index] = {
+      ...newThoiGianBieus[index],
+      [field]: value
+    };
+    setFormData({
+      ...formData,
+      thoiGianBieus: newThoiGianBieus
+    });
   };
 
-  const formatDateRange = (tuNgay?: string, denNgay?: string) => {
-    if (!tuNgay || !denNgay) return "—";
-    return `${formatDate(tuNgay)} - ${formatDate(denNgay)}`;
+  const getDayName = (day: DayOfWeek) => {
+    const days = {
+      [DayOfWeek.Monday]: "Thứ 2",
+      [DayOfWeek.Tuesday]: "Thứ 3",
+      [DayOfWeek.Wednesday]: "Thứ 4",
+      [DayOfWeek.Thursday]: "Thứ 5",
+      [DayOfWeek.Friday]: "Thứ 6",
+      [DayOfWeek.Saturday]: "Thứ 7",
+      [DayOfWeek.Sunday]: "Chủ nhật",
+    };
+    return days[day] || "";
   };
 
-  const filteredSchedules = schedules.filter(schedule => {
-    if (!searchTerm) return true;
-    const classNameMatch = schedule.lopHoc?.tenLop?.toLowerCase().includes(searchTerm.toLowerCase());
-    const roomNameMatch = schedule.phongHoc?.tenPhong?.toLowerCase().includes(searchTerm.toLowerCase());
-    return classNameMatch || roomNameMatch;
-  });
+  // Filter and pagination
+  const filteredSchedules = schedules.filter(schedule =>
+    schedule.tenLop?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    schedule.tenPhong?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const getPaginatedData = () => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return filteredSchedules.slice(startIndex, endIndex);
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const paginatedSchedules = filteredSchedules.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   return (
-    <div className="space-y-6">
-      {message && (
-        <div className={`px-4 py-3 rounded-lg ${
-          message.includes("thành công") 
-            ? "bg-green-100 border border-green-400 text-green-700"
-            : message.includes("Cảnh báo")
-            ? "bg-yellow-100 border border-yellow-400 text-yellow-800"
-            : "bg-red-100 border border-red-400 text-red-700"
+    <div className="p-6">
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Quản lý Lịch học</h1>
+            <p className="text-gray-600 mt-1">Quản lý lịch học và thời gian biểu</p>
+          </div>
+          <button
+            onClick={handleCreate}
+            className="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center gap-2 transition-colors"
+          >
+            <Plus size={20} />
+            Tạo lịch học
+          </button>
+        </div>
+      </div>
+
+      {message && !showModal && (
+        <div className={`mb-4 p-4 rounded-lg ${
+          message.includes('thành công')
+            ? 'bg-green-100 text-green-800 border border-green-200'
+            : 'bg-red-100 text-red-800 border border-red-200'
         }`}>
-          <div className="whitespace-pre-line">{message}</div>
+          {message}
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Quản lý lịch học</h1>
-          <p className="text-gray-600 mt-1">Danh sách tất cả lịch học</p>
-        </div>
-        <button 
-          onClick={handleCreate}
-          className="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center space-x-2"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Thêm lịch học</span>
-        </button>
+      {/* Search */}
+      <div className="mb-6 relative">
+        <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+        <input
+          type="text"
+          placeholder="Tìm kiếm theo tên lớp, phòng..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Tìm kiếm theo lớp học hoặc phòng học..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
-          />
+      {/* Table */}
+      {loading ? (
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-2 text-gray-600">Đang tải dữ liệu...</p>
         </div>
-      </div>
-
-      {loading && (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      ) : schedules.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-8 text-center">
+          <p className="text-gray-500 text-lg">Chưa có lịch học nào</p>
+          <button
+            onClick={handleCreate}
+            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Tạo lịch học đầu tiên
+          </button>
         </div>
-      )}
-
-      {!loading && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+      ) : (
+        <>
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Lớp học
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Phòng học
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Thứ
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Thời gian
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Khoảng thời gian
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Thời gian biểu
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Trạng thái
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Thao tác
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {getPaginatedData().map((schedule) => (
-                  <tr key={schedule.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <Users className="w-5 h-5 text-gray-400 mr-2" />
-                        <span className="font-medium text-gray-900">
-                          {classes.find(l => l.id === schedule.lopHocId)?.tenLop || "—"}
-                        </span>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {paginatedSchedules.length > 0 ? (
+                  paginatedSchedules.map((schedule) => (
+                    <tr key={schedule.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {schedule.tenLop || schedule.lopHoc?.tenLop || "—"}
+                        </div>
+                      </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center text-sm text-gray-500">
+                        <MapPin size={16} className="mr-1" />
+                        {schedule.tenPhong || schedule.phongHoc?.tenPhong || "—"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Calendar size={16} className="mr-1" />
+                        {schedule.tuNgay} - {schedule.denNgay}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <MapPin className="w-5 h-5 text-gray-400 mr-2" />
-                        <span className="text-gray-700">
-                          {rooms.find(r => r.id === schedule.phongHocId)?.tenPhong || "—"}
-                        </span>
+                      <div className="text-sm text-gray-900">
+                        {schedule.thoiGianBieu && schedule.thoiGianBieu.length > 0 ? (
+                          schedule.thoiGianBieu.map((tgb, index) => (
+                            <div key={index} className="flex items-center gap-2 mb-1">
+                              <span className="font-medium">{getDayName(tgb.thu!)}</span>
+                              <Clock size={14} />
+                              <span>{tgb.gioBatDau?.substring(0, 5)} - {tgb.gioKetThuc?.substring(0, 5)}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <Calendar className="w-5 h-5 text-gray-400 mr-2" />
-                        <span className="text-gray-700">
-                          {getDayOfWeekText(schedule.thu)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <Clock className="w-5 h-5 text-gray-400 mr-2" />
-                        <span className="text-gray-700">
-                          {formatTime(schedule.gioBatDau)} - {formatTime(schedule.gioKetThuc)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-600">
-                        {formatDateRange(schedule.tuNgay, schedule.denNgay)}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        schedule.coHieuLuc
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {schedule.coHieuLuc ? 'Có hiệu lực' : 'Không hiệu lực'}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex justify-end space-x-2">
-                        <button 
-                          onClick={() => handleEdit(schedule)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Chỉnh sửa"
-                        >
-                          <Edit className="w-5 h-5" />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(schedule.id!)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Xóa"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </div>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => handleEdit(schedule)}
+                        className="text-blue-600 hover:text-blue-900 mr-4 inline-flex items-center"
+                        title="Chỉnh sửa"
+                      >
+                        <Edit size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(schedule.id!)}
+                        className="text-red-600 hover:text-red-900 inline-flex items-center"
+                        title="Xóa"
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </td>
                   </tr>
-                ))}
-                {getPaginatedData().length === 0 && (
+                ))
+                ) : (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                      <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                      <p>Không tìm thấy lịch học nào</p>
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                      Không tìm thấy lịch học nào
                     </td>
                   </tr>
                 )}
@@ -415,200 +388,171 @@ export default function AdminSchedule() {
             </table>
           </div>
 
-          {/* Pagination */}
           {filteredSchedules.length > pageSize && (
-            <div className="flex justify-center mt-6">
-              <Pagination
-                currentPage={currentPage}
-                totalCount={filteredSchedules.length}
-                pageSize={pageSize}
-                onPageChange={handlePageChange}
-              />
-            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalCount={filteredSchedules.length}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+            />
           )}
-        </div>
+        </>
       )}
 
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {editingSchedule ? "Chỉnh sửa lịch học" : "Thêm lịch học mới"}
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">
+                  {editingSchedule ? 'Cập nhật lịch học' : 'Tạo lịch học mới'}
                 </h2>
-                <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
-                  <X className="w-6 h-6" />
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={24} />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Lớp học <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.lopHocId}
-                    onChange={(e) => setFormData({ ...formData, lopHocId: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
-                    required
-                    disabled={!!editingSchedule}
-                  >
-                    <option value="">Chọn lớp học</option>
-                    {classes.map((cls) => (
-                      <option key={cls.id} value={cls.id}>
-                        {cls.tenLop}
-                      </option>
-                    ))}
-                  </select>
+              {message && (
+                <div className={`p-3 mb-4 rounded ${
+                  message.includes('thành công')
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {message}
                 </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {!editingSchedule && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Lớp học <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      required
+                      value={formData.lopHocId}
+                      onChange={(e) => setFormData({ ...formData, lopHocId: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">-- Chọn lớp học --</option>
+                      {classes.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.tenLop}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Phòng học <span className="text-red-500">*</span>
                   </label>
                   <select
+                    required
                     value={formData.phongHocId}
                     onChange={(e) => setFormData({ ...formData, phongHocId: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
-                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="">Chọn phòng học</option>
-                    {rooms.map((room) => (
-                      <option key={room.id} value={room.id}>
-                        {room.tenPhong} (Sức chứa: {room.soGhe})
+                    <option value="">-- Chọn phòng học --</option>
+                    {rooms.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.tenPhong}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Thứ <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.thu}
-                    onChange={(e) => setFormData({ ...formData, thu: Number(e.target.value) as DayOfWeek })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
-                    required
-                  >
-                    <option value={DayOfWeek.Sunday}>Chủ nhật</option>
-                    <option value={DayOfWeek.Monday}>Thứ 2</option>
-                    <option value={DayOfWeek.Tuesday}>Thứ 3</option>
-                    <option value={DayOfWeek.Wednesday}>Thứ 4</option>
-                    <option value={DayOfWeek.Thursday}>Thứ 5</option>
-                    <option value={DayOfWeek.Friday}>Thứ 6</option>
-                    <option value={DayOfWeek.Saturday}>Thứ 7</option>
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Giờ bắt đầu <span className="text-red-500">*</span>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Thời gian biểu <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="time"
-                      value={formData.gioBatDau}
-                      onChange={(e) => setFormData({ ...formData, gioBatDau: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
-                      required
-                    />
+                    <button
+                      type="button"
+                      onClick={addThoiGianBieu}
+                      className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1 font-medium"
+                    >
+                      <Plus size={16} />
+                      Thêm buổi học
+                    </button>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Giờ kết thúc <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="time"
-                      value={formData.gioKetThuc}
-                      onChange={(e) => setFormData({ ...formData, gioKetThuc: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
-                      required
-                    />
-                  </div>
-                </div>
+                  {formData.thoiGianBieus?.map((tgb, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4 mb-3">
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="font-medium text-gray-700">Buổi học {index + 1}</span>
+                        {(formData.thoiGianBieus?.length || 0) > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeThoiGianBieu(index)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <X size={18} />
+                          </button>
+                        )}
+                      </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Từ ngày <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.tuNgay}
-                      onChange={(e) => setFormData({ ...formData, tuNgay: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
-                      required
-                    />
-                  </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">Thứ</label>
+                          <select
+                            required
+                            value={tgb.thu}
+                            onChange={(e) => updateThoiGianBieu(index, 'thu', parseInt(e.target.value))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                          >
+                            <option value={DayOfWeek.Monday}>Thứ 2</option>
+                            <option value={DayOfWeek.Tuesday}>Thứ 3</option>
+                            <option value={DayOfWeek.Wednesday}>Thứ 4</option>
+                            <option value={DayOfWeek.Thursday}>Thứ 5</option>
+                            <option value={DayOfWeek.Friday}>Thứ 6</option>
+                            <option value={DayOfWeek.Saturday}>Thứ 7</option>
+                            <option value={DayOfWeek.Sunday}>Chủ nhật</option>
+                          </select>
+                        </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Đến ngày <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.denNgay}
-                      onChange={(e) => setFormData({ ...formData, denNgay: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
-                      required
-                    />
-                  </div>
-                </div>
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">Giờ bắt đầu</label>
+                          <input
+                            type="time"
+                            required
+                            value={tgb.gioBatDau}
+                            onChange={(e) => updateThoiGianBieu(index, 'gioBatDau', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                          />
+                        </div>
 
-                {/* Preview conflicts */}
-                {formData.phongHocId && formData.lopHocId && formData.gioBatDau && formData.gioKetThuc && (() => {
-                  const conflicts = checkScheduleConflict();
-                  if (conflicts.length > 0) {
-                    return (
-                      <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
-                        <div className="flex items-start">
-                          <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                          <div className="ml-3 flex-1">
-                            <h3 className="text-sm font-medium text-yellow-800">Phát hiện trùng lịch</h3>
-                            <div className="mt-2 text-sm text-yellow-700">
-                              <ul className="list-disc list-inside space-y-1">
-                                {conflicts.map((conflict, index) => (
-                                  <li key={index}>{conflict}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div>
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">Giờ kết thúc</label>
+                          <input
+                            type="time"
+                            required
+                            value={tgb.gioKetThuc}
+                            onChange={(e) => updateThoiGianBieu(index, 'gioKetThuc', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                          />
                         </div>
                       </div>
-                    );
-                  }
-                  return null;
-                })()}
+                    </div>
+                  ))}
+                </div>
 
-                {/* Error/Success message */}
-                {message && (
-                  <div className={`rounded-lg p-4 ${
-                    message.includes("thành công") 
-                      ? "bg-green-50 text-green-800 border border-green-200"
-                      : "bg-red-50 text-red-800 border border-red-200"
-                  }`}>
-                    <div className="whitespace-pre-line text-sm">{message}</div>
-                  </div>
-                )}
-
-                <div className="flex space-x-4 pt-4">
+                <div className="flex gap-3 pt-4 border-t">
                   <button
                     type="submit"
-                    className="flex-1 bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
                   >
-                    {editingSchedule ? "Cập nhật" : "Thêm mới"}
+                    {editingSchedule ? 'Cập nhật' : 'Tạo mới'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="flex-1 bg-gray-200 text-gray-900 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors"
+                    className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors font-medium"
                   >
                     Hủy
                   </button>

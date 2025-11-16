@@ -26,6 +26,7 @@ public class ApplicationDbContext : DbContext
     // Courses
     public DbSet<KhoaHoc> KhoaHocs { get; set; } = null!;
     public DbSet<LopHoc> LopHocs { get; set; } = null!;
+    public DbSet<ThoiGianBieu> ThoiGianBieus { get; set; } = null!;
     public DbSet<LichHoc> LichHocs { get; set; } = null!;
     public DbSet<PhanCong> PhanCongs { get; set; } = null!;
 
@@ -99,9 +100,16 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<LopHoc>()
             .Navigation(lh => lh.KhoaHoc)
             .AutoInclude();
+        modelBuilder.Entity<ThoiGianBieu>().ToTable("ThoiGianBieu");
         modelBuilder.Entity<LichHoc>().ToTable("LichHoc");
         modelBuilder.Entity<LichHoc>()
             .Navigation(lh => lh.LopHoc)
+            .AutoInclude();
+        modelBuilder.Entity<LichHoc>()
+            .Navigation(lh => lh.PhongHoc)
+            .AutoInclude();
+        modelBuilder.Entity<LichHoc>()
+            .Navigation(lh => lh.ThoiGianBieu)
             .AutoInclude();
         modelBuilder.Entity<PhanCong>().ToTable("PhanCong");
         modelBuilder.Entity<PhanCong>()

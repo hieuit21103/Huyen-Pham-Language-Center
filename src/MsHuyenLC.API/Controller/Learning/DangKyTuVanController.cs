@@ -125,7 +125,7 @@ public class DangKyTuVanController : BaseController
             TrangThai = result.TrangThai,
             KetQua = result.KetQua,
             KhoaHocId = result.KhoaHocId,
-            TenKhoaHoc = result.KhoaHoc.TenKhoaHoc
+            TenKhoaHoc = result.KhoaHoc?.TenKhoaHoc
         };
 
         return Ok(new
@@ -171,7 +171,7 @@ public class DangKyTuVanController : BaseController
             KetQua = result.KetQua,
             GioiTinh = result.GioiTinh,
             KhoaHocId = result.KhoaHocId,
-            TenKhoaHoc = result.KhoaHoc.TenKhoaHoc,
+            TenKhoaHoc = result.KhoaHoc?.TenKhoaHoc,
             TaiKhoanXuLyId = result.TaiKhoanXuLyId
         };
 

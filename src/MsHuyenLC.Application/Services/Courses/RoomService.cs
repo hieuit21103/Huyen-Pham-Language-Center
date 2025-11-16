@@ -78,12 +78,24 @@ public class RoomService : IRoomService
     public async Task<IEnumerable<PhongHoc>> GetAvailableRoomsAsync(DayOfWeek dayOfWeek, TimeOnly startTime, TimeOnly endTime)
     {
         var allRooms = await _unitOfWork.PhongHocs.GetAllAsync();
-        var occupiedRoomIds = (await _unitOfWork.LichHocs.GetAllAsync(
-            lh => lh.CoHieuLuc &&
-                  lh.Thu == dayOfWeek &&
-                  lh.GioBatDau < endTime &&
-                  lh.GioKetThuc > startTime
-        )).Select(lh => lh.PhongHocId).Distinct();
+        
+        var activeLichHocs = await _unitOfWork.LichHocs.GetAllAsync(lh => lh.CoHieuLuc);
+        
+        var occupiedRoomIds = new HashSet<Guid>();
+        foreach (var lichHoc in activeLichHocs)
+        {
+            var conflictingThoiGianBieus = await _unitOfWork.ThoiGianBieus.GetAllAsync(
+                tgb => tgb.LichHocId == lichHoc.Id &&
+                       tgb.Thu == dayOfWeek &&
+                       tgb.GioBatDau < endTime &&
+                       tgb.GioKetThuc > startTime
+            );
+            
+            if (conflictingThoiGianBieus.Any())
+            {
+                occupiedRoomIds.Add(lichHoc.PhongHocId);
+            }
+        }
 
         return allRooms.Where(room => !occupiedRoomIds.Contains(room.Id));
     }

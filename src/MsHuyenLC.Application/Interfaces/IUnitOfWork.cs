@@ -39,6 +39,7 @@ public interface IUnitOfWork : IDisposable
     IGenericRepository<KhoaHoc> KhoaHocs { get; }
     IGenericRepository<LopHoc> LopHocs { get; }
     IGenericRepository<LichHoc> LichHocs { get; }
+    IGenericRepository<ThoiGianBieu> ThoiGianBieus { get; }
     IGenericRepository<PhanCong> PhanCongs { get; }
     IGenericRepository<PhongHoc> PhongHocs { get; }
 

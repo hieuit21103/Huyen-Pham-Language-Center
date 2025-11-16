@@ -125,15 +125,15 @@ export default function Dashboard() {
 
   const formatTime = (timeString?: string) => {
     if (!timeString) return "—";
-    return timeString.substring(0, 5); // HH:mm
+    return timeString.substring(0, 5);
   };
 
   const isExamAvailable = (kyThi: KyThi): boolean => {
     if (!kyThi.ngayThi || !kyThi.gioBatDau || !kyThi.gioKetThuc) return false;
     
     const now = new Date();
-    const currentDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
-    const currentTime = now.toTimeString().substring(0, 5); // HH:mm
+    const currentDate = now.toISOString().split('T')[0]; 
+    const currentTime = now.toTimeString().substring(0, 5); 
     
     // Parse exam date
     const examDate = kyThi.ngayThi.split('T')[0];
@@ -285,18 +285,32 @@ export default function Dashboard() {
     return null;
   }
 
-  var upcomingSchedules = lichHocs.map(lich => {
-    return {
-      id: lich.id,
-      thu: getDayOfWeekText(lich.thu),
+  const upcomingSchedules = lichHocs.flatMap(lich => {
+    if (!lich.thoiGianBieu || lich.thoiGianBieu.length === 0) {
+      return [{
+        id: lich.id || "",
+        thu: "—",
+        tuNgay: lich.tuNgay,
+        denNgay: lich.denNgay,
+        gioBatDau: "—" as string | undefined,
+        gioKetThuc: "—" as string | undefined,
+        lopHoc: lich.lopHoc,
+        phongHoc: lich.phongHoc,
+        giaoVien: lich.lopHoc?.id ? teachersByClass[lich.lopHoc.id] || "" : ""
+      }];
+    }
+    
+    return lich.thoiGianBieu.map(tgb => ({
+      id: `${lich.id || ""}-${tgb.id || ""}`,
+      thu: getDayOfWeekText(tgb.thu),
       tuNgay: lich.tuNgay,
       denNgay: lich.denNgay,
-      gioBatDau: lich.gioBatDau,
-      gioKetThuc: lich.gioKetThuc,
+      gioBatDau: tgb.gioBatDau,
+      gioKetThuc: tgb.gioKetThuc,
       lopHoc: lich.lopHoc,
       phongHoc: lich.phongHoc,
       giaoVien: lich.lopHoc?.id ? teachersByClass[lich.lopHoc.id] || "" : ""
-    };
+    }));
   });
 
   const isStudent = profile.vaiTro === VaiTro.HocVien;

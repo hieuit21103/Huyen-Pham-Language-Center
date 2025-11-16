@@ -12,6 +12,7 @@ public class ScheduleService : IScheduleService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IValidator<LichHocRequest> _createValidator;
     private readonly IValidator<LichHocUpdateRequest> _updateValidator;
+    
     public ScheduleService(
         IUnitOfWork unitOfWork,
         IValidator<LichHocRequest> createValidator,
@@ -26,6 +27,62 @@ public class ScheduleService : IScheduleService
     public async Task<LichHoc?> GetByIdAsync(string id)
     {
         return await _unitOfWork.LichHocs.GetByIdAsync(id);
+    }
+
+    public async Task<LichHocResponse?> GetByIdWithDetailsAsync(string id)
+    {
+        var lichHoc = await _unitOfWork.LichHocs.GetByIdAsync(id);
+        if (lichHoc == null)
+            return null;
+
+        var thoiGianBieus = await _unitOfWork.ThoiGianBieus.GetAllAsync(tgb => tgb.LichHocId == lichHoc.Id);
+
+        return new LichHocResponse
+        {
+            Id = lichHoc.Id,
+            LopHocId = lichHoc.LopHocId,
+            PhongHocId = lichHoc.PhongHocId,
+            TuNgay = lichHoc.TuNgay,
+            DenNgay = lichHoc.DenNgay,
+            CoHieuLuc = lichHoc.CoHieuLuc,
+            ThoiGianBieu = thoiGianBieus.Select(tgb => new ThoiGianBieuResponse
+            {
+                Id = tgb.Id,
+                Thu = tgb.Thu,
+                GioBatDau = tgb.GioBatDau,
+                GioKetThuc = tgb.GioKetThuc
+            }).ToList()
+        };
+    }
+
+    public async Task<IEnumerable<LichHocResponse>> GetAllWithDetailsAsync()
+    {
+        var lichHocs = await _unitOfWork.LichHocs.GetAllAsync();
+        var result = new List<LichHocResponse>();
+
+        foreach (var lh in lichHocs)
+        {
+            var thoiGianBieus = await _unitOfWork.ThoiGianBieus.GetAllAsync(tgb => tgb.LichHocId == lh.Id);
+            
+            result.Add(new LichHocResponse
+            {
+                Id = lh.Id,
+                LopHocId = lh.LopHocId,
+                PhongHocId = lh.PhongHocId,
+                TuNgay = lh.TuNgay,
+                DenNgay = lh.DenNgay,
+                CoHieuLuc = lh.CoHieuLuc,
+                ThoiGianBieu = thoiGianBieus.Select(tgb => new ThoiGianBieuResponse
+                {
+                    Id = tgb.Id,
+                    Thu = tgb.Thu,
+                    GioBatDau = tgb.GioBatDau,
+                    GioKetThuc = tgb.GioKetThuc
+                }).ToList()
+            });
+        }
+
+        return result;
     }
 
     public async Task<IEnumerable<LichHoc>> GetByClassIdAsync(string classId)
@@ -84,18 +141,41 @@ public class ScheduleService : IScheduleService
     {
         await _createValidator.ValidateAndThrowAsync(request);
 
+        var lopHoc = await _unitOfWork.LopHocs.GetByIdAsync(request.LopHocId.ToString());
+        if (lopHoc == null)
+            throw new KeyNotFoundException("Lớp học không tồn tại");
+
+        var tuNgay = lopHoc.KhoaHoc.NgayKhaiGiang;
+        var soBuoiKhoaHoc = lopHoc.KhoaHoc.ThoiLuong;
+
         var lichHoc = new LichHoc
         {
             LopHocId = request.LopHocId,
             PhongHocId = request.PhongHocId,
-            TuNgay = request.TuNgay,
-            DenNgay = request.DenNgay,
-            GioBatDau = request.GioBatDau,
-            GioKetThuc = request.GioKetThuc,
-            Thu = request.Thu
+            TuNgay = tuNgay,
+            DenNgay = tuNgay,
+            CoHieuLuc = true
         };
 
         var result = await _unitOfWork.LichHocs.AddAsync(lichHoc);
+        
+        if (request.ThoiGianBieus != null && request.ThoiGianBieus.Any())
+        {
+            foreach (var tgb in request.ThoiGianBieus)
+            {
+                var thoiGianBieu = new ThoiGianBieu
+                {
+                    LichHocId = lichHoc.Id,
+                    Thu = tgb.Thu,
+                    GioBatDau = tgb.GioBatDau,
+                    GioKetThuc = tgb.GioKetThuc
+                };
+                await _unitOfWork.ThoiGianBieus.AddAsync(thoiGianBieu);
+            }
+
+            lichHoc.DenNgay = CalculateDenNgay(tuNgay, soBuoiKhoaHoc, request.ThoiGianBieus.Count);
+        }
+
         await _unitOfWork.SaveChangesAsync();
         return result;
     }
@@ -108,13 +188,38 @@ public class ScheduleService : IScheduleService
         if (lichHoc == null)
             return null;
 
+        var lopHoc = await _unitOfWork.LopHocs.GetByIdAsync(lichHoc.LopHocId.ToString());
+        if (lopHoc == null)
+            throw new KeyNotFoundException("Lớp học không tồn tại");
+
         lichHoc.PhongHocId = request.PhongHocId;
-        lichHoc.TuNgay = request.TuNgay;
-        lichHoc.DenNgay = request.DenNgay;
-        lichHoc.GioBatDau = request.GioBatDau;
-        lichHoc.GioKetThuc = request.GioKetThuc;
-        lichHoc.Thu = request.Thu;
         lichHoc.CoHieuLuc = request.CoHieuLuc;
+
+        var oldThoiGianBieus = await _unitOfWork.ThoiGianBieus.GetAllAsync(
+            filter: tgb => tgb.LichHocId == lichHoc.Id
+        );
+        foreach (var tgb in oldThoiGianBieus)
+        {
+            await _unitOfWork.ThoiGianBieus.DeleteAsync(tgb);
+        }
+
+        if (request.ThoiGianBieus != null && request.ThoiGianBieus.Any())
+        {
+            foreach (var tgb in request.ThoiGianBieus)
+            {
+                var thoiGianBieu = new ThoiGianBieu
+                {
+                    LichHocId = lichHoc.Id,
+                    Thu = tgb.Thu,
+                    GioBatDau = tgb.GioBatDau,
+                    GioKetThuc = tgb.GioKetThuc
+                };
+                await _unitOfWork.ThoiGianBieus.AddAsync(thoiGianBieu);
+            }
+
+            var soBuoiKhoaHoc = lopHoc.KhoaHoc.ThoiLuong;
+            lichHoc.DenNgay = CalculateDenNgay(lichHoc.TuNgay, soBuoiKhoaHoc, request.ThoiGianBieus.Count);
+        }
 
         await _unitOfWork.SaveChangesAsync();
         return lichHoc;
@@ -125,6 +230,14 @@ public class ScheduleService : IScheduleService
         var lichHoc = await _unitOfWork.LichHocs.GetByIdAsync(id);
         if (lichHoc == null)
             return false;
+
+        var thoiGianBieus = await _unitOfWork.ThoiGianBieus.GetAllAsync(
+            filter: tgb => tgb.LichHocId == lichHoc.Id
+        );
+        foreach (var tgb in thoiGianBieus)
+        {
+            await _unitOfWork.ThoiGianBieus.DeleteAsync(tgb);
+        }
 
         await _unitOfWork.LichHocs.DeleteAsync(lichHoc);
         await _unitOfWork.SaveChangesAsync();
@@ -141,37 +254,65 @@ public class ScheduleService : IScheduleService
 
         foreach (var lichHoc in lichHocs)
         {
-            var dayOfWeek = lichHoc.Thu;
-            var startTime = lichHoc.GioBatDau;
-            var endTime = lichHoc.GioKetThuc;
-            var startDate = lichHoc.TuNgay;
-            var endDate = lichHoc.DenNgay;
-            if (await IsRoomAvailable(dayOfWeek, startTime, endTime, startDate, endDate))
+            var thoiGianBieus = await _unitOfWork.ThoiGianBieus.GetAllAsync(
+                filter: tgb => tgb.LichHocId == lichHoc.Id
+            );
+
+            foreach (var tgb in thoiGianBieus)
             {
-                availableRooms.Add(lichHoc.PhongHoc);
+                if (await IsRoomAvailable(tgb.Thu, tgb.GioBatDau, tgb.GioKetThuc, lichHoc.TuNgay, lichHoc.DenNgay))
+                {
+                    availableRooms.Add(lichHoc.PhongHoc);
+                    break;
+                }
             }
         }
 
-        return availableRooms;
+        return availableRooms.Distinct();
     }
 
     public async Task<bool> IsRoomAvailable(DayOfWeek dayOfWeek, TimeOnly startTime, TimeOnly endTime, DateOnly startDate, DateOnly endDate)
     {
-        var conflictingSchedules = await _unitOfWork.LichHocs.GetAllAsync(
+        var conflictingLichHocs = await _unitOfWork.LichHocs.GetAllAsync(
             filter: lh => lh.CoHieuLuc &&
-                    lh.Thu == dayOfWeek &&
-                    lh.GioBatDau < endTime &&
-                    lh.GioKetThuc > startTime &&
                     lh.TuNgay < endDate &&
                     lh.DenNgay > startDate
         );
 
-        return !conflictingSchedules.Any();
+        foreach (var lichHoc in conflictingLichHocs)
+        {
+            var thoiGianBieus = await _unitOfWork.ThoiGianBieus.GetAllAsync(
+                filter: tgb => tgb.LichHocId == lichHoc.Id &&
+                              tgb.Thu == dayOfWeek &&
+                              tgb.GioBatDau < endTime &&
+                              tgb.GioKetThuc > startTime
+            );
+
+            if (thoiGianBieus.Any())
+                return false; 
+        }
+
+        return true;
     }
 
     public async Task<int> CountAsync()
     {
         return await _unitOfWork.LichHocs.CountAsync();
+    }
+
+    private DateOnly CalculateDenNgay(DateOnly tuNgay, int soBuoiKhoaHoc, int soThoiGianBieuTrongTuan)
+    {
+        if (soThoiGianBieuTrongTuan <= 0)
+            throw new ArgumentException("Số thời gian biểu trong tuần phải lớn hơn 0");
+
+        int soTuan = (int)Math.Ceiling((double)soBuoiKhoaHoc / soThoiGianBieuTrongTuan);
+        
+        int soNgay = soTuan * 7;
+
+        if (soNgay > 3650)
+            soNgay = 3650;
+
+        return tuNgay.AddDays(soNgay - 1);
     }
 }
 

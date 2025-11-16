@@ -17,33 +17,30 @@ public class LichHocUpdateRequestValidator : AbstractValidator<LichHocUpdateRequ
             .NotEmpty().WithMessage("Phòng học không được để trống")
             .MustAsync(PhongHocExists).WithMessage("Phòng học không tồn tại");
 
-        RuleFor(x => x.Thu)
-            .IsInEnum().WithMessage("Thứ không hợp lệ");
+        RuleFor(x => x.ThoiGianBieus)
+            .NotEmpty().WithMessage("Phải có ít nhất một thời gian biểu")
+            .Must(tgbs => tgbs != null && tgbs.Count > 0)
+            .WithMessage("Phải có ít nhất một thời gian biểu");
 
-        RuleFor(x => x.GioBatDau)
-            .NotEmpty().WithMessage("Giờ bắt đầu không được để trống");
+        RuleForEach(x => x.ThoiGianBieus).ChildRules(tgb =>
+        {
+            tgb.RuleFor(x => x.Thu)
+                .IsInEnum().WithMessage("Thứ không hợp lệ");
 
-        RuleFor(x => x.GioKetThuc)
-            .NotEmpty().WithMessage("Giờ kết thúc không được để trống")
-            .Must((model, gioKetThuc) => gioKetThuc > model.GioBatDau)
-            .WithMessage("Giờ kết thúc phải sau giờ bắt đầu");
+            tgb.RuleFor(x => x.GioBatDau)
+                .NotNull().WithMessage("Giờ bắt đầu không được để trống")
+                .Must((model, gioBatDau) => gioBatDau < model.GioKetThuc)
+                .WithMessage("Giờ bắt đầu phải nhỏ hơn giờ kết thúc");
 
-        RuleFor(x => x.TuNgay)
-            .NotEmpty().WithMessage("Từ ngày không được để trống");
-
-        RuleFor(x => x.DenNgay)
-            .NotEmpty().WithMessage("Đến ngày không được để trống")
-            .Must((model, denNgay) => denNgay >= model.TuNgay)
-            .WithMessage("Đến ngày phải sau hoặc bằng từ ngày");
+            tgb.RuleFor(x => x.GioKetThuc)
+                .NotNull().WithMessage("Giờ kết thúc không được để trống")
+                .Must((model, gioKetThuc) => gioKetThuc > model.GioBatDau)
+                .WithMessage("Giờ kết thúc phải lớn hơn giờ bắt đầu");
+        });
     }
 
     private async Task<bool> PhongHocExists(Guid phongHocId, CancellationToken cancellationToken)
     {
         return await _unitOfWork.PhongHocs.ExistsAsync(x => x.Id == phongHocId);
-    }
-
-    private async Task<bool> LopHocExists(Guid lopHocId, CancellationToken cancellationToken)
-    {
-        return await _unitOfWork.LopHocs.ExistsAsync(x => x.Id == lopHocId);
     }
 }

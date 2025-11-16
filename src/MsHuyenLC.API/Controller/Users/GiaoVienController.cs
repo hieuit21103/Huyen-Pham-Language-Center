@@ -83,8 +83,8 @@ public class GiaoVienController : BaseController
             TrinhDo = result.TrinhDo,
             KinhNghiem = result.KinhNghiem,
             TaiKhoanId = result.TaiKhoanId,
-            Email = result.TaiKhoan.Email,
-            Sdt = result.TaiKhoan.Sdt
+            Email = result.TaiKhoan?.Email,
+            Sdt = result.TaiKhoan?.Sdt
         };
 
         return Ok(new

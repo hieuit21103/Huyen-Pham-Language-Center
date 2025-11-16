@@ -343,16 +343,31 @@ export default function DashboardGiaoVien() {
     return null;
   }
 
-  const upcomingSchedules = lichHocs.map(lich => ({
-    id: lich.id,
-    thu: getDayOfWeekText(lich.thu),
-    tuNgay: lich.tuNgay,
-    denNgay: lich.denNgay,
-    gioBatDau: lich.gioBatDau,
-    gioKetThuc: lich.gioKetThuc,
-    lopHoc: lich.lopHoc,
-    phongHoc: lich.phongHoc
-  }));
+  const upcomingSchedules = lichHocs.flatMap(lich => {
+    if (!lich.thoiGianBieu || lich.thoiGianBieu.length === 0) {
+      return [{
+        id: lich.id || "",
+        thu: "—",
+        tuNgay: lich.tuNgay,
+        denNgay: lich.denNgay,
+        gioBatDau: "—" as string | undefined,
+        gioKetThuc: "—" as string | undefined,
+        lopHoc: lich.lopHoc,
+        phongHoc: lich.phongHoc
+      }];
+    }
+    
+    return lich.thoiGianBieu.map(tgb => ({
+      id: `${lich.id || ""}-${tgb.id || ""}`,
+      thu: getDayOfWeekText(tgb.thu),
+      tuNgay: lich.tuNgay,
+      denNgay: lich.denNgay,
+      gioBatDau: tgb.gioBatDau,
+      gioKetThuc: tgb.gioKetThuc,
+      lopHoc: lich.lopHoc,
+      phongHoc: lich.phongHoc
+    }));
+  });
 
   return (
     <div className="space-y-6">
