@@ -23,6 +23,7 @@ import {
   Briefcase,
   BarChart,
   DollarSign,
+  MessageSquare,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
@@ -106,6 +107,12 @@ export default function AdminSidebar({ onCollapsedChange }: AdminSidebarProps) {
       items: [
         { icon: BarChart, label: "Kết quả học tập", path: "/admin/bao-cao-ket-qua" },
         { icon: DollarSign, label: "Doanh thu", path: "/admin/bao-cao-doanh-thu" },
+      ]
+    },
+    {
+      title: "Hỗ trợ",
+      items: [
+        { icon: MessageSquare, label: "Phản hồi", path: "/admin/phan-hoi" },
       ]
     }
   ];

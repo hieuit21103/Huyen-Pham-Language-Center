@@ -64,6 +64,9 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<DeThi>()
             .Navigation(dt => dt.KyThi)
             .AutoInclude();
+        modelBuilder.Entity<DeThi>()
+            .Navigation(dt => dt.CacCauHoi)
+            .AutoInclude();
         modelBuilder.Entity<KyThi>().ToTable("KyThi");
         modelBuilder.Entity<PhienLamBai>().ToTable("PhienLamBai");
         modelBuilder.Entity<PhienLamBai>()
@@ -71,6 +74,12 @@ public class ApplicationDbContext : DbContext
             .AutoInclude();
         modelBuilder.Entity<PhienLamBai>()
             .Navigation(p => p.HocVien)
+            .AutoInclude();
+        modelBuilder.Entity<PhienLamBai>()
+            .Navigation(p => p.KyThi)
+            .AutoInclude();
+        modelBuilder.Entity<PhienLamBai>()
+            .Navigation(p => p.CacCauTraLoi)
             .AutoInclude();
         modelBuilder.Entity<CauTraLoi>().ToTable("CauTraLoi");
         modelBuilder.Entity<CauTraLoi>()

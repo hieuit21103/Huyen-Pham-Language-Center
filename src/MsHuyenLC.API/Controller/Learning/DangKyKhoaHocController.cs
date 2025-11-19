@@ -1,20 +1,18 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Learning.DangKyKhoaHoc;
-using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Interfaces.Repositories;
-using MsHuyenLC.Application.Interfaces.Services;
 using MsHuyenLC.Application.Interfaces.Services.System;
 using MsHuyenLC.Application.Interfaces.Services.Learning;
+using System.Security.Claims;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
 [Route("api/[controller]")]
 [ApiController]
-public class DangKyController : BaseController
+public class DangKyKhoaHocController : BaseController
 {
     private readonly IRegistrationService _service;
-    public DangKyController(
+    public DangKyKhoaHocController(
         IRegistrationService service,
         ISystemLoggerService logService)
         : base(logService)
@@ -47,10 +45,11 @@ public class DangKyController : BaseController
     }
 
     [HttpGet("{id}")]
-    [Authorize(Roles = "admin,giaovu")]
+    [Authorize(Roles = "admin,giaovu,hocvien")]
     public async Task<IActionResult> GetDangKyById(string id)
     {
-        var entity = await _service.GetByIdAsync(id);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+        var entity = await _service.GetByIdAsync(id, userId);
         if (entity == null)
         {
             return NotFound(new
@@ -248,6 +247,8 @@ public class DangKyController : BaseController
             message = "Xóa đăng ký thành công"
         });
     }
+
+    
 }
 
 

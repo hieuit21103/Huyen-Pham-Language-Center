@@ -115,6 +115,36 @@ public class HocVienController : BaseController
         });
     }
 
+    [HttpGet("class/{classId}")]
+    [Authorize(Roles = "admin,giaovu,giaovien")]
+    public async Task<IActionResult> GetStudentsByClassId(string classId)
+    {
+        var students = await _service.GetStudentsByClassIdAsync(classId);
+
+        var response = students.Select(s => new
+        {
+            s.Id,
+            s.HoTen,
+            s.NgaySinh,
+            s.GioiTinh,
+            s.DiaChi,
+            s.TrangThai,
+            s.TaiKhoanId,
+            TaiKhoan = s.TaiKhoan != null ? new
+            {
+                s.TaiKhoan.Email,
+                s.TaiKhoan.Sdt
+            } : null
+        });
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy danh sách học viên trong lớp thành công",
+            data = response
+        });
+    }
+
     [Authorize(Roles = "admin,giaovu")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)

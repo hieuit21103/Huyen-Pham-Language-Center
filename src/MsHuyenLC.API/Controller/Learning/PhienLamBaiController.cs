@@ -205,14 +205,7 @@ public class PhienLamBaiController : BaseController
             return Ok(new
             {
                 success = true,
-                data = result.Select(plb => new
-                {
-                    id = plb.Id,
-                    deThiId = plb.DeThiId,
-                    deThi = plb.DeThi,
-                    diem = plb.Diem,
-                    ngayLam = plb.NgayLam,
-                }),
+                data = result,
                 count = result.Count()
             });
         }

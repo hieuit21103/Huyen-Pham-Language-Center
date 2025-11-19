@@ -51,6 +51,13 @@ export async function gradeBaiThi(id: string, request: GradingRequest): Promise<
 }
 
 /**
+ * Chấm điểm phiên làm bài (alias cho gradeBaiThi)
+ */
+export async function gradePhienLamBai(id: string, request: GradingRequest): Promise<ApiResponse> {
+    return gradeBaiThi(id, request);
+}
+
+/**
  * Lấy chi tiết bài thi và các câu trả lời
  */
 export async function getPhienLamBaiDetails(id: string): Promise<ApiResponse> {
@@ -148,6 +155,13 @@ export async function getPhienLamBai(id: string): Promise<ApiResponse> {
     } catch (error) {
         return { success: false, message: `Lỗi: ${error}` };
     }
+}
+
+/**
+ * Lấy phiên làm bài theo ID (alias)
+ */
+export async function getPhienLamBaiById(id: string): Promise<ApiResponse> {
+    return getPhienLamBai(id);
 }
 
 /**

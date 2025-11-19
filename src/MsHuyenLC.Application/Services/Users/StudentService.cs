@@ -92,4 +92,18 @@ public class StudentService : IStudentService
     {
         return await _unitOfWork.HocViens.CountAsync();
     }
+
+    public async Task<IEnumerable<HocVien>> GetStudentsByClassIdAsync(string classId)
+    {
+        if (!Guid.TryParse(classId, out var id))
+            return Enumerable.Empty<HocVien>();
+
+        var registrations = await _unitOfWork.DangKyKhoaHocs.GetAllAsync(
+            filter: dk => dk.LopHocId == id,
+            dk => dk.HocVien,
+            dk => dk.HocVien.TaiKhoan
+        );
+
+        return registrations.Select(dk => dk.HocVien).ToList();
+    }
 }

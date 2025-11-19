@@ -55,37 +55,24 @@ export default function AdminExams() {
     if (response.success && response.data) {
       let questionsData: CauHoi[] = [];
       
-      const actualData = (response.data as any).data || response.data;
+      const responseData = response.data;
       
-      if (Array.isArray(actualData)) {
-        questionsData = actualData;
-      } else if (typeof actualData === 'object' && actualData !== null) {
-        const possibleArrays = [
-          actualData.items,
-          actualData.questions,
-          actualData.cauHois,
-          Object.values(actualData)
-        ];
-        
-        for (const possibleArray of possibleArrays) {
-          if (Array.isArray(possibleArray) && possibleArray.length > 0) {
-            questionsData = possibleArray;
-            break;
-          }
-        }
-        
-        if (questionsData.length === 0) {
-          const numericKeys = Object.keys(actualData)
-            .filter(key => !isNaN(Number(key)))
-            .sort((a, b) => Number(a) - Number(b));
-          
-          if (numericKeys.length > 0) {
-            questionsData = numericKeys
-              .map(key => actualData[key])
-              .filter(item => item && typeof item === 'object' && item.id);
-          }
-        }
+      // Backend trả về: { deThi, groupedQuestions, standaloneQuestions, totalQuestions }
+      if (responseData.standaloneQuestions && Array.isArray(responseData.standaloneQuestions)) {
+        // Lấy câu hỏi đơn (standalone)
+        questionsData = responseData.standaloneQuestions.map((item: any) => item.cauHoi || item);
       }
+      
+      if (responseData.groupedQuestions && Array.isArray(responseData.groupedQuestions)) {
+        // Thêm câu hỏi trong nhóm
+        const groupedCauHois = responseData.groupedQuestions.map((item: any) => item.cauHoi || item);
+        questionsData = [...questionsData, ...groupedCauHois];
+      }
+      
+      // Lọc bỏ null/undefined và sắp xếp theo thứ tự
+      questionsData = questionsData
+        .filter(q => q && q.id)
+        .sort((a: any, b: any) => (a.thuTu || 0) - (b.thuTu || 0));
       
       setExamQuestions(questionsData);
       
@@ -353,10 +340,10 @@ export default function AdminExams() {
                                 )}
 
                                 {/* Các đáp án */}
-                                {questionData.dapAns && questionData.dapAns.length > 0 && (
+                                {(questionData.cacDapAn || questionData.dapAns) && (questionData.cacDapAn || questionData.dapAns).length > 0 && (
                                   <div className="mt-3 space-y-2">
                                     <p className="text-sm font-medium text-gray-700">Các đáp án:</p>
-                                    {questionData.dapAns.map((dapAn: any, idx: number) => (
+                                    {(questionData.cacDapAn || questionData.dapAns).map((dapAn: any, idx: number) => (
                                       <div 
                                         key={idx}
                                         className={`p-3 rounded-lg border ${
@@ -393,7 +380,7 @@ export default function AdminExams() {
                                 )}
 
                                 {/* Đáp án đúng (nếu không có dapAns) */}
-                                {!questionData.dapAns && questionData.dapAnDung && (
+                                {!questionData.cacDapAn && !questionData.dapAns && questionData.dapAnDung && (
                                   <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                                     <span className="font-medium text-green-800">Đáp án: </span>
                                     <span className="text-green-900">{questionData.dapAnDung}</span>

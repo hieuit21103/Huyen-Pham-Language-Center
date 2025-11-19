@@ -95,6 +95,10 @@ export default function AdminRegistrations() {
   };
 
   const handleOpenAssignModal = (registration: DangKy) => {
+    console.log("Selected registration:", registration);
+    console.log("Registration khoaHocId:", registration.khoaHocId);
+    console.log("All classes:", classes);
+    console.log("Classes khoaHocIds:", classes.map(c => c.khoaHocId));
     setSelectedRegistration(registration);
     setSelectedClassId("");
     setShowAssignModal(true);
@@ -132,9 +136,8 @@ export default function AdminRegistrations() {
     }
   };
 
-  // Lấy danh sách lớp học theo khóa học đã chọn
   const availableClasses = selectedRegistration
-    ? classes.filter(cls => cls.khoaHocId === selectedRegistration.khoaHocId)
+    ? classes.filter(cls => cls.khoaHocId === selectedRegistration.khoaHoc?.id)
     : [];
 
   const getStatusBadge = (status?: TrangThaiDangKy) => {
@@ -249,6 +252,28 @@ export default function AdminRegistrations() {
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <CheckCircle className="w-6 h-6 text-green-700" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-700 text-sm font-medium mb-1">Đã thanh toán</p>
+                <p className="text-3xl font-bold text-blue-900">{getStatusCount(TrangThaiDangKy.DaThanhToan)}</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-blue-700" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-pink-50 border border-pink-200 rounded-xl p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-pink-700 text-sm font-medium mb-1">Đã xếp lớp</p>
+                <p className="text-3xl font-bold text-pink-900">{getStatusCount(TrangThaiDangKy.DaXepLop)}</p>
+              </div>
+              <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-pink-700" />
               </div>
             </div>
           </div>

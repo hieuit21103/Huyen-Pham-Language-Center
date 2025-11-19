@@ -1,15 +1,25 @@
-import { Menu, X, User, LogOut, Key, LayoutDashboard, ChevronDown, Bell, icons, CreditCard } from "lucide-react";
+import { Menu, X, User, LogOut, Key, LayoutDashboard, ChevronDown, Bell, icons, CreditCard, Calendar, FileCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { Asset } from "~/assets/Asset";
 import { clearJwtToken } from "~/apis/Auth";
 import { getThongBaoByTaiKhoanId } from "~/apis/ThongBao";
 import { formatDateTime } from "~/utils/date-utils";
-import type { ThongBaoResponse } from "~/types";
+import { getProfile } from "~/apis/Profile";
+import type { ThongBaoResponse, VaiTro } from "~/types";
+import type { LucideIcon } from "lucide-react";
+
+type DropdownItem = {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+  onClick?: () => void;
+};
 
 export default function Header() {
   const [jwtToken, setJwtToken] = useState<string | undefined>(undefined);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<VaiTro | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<ThongBaoResponse[]>([]);
@@ -30,6 +40,7 @@ export default function Header() {
           
           if (userId) {
             loadNotifications(userId);
+            loadUserRole();
           }
         } catch (error) {
           console.error("Error decoding JWT:", error);
@@ -49,6 +60,17 @@ export default function Header() {
     }
   };
 
+  const loadUserRole = async () => {
+    try {
+      const result = await getProfile();
+      if (result.success && result.data) {
+        setUserRole(result.data.vaiTro);
+      }
+    } catch (error) {
+      console.error("Error loading user role:", error);
+    }
+  };
+
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
       clearJwtToken();
@@ -56,32 +78,53 @@ export default function Header() {
     }
   };
 
-  const navigation = jwtToken
-    ? [
-      { name: 'Trang Chủ', href: '' },
-      { name: 'Khóa Học', href: 'khoa-hoc' },
-      { name: 'Luyện Đề', href: 'luyen-thi' },
-      { name: 'Khóa Học Của Tôi', href: 'khoa-hoc-cua-toi' },
-      { name: 'Phản Hồi', href: 'phan-hoi' },
-    ]
-    : [
-      { name: 'Trang Chủ', href: '' },
-      { name: 'Khóa Học', href: 'khoa-hoc' },
-      { name: 'Luyện Đề', href: 'luyen-thi' },
-      { name: 'Đăng Nhập', href: 'dang-nhap' },
+  const getDropdownItems = (): DropdownItem[] => {
+    const baseItems: DropdownItem[] = [
+      { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     ];
 
-  const dropdown = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Đổi Mật Khẩu', href: '/doi-mat-khau', icon: Key },
-    { name: 'Đăng Xuất', href: '/', icon: LogOut, onClick: handleLogout },
-  ]
+    if (userRole === 3) {
+      baseItems.push(
+        { name: 'Kỳ Thi Của Tôi', href: '/ky-thi-cua-toi', icon: Calendar }
+      );
+    }
+
+    if (userRole === 2) {
+      baseItems.push(
+        { name: 'Chấm Điểm', href: '/cham-diem-giao-vien', icon: FileCheck }
+      );
+    }
+
+    baseItems.push(
+      { name: 'Đổi Mật Khẩu', href: '/doi-mat-khau', icon: Key },
+      { name: 'Đăng Xuất', href: '/', icon: LogOut, onClick: handleLogout }
+    );
+
+    return baseItems;
+  };
+
+  const navigation = jwtToken
+    ? [
+      { name: 'Trang Chủ', href: '/' },
+      { name: 'Khóa Học', href: '/khoa-hoc' },
+      { name: 'Luyện Đề', href: '/luyen-thi' },
+      { name: 'Khóa Học Của Tôi', href: '/khoa-hoc-cua-toi' },
+      { name: 'Phản Hồi', href: '/phan-hoi' },
+    ]
+    : [
+      { name: 'Trang Chủ', href: '/' },
+      { name: 'Khóa Học', href: '/khoa-hoc' },
+      { name: 'Luyện Đề', href: '/luyen-thi' },
+      { name: 'Đăng Nhập', href: '/dang-nhap' },
+    ];
+
+  const dropdown = getDropdownItems();
 
   return (
     <header className="bg-white text-gray-900 fixed w-full top-0 z-50 shadow-md border-b border-gray-200 backdrop-blur-sm bg-white/95">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link to="" className="flex items-center group transition-transform duration-300 hover:scale-105">
+          <Link to="/" className="flex items-center group transition-transform duration-300 hover:scale-105">
             <img src={Asset.logo} className="w-8 h-8 mr-2 text-gray-900 transition-transform duration-300 group-hover:rotate-12" />
             <span className="text-2xl font-bold text-gray-900">HPLC</span>
           </Link>
@@ -153,13 +196,14 @@ export default function Header() {
 
                   {showDropdown && (
                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 animate-fadeIn">
-                      {dropdown.map((item) => (
+                      {dropdown.map((item, index) => (
                         <Link
+                          key={index}
                           to={item.href}
                           className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 group"
                           onClick={() => {
                             setShowDropdown(false);
-                            item.onClick?.();
+                            (item as any).onClick?.();
                           }}
                         >
                           <item.icon className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform duration-200" />

@@ -1,17 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Interfaces.Repositories;
-using MsHuyenLC.Application.Interfaces.Services;
 using MsHuyenLC.Application.Interfaces.Services.System;
-using MsHuyenLC.Infrastructure.Services;
 using MsHuyenLC.Application.Interfaces.Services.Finance;
 using MsHuyenLC.Application.DTOs.Finance.VNPay;
-using MsHuyenLC.Domain.Enums;
-using Microsoft.Extensions.Logging;
-using MsHuyenLC.Application.Interfaces.Services.Learning;
-using MsHuyenLC.Application.DTOs.Learning.DangKyKhoaHoc;
-using MsHuyenLC.Application.DTOs.Finance.ThanhToan;
+using System.Security.Claims; 
 
 namespace MsHuyenLC.API.Controller.Finance;
 
@@ -68,6 +60,46 @@ public class ThanhToanController : BaseController
             success = true,
             message = "Lấy thông tin thanh toán thành công",
             data = payment
+        });
+    }
+
+    [HttpGet("dang-ky/{dangKyId}")]
+    [Authorize]
+    public async Task<IActionResult> GetByRegistrationId(string dangKyId)
+    {
+        var payment = await _service.GetByRegistrationIdAsync(dangKyId);
+        if (payment == null)
+            return NotFound(new
+            {
+                success = false,
+                message = "Không tìm thấy thông tin thanh toán"
+            });
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy thông tin thanh toán thành công",
+            data = payment
+        });
+    }
+
+    [HttpGet("student/{studentId}")]
+    [Authorize]
+    public async Task<IActionResult> GetByStudentId(string studentId)
+    {
+        var payments = await _service.GetByStudentIdAsync(studentId);
+        if (payments == null || !payments.Any())
+            return NotFound(new
+            {
+                success = false,
+                message = "Không tìm thấy thông tin thanh toán"
+            });
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy thông tin thanh toán thành công",
+            data = payments
         });
     }
 

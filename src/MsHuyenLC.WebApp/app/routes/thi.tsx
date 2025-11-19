@@ -35,14 +35,14 @@ export default function TakeExam() {
   const [submitting, setSubmitting] = useState(false);
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
   const [timeUp, setTimeUp] = useState(false);
+  const [examStartTime, setExamStartTime] = useState<number>(Date.now());
 
   useEffect(() => {
     if (kyThiId) {
-      // Flow: Join exam → Generate → Take exam
       loadExamSession();
     } else if (deThiId) {
-      // Flow: Take exam directly
       setStep("exam");
+      setExamStartTime(Date.now());
       loadExam();
     } else {
       navigate("/luyen-thi");
@@ -57,7 +57,6 @@ export default function TakeExam() {
     }
 
     try {
-      // Get kỳ thi info
       const kyThiRes = await getKyThiById(kyThiId);
       if (!kyThiRes.success || !kyThiRes.data) {
         setError("Không tìm thấy thông tin kỳ thi");
@@ -68,7 +67,6 @@ export default function TakeExam() {
       const kyThiData = kyThiRes.data;
       setKyThi(kyThiData);
 
-      // Check time validity
       if (!isExamAvailable(kyThiData)) {
         setError("Chưa đến giờ thi hoặc đã hết giờ làm bài");
         setLoading(false);
@@ -140,6 +138,7 @@ export default function TakeExam() {
 
       // Load the generated exam
       setStep("exam");
+      setExamStartTime(Date.now());
       await loadExam(newDeThiId);
 
     } catch (err: any) {
@@ -239,11 +238,14 @@ export default function TakeExam() {
     });
 
     try {
+      // Calculate time spent in seconds
+      const timeSpentSeconds = Math.floor((Date.now() - examStartTime) / 1000);
+      
       const response = await submitBaiThi({
         deThiId: targetDeThiId,
         tongCauHoi: examData.totalQuestions,
         cacTraLoi,
-        thoiGianLamBai: "00:00:00",
+        thoiGianLamBai: timeSpentSeconds,
         tuDongCham: true,
       });
 

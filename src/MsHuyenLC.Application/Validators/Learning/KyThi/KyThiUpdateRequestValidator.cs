@@ -13,20 +13,15 @@ public class KyThiUpdateRequestValidator : AbstractValidator<KyThiUpdateRequest>
         _unitOfWork = unitOfWork;
 
         RuleFor(x => x.TenKyThi)
-            .NotEmpty().WithMessage("Tên kỳ thi không được để trống")
             .MinimumLength(3).WithMessage("Tên kỳ thi phải có ít nhất 3 ký tự")
             .MaximumLength(200).WithMessage("Tên kỳ thi không được quá 200 ký tự");
 
-        RuleFor(x => x.NgayThi)
-            .NotEmpty().WithMessage("Ngày thi không được để trống");
-
-        RuleFor(x => x.GioBatDau)
-            .NotEmpty().WithMessage("Giờ bắt đầu không được để trống");
-
-        RuleFor(x => x.GioKetThuc)
-            .NotEmpty().WithMessage("Giờ kết thúc không được để trống")
-            .Must((model, gioKetThuc) => gioKetThuc > model.GioBatDau)
-            .WithMessage("Giờ kết thúc phải sau giờ bắt đầu");
+        When(x => x.GioBatDau != default && x.GioKetThuc != default, () =>
+        {
+            RuleFor(x => x.GioKetThuc)
+                .Must((model, gioKetThuc) => gioKetThuc > model.GioBatDau)
+                .WithMessage("Giờ kết thúc phải sau giờ bắt đầu");
+        });
 
         RuleFor(x => x.ThoiLuong)
             .GreaterThan(0).WithMessage("Thời lượng phải lớn hơn 0")

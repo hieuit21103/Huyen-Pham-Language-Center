@@ -12,4 +12,5 @@ public interface IStudentService
     Task<bool> DeleteAsync(string id);
     Task<HocVien?> GetByAccountIdAsync(string accountId);
     Task<int> CountAsync();
+    Task<IEnumerable<HocVien>> GetStudentsByClassIdAsync(string classId);
 }

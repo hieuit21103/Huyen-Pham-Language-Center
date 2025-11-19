@@ -122,7 +122,7 @@ public class TestSessionService : ITestSessionService
 
                 var dapAnDung = dapAns.FirstOrDefault();
                 if (dapAnDung != null && 
-                    dapAnDung.NoiDung?.Trim().Equals(answer.Value?.Trim(), StringComparison.OrdinalIgnoreCase) == true)
+                    dapAnDung.Nhan?.Trim().Equals(answer.Value?.Trim(), StringComparison.OrdinalIgnoreCase) == true)
                 {
                     soCauDung++;
                 }
@@ -197,7 +197,7 @@ public class TestSessionService : ITestSessionService
 
                 var dapAnDung = dapAns.FirstOrDefault();
                 isDung = dapAnDung != null && 
-                         dapAnDung.NoiDung?.Trim().Equals(answer.Value?.Trim(), StringComparison.OrdinalIgnoreCase) == true;
+                         dapAnDung.Nhan?.Trim().Equals(answer.Value?.Trim(), StringComparison.OrdinalIgnoreCase) == true;
             }
 
             var cauTraLoi = new CauTraLoi

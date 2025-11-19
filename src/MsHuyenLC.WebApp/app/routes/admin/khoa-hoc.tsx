@@ -90,25 +90,6 @@ export default function AdminCourses() {
     }
   };
 
-  const getTrangThaiText = (trangThai?: TrangThaiKhoaHoc) => {
-    switch (trangThai) {
-      case 0: return "Chưa mở";
-      case 1: return "Đang mở";
-      case 2: return "Đang dạy";
-      case 3: return "Kết thúc";
-      default: return "Không xác định";
-    }
-  };
-
-  const getTrangThaiColor = (trangThai?: TrangThaiKhoaHoc) => {
-    switch (trangThai) {
-      case 0: return "bg-gray-100 text-gray-800";
-      case 1: return "bg-green-100 text-green-800";
-      case 2: return "bg-blue-100 text-blue-800";
-      case 3: return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
 
   const filteredCourses = courses.filter(course =>
     course.tenKhoaHoc?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -173,9 +154,6 @@ export default function AdminCourses() {
                   <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center">
                     <BookOpen className="w-6 h-6 text-white" />
                   </div>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getTrangThaiColor(course.trangThai)}`}>
-                    {getTrangThaiText(course.trangThai)}
-                  </span>
                 </div>
                 
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{course.tenKhoaHoc}</h3>

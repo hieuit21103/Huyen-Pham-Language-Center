@@ -312,9 +312,9 @@ export default function LanguageCenterLanding() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                 {partners.map((partner, index) => (
                   <div key={index} className="aspect-square bg-gray-100 rounded-2xl flex items-center justify-center hover:scale-105 transition-all">
-                    <div className="text-center p-4 flex flex-col h-full">
+                    <div className="text-center p-4 flex flex-col h-full w-full">
                       <div className="w-full flex-1 flex items-center justify-center p-4">
-                      <img src={partner.logo} alt={partner.name} className="max-w-full max-h-full object-contain" />
+                      <img src={partner.logo} alt={partner.name} className="w-full h-full object-contain" style={{ minWidth: '80px', minHeight: '80px' }} />
                       </div>
                       <p className="font-bold text-gray-900 mt-2">{partner.name}</p>
                     </div>

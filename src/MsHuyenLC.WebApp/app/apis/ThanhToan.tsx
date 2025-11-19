@@ -52,14 +52,11 @@ export interface VNPayCallbackRequest {
   vnp_SecureHashType?: string;
 }
 
-export async function getThanhToans(
-  pageNumber: number = 1,
-  pageSize: number = 10
-): Promise<{ success: boolean; data?: ThanhToan[]; message?: string }> {
+export async function getThanhToans(): Promise<{ success: boolean; data?: ThanhToan[]; message?: string }> {
   try {
     const token = getJwtToken();
     const response = await fetch(
-      ThanhToanApiUrl(`?PageNumber=${pageNumber}&PageSize=${pageSize}`),
+      ThanhToanApiUrl(),
       {
         method: "GET",
         headers: {
@@ -68,6 +65,26 @@ export async function getThanhToans(
         },
       }
     );
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    return { success: false, message: "Lỗi khi tải danh sách thanh toán" };
+  }
+}
+
+export async function getThanhToansByStudentId(
+  studentId: string
+): Promise<{ success: boolean; data?: ThanhToan[]; message?: string }> {
+  try {
+    const token = getJwtToken();
+    const response = await fetch(ThanhToanApiUrl(`student/${studentId}`), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     const data = await response.json();
     return data;
@@ -147,7 +164,7 @@ export async function getThanhToanByDangKyId(
   try {
     const token = getJwtToken();
     const response = await fetch(
-      ThanhToanApiUrl(`?PageNumber=1&PageSize=100`),
+      ThanhToanApiUrl("dang-ky/" + dangKyId),
       {
         method: "GET",
         headers: {
@@ -157,18 +174,9 @@ export async function getThanhToanByDangKyId(
       }
     );
 
-    const result = await response.json();
-    if (result.success && result.data) {
-      const payment = result.data.find(
-        (p: ThanhToan) => p.dangKyId === dangKyId
-      );
-      if (payment) {
-        return { success: true, data: payment };
-      }
-    }
-    return { success: false, message: "Không tìm thấy thanh toán" };
+    return await response.json();
   } catch (error) {
-    return { success: false, message: "Lỗi khi tìm thanh toán" };
+    return { success: false, message: "Không tìm thấy thanh toán" };
   }
 }
 

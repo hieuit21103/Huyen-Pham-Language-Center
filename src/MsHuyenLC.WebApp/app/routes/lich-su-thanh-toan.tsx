@@ -6,9 +6,10 @@ import {
   Filter, Search, DollarSign
 } from "lucide-react";
 import { getProfile } from "~/apis/Profile";
-import { getThanhToans, type ThanhToan } from "~/apis/ThanhToan";
+import { getThanhToansByStudentId, type ThanhToan } from "~/apis/ThanhToan";
 import { VaiTro } from "~/types/index";
 import Pagination from "~/components/Pagination";
+import { getByTaiKhoanId } from "~/apis";
 
 export default function PaymentHistoryPage() {
   const navigate = useNavigate();
@@ -30,7 +31,6 @@ export default function PaymentHistoryPage() {
     applyFilters();
   }, [searchTerm, filterStatus, filterMethod, payments]);
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, filterStatus, filterMethod]);
@@ -48,9 +48,12 @@ export default function PaymentHistoryPage() {
       navigate("/");
       return;
     }
-
-    // Lấy hết tất cả data từ backend
-    const paymentsRes = await getThanhToans(1, 1000);
+    const hocVienRes = await getByTaiKhoanId(profileRes.data.id!);
+    if (!hocVienRes.success || !hocVienRes.data) {
+      navigate("/khoa-hoc-cua-toi");
+      return;
+    }
+    const paymentsRes = await getThanhToansByStudentId(hocVienRes.data.id!);
     if (paymentsRes.success && paymentsRes.data) {
       setPayments(paymentsRes.data);
     }
@@ -61,7 +64,6 @@ export default function PaymentHistoryPage() {
   const applyFilters = () => {
     let filtered = [...payments];
 
-    // Search filter
     if (searchTerm) {
       filtered = filtered.filter(
         (p) =>
@@ -71,20 +73,15 @@ export default function PaymentHistoryPage() {
       );
     }
 
-    // Status filter
     if (filterStatus !== "all") {
       filtered = filtered.filter((p) => p.trangThai === filterStatus);
-    }
-
-    // Method filter
+    }    
     if (filterMethod !== "all") {
       filtered = filtered.filter((p) => p.phuongThuc === filterMethod);
     }
-
     setFilteredPayments(filtered);
   };
 
-  // Tính toán data cho trang hiện tại
   const getPaginatedData = () => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
@@ -102,17 +99,6 @@ export default function PaymentHistoryPage() {
       style: "currency",
       currency: "VND",
     }).format(amount);
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "—";
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   };
 
   const getStatusInfo = (status?: number) => {
@@ -148,8 +134,6 @@ export default function PaymentHistoryPage() {
     switch (method) {
       case 0:
         return "VNPay";
-      case 1:
-        return "MoMo";
       case 2:
         return "Tiền mặt";
       default:
@@ -161,8 +145,6 @@ export default function PaymentHistoryPage() {
     switch (method) {
       case 0:
         return "text-blue-700 bg-blue-50 border-blue-200";
-      case 1:
-        return "text-pink-700 bg-pink-50 border-pink-200";
       case 2:
         return "text-green-700 bg-green-50 border-green-200";
       default:
@@ -246,7 +228,6 @@ export default function PaymentHistoryPage() {
             >
               <option value="all">Tất cả phương thức</option>
               <option value="0">VNPay</option>
-              <option value="1">MoMo</option>
               <option value="2">Tiền mặt</option>
             </select>
           </div>

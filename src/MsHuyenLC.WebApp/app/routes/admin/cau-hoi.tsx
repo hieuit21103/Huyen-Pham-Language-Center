@@ -372,7 +372,9 @@ export default function AdminQuestionBank() {
     switch(kyNang) {
       case 0: return "Listening";
       case 1: return "Reading";
-      case 2: return "Writing";
+      case 2: return "Grammar";
+      case 3: return "Vocabulary";
+      case 4: return "Writing";
       default: return "—";
     }
   };

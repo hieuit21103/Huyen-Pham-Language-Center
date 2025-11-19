@@ -3,23 +3,11 @@ import type { ApiResponse } from "~/types/index";
 import { NotificationApiUrl } from "~/constants/apis-url";
 import type { ThongBaoRequest, ThongBaoResponse } from "~/types/notification.types";
 
-export const getThongBaos = async (
-  pageNumber: number = 1,
-  pageSize: number = 10,
-  sortBy?: string,
-  sortOrder: string = "desc"
-): Promise<ApiResponse<ThongBaoResponse[]>> => {
+export const getThongBaos = async (): Promise<ApiResponse<ThongBaoResponse[]>> => {
   try {
     const token = getJwtToken();
-    const params = new URLSearchParams({
-      pageNumber: pageNumber.toString(),
-      pageSize: pageSize.toString(),
-    });
-    
-    if (sortBy) params.append("sortBy", sortBy);
-    if (sortOrder) params.append("sortOrder", sortOrder);
 
-    const response = await fetch(`${NotificationApiUrl()}?${params.toString()}`, {
+    const response = await fetch(`${NotificationApiUrl()}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

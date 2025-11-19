@@ -169,18 +169,6 @@ export default function AdminBaoCaoKetQua() {
             </div>
           </div>
         </div>
-
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-orange-700 text-sm font-medium mb-1">Tỷ lệ đạt</p>
-              <p className="text-2xl font-bold text-orange-900">{stats.tyLeDat}%</p>
-            </div>
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <BarChart3 className="w-6 h-6 text-orange-600" />
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Filter Panel */}

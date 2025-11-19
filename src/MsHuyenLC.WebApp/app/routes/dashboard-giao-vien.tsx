@@ -8,7 +8,7 @@ import { createThongBao } from "~/apis/ThongBao";
 import { getLopHocStudents } from "~/apis/LopHoc";
 import {
   User, Calendar, Clock, Mail, Phone, MapPin, Edit, X, Camera,
-  Bell, Send, Users, GraduationCap
+  Bell, Send, Users, GraduationCap, FileText
 } from "lucide-react";
 import { getGiaoVien } from "~/apis";
 
@@ -26,7 +26,7 @@ export default function DashboardGiaoVien() {
     sdt: "",
     avatar: ""
   });
-  
+
   // Notification states
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [notificationForm, setNotificationForm] = useState({
@@ -71,7 +71,7 @@ export default function DashboardGiaoVien() {
     const lichDayRes = await getLichHocByTeacher(profileRes.data.id!);
     if (lichDayRes.success && Array.isArray(lichDayRes.data)) {
       setLichHocs(lichDayRes.data);
-      
+
       // Get unique classes
       const uniqueClasses = lichDayRes.data
         .filter((lich: LichHoc) => lich.lopHoc)
@@ -272,7 +272,7 @@ export default function DashboardGiaoVien() {
 
       } else {
         let recipientIds: string[] = [];
-        
+
         if (sendType === 'class') {
           recipientIds = classStudents.map(s => s.taiKhoanId).filter(Boolean);
         } else if (sendType === 'individual') {
@@ -356,7 +356,7 @@ export default function DashboardGiaoVien() {
         phongHoc: lich.phongHoc
       }];
     }
-    
+
     return lich.thoiGianBieu.map(tgb => ({
       id: `${lich.id || ""}-${tgb.id || ""}`,
       thu: getDayOfWeekText(tgb.thu),
@@ -464,403 +464,400 @@ export default function DashboardGiaoVien() {
               Gửi thông báo mới
             </button>
           </div>
-        </div>
+          </div>
 
-        {/* Lịch dạy */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-              <Calendar className="w-5 h-5 mr-2" />
-              Lịch dạy sắp tới
-            </h2>
+          {/* Lịch dạy */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <Calendar className="w-5 h-5 mr-2" />
+                Lịch dạy sắp tới
+              </h2>
 
-            {upcomingSchedules.length === 0 ? (
-              <div className="text-center py-8">
-                <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600">Không có lịch dạy nào trong thời gian tới</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {upcomingSchedules.map((lh, index) => (
-                  <div key={lh.id || index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 mb-2">
-                          {lh.lopHoc?.tenLop || "—"}
-                        </h3>
-                        <p className="text-xs text-gray-500 mb-3">
-                          {lh.lopHoc?.khoaHoc?.tenKhoaHoc || "—"}
-                        </p>
-                        <div className="space-y-1 text-sm text-gray-600">
-                          <div className="flex items-center">
-                            <Calendar className="w-4 h-4 mr-2" />
-                            {lh.thu} - {formatDate(lh.tuNgay)} đến {formatDate(lh.denNgay)}
-                          </div>
-                          <div className="flex items-center">
-                            <Clock className="w-4 h-4 mr-2" />
-                            {formatTime(lh.gioBatDau)} - {formatTime(lh.gioKetThuc)}
-                          </div>
-                          {lh.phongHoc?.tenPhong && (
+              {upcomingSchedules.length === 0 ? (
+                <div className="text-center py-8">
+                  <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-600">Không có lịch dạy nào trong thời gian tới</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {upcomingSchedules.map((lh, index) => (
+                    <div key={lh.id || index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 mb-2">
+                            {lh.lopHoc?.tenLop || "—"}
+                          </h3>
+                          <p className="text-xs text-gray-500 mb-3">
+                            {lh.lopHoc?.khoaHoc?.tenKhoaHoc || "—"}
+                          </p>
+                          <div className="space-y-1 text-sm text-gray-600">
                             <div className="flex items-center">
-                              <MapPin className="w-4 h-4 mr-2" />
-                              {lh.phongHoc.tenPhong}
+                              <Calendar className="w-4 h-4 mr-2" />
+                              {lh.thu} - {formatDate(lh.tuNgay)} đến {formatDate(lh.denNgay)}
                             </div>
-                          )}
+                            <div className="flex items-center">
+                              <Clock className="w-4 h-4 mr-2" />
+                              {formatTime(lh.gioBatDau)} - {formatTime(lh.gioKetThuc)}
+                            </div>
+                            {lh.phongHoc?.tenPhong && (
+                              <div className="flex items-center">
+                                <MapPin className="w-4 h-4 mr-2" />
+                                {lh.phongHoc.tenPhong}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <span className="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
+                            Sắp diễn ra
+                          </span>
                         </div>
                       </div>
-                      <div className="ml-4">
-                        <span className="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
-                          Sắp diễn ra
-                        </span>
-                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Edit Profile Modal */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">Chỉnh sửa thông tin</h2>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Avatar Upload */}
-              <div className="flex flex-col items-center space-y-4">
-                <div className="relative">
-                  <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-gray-200">
-                    {editForm.avatar ? (
-                      <img src={editForm.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                    ) : (
-                      <User className="w-16 h-16 text-gray-400" />
-                    )}
-                  </div>
-                  <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 transition-colors">
-                    <Camera className="w-5 h-5" />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      className="hidden"
-                      disabled={uploading}
-                    />
-                  </label>
-                </div>
-                {uploading && <p className="text-sm text-blue-600">Đang upload...</p>}
-              </div>
-
-              {/* Form Fields */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Email <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={editForm.email}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Nhập email"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Số điện thoại
-                  </label>
-                  <input
-                    type="tel"
-                    value={editForm.sdt}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, sdt: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Nhập số điện thoại"
-                  />
-                </div>
-              </div>
-
-              {/* Message */}
-              {message && (
-                <div className={`p-4 rounded-lg ${message.includes("thành công")
-                    ? "bg-green-50 text-green-800 border border-green-200"
-                    : "bg-red-50 text-red-800 border border-red-200"
-                  }`}>
-                  {message}
+                  ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+        {/* Edit Profile Modal */}
+        {showEditModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Chỉnh sửa thông tin</h2>
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  disabled={saving}
+                  className="text-gray-400 hover:text-gray-600"
                 >
-                  Hủy
+                  <X className="w-6 h-6" />
                 </button>
-                <button
-                  onClick={handleSaveProfile}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={saving || uploading}
-                >
-                  {saving ? "Đang lưu..." : "Lưu thay đổi"}
-                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Avatar Upload */}
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="relative">
+                    <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-gray-200">
+                      {editForm.avatar ? (
+                        <img src={editForm.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-16 h-16 text-gray-400" />
+                      )}
+                    </div>
+                    <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 transition-colors">
+                      <Camera className="w-5 h-5" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarUpload}
+                        className="hidden"
+                        disabled={uploading}
+                      />
+                    </label>
+                  </div>
+                  {uploading && <p className="text-sm text-blue-600">Đang upload...</p>}
+                </div>
+
+                {/* Form Fields */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={editForm.email}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Nhập email"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Số điện thoại
+                    </label>
+                    <input
+                      type="tel"
+                      value={editForm.sdt}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, sdt: e.target.value }))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Nhập số điện thoại"
+                    />
+                  </div>
+                </div>
+
+                {/* Message */}
+                {message && (
+                  <div className={`p-4 rounded-lg ${message.includes("thành công")
+                    ? "bg-green-50 text-green-800 border border-green-200"
+                    : "bg-red-50 text-red-800 border border-red-200"
+                    }`}>
+                    {message}
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    disabled={saving}
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleSaveProfile}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={saving || uploading}
+                  >
+                    {saving ? "Đang lưu..." : "Lưu thay đổi"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Notification Modal */}
-      {showNotificationModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                <Bell className="w-6 h-6 mr-2 text-blue-600" />
-                Gửi thông báo
-              </h2>
-              <button
-                onClick={() => {
-                  setShowNotificationModal(false);
-                  resetNotificationForm();
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Send Type Selection */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Gửi đến <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSendType('all');
-                      setSelectedClassId("");
-                      setSelectedStudentIds([]);
-                    }}
-                    className={`p-4 rounded-lg border-2 transition-all ${
-                      sendType === 'all'
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                  >
-                    <Users className={`w-6 h-6 mx-auto mb-2 ${sendType === 'all' ? 'text-blue-600' : 'text-gray-600'}`} />
-                    <p className={`text-sm font-medium ${sendType === 'all' ? 'text-blue-900' : 'text-gray-700'}`}>
-                      Tất cả lớp
-                    </p>
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSendType('class');
-                      setSelectedStudentIds([]);
-                    }}
-                    className={`p-4 rounded-lg border-2 transition-all ${
-                      sendType === 'class'
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                  >
-                    <Users className={`w-6 h-6 mx-auto mb-2 ${sendType === 'class' ? 'text-blue-600' : 'text-gray-600'}`} />
-                    <p className={`text-sm font-medium ${sendType === 'class' ? 'text-blue-900' : 'text-gray-700'}`}>
-                      Theo lớp
-                    </p>
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={() => setSendType('individual')}
-                    className={`p-4 rounded-lg border-2 transition-all ${
-                      sendType === 'individual'
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                  >
-                    <User className={`w-6 h-6 mx-auto mb-2 ${sendType === 'individual' ? 'text-blue-600' : 'text-gray-600'}`} />
-                    <p className={`text-sm font-medium ${sendType === 'individual' ? 'text-blue-900' : 'text-gray-700'}`}>
-                      Chọn học viên
-                    </p>
-                  </button>
-                </div>
-              </div>
-
-              {/* Class Selection */}
-              {(sendType === 'class' || sendType === 'individual') && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Chọn lớp học <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={selectedClassId}
-                    onChange={(e) => setSelectedClassId(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">-- Chọn lớp học --</option>
-                    {teacherClasses.map((cls) => (
-                      <option key={cls.id} value={cls.id}>
-                        {cls.tenLop}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Student Selection */}
-              {sendType === 'individual' && selectedClassId && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-semibold text-gray-700">
-                      Chọn học viên <span className="text-red-500">*</span>
-                    </label>
-                    {classStudents.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={toggleAllStudents}
-                        className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                      >
-                        {selectedStudentIds.length === classStudents.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
-                      </button>
-                    )}
-                  </div>
-                  
-                  <div className="border border-gray-300 rounded-lg max-h-64 overflow-y-auto">
-                    {loadingClassStudents ? (
-                      <div className="p-8 text-center">
-                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                        <p className="text-sm text-gray-600 mt-2">Đang tải danh sách học viên...</p>
-                      </div>
-                    ) : classStudents.length === 0 ? (
-                      <div className="p-8 text-center text-gray-500">
-                        Không có học viên nào trong lớp
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-gray-200">
-                        {classStudents.map((student) => (
-                          <label
-                            key={student.id}
-                            className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedStudentIds.includes(student.taiKhoanId)}
-                              onChange={() => toggleStudentSelection(student.taiKhoanId)}
-                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                            />
-                            <div className="ml-3 flex-1">
-                              <p className="text-sm font-medium text-gray-900">{student.hoTen}</p>
-                              <p className="text-xs text-gray-500">{student.email}</p>
-                            </div>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {selectedStudentIds.length > 0 && (
-                    <p className="text-xs text-gray-600 mt-2">
-                      Đã chọn {selectedStudentIds.length} / {classStudents.length} học viên
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* Title */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Tiêu đề thông báo <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={notificationForm.title}
-                  onChange={(e) => setNotificationForm(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Nhập tiêu đề thông báo"
-                />
-              </div>
-
-              {/* Message */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Nội dung <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={notificationForm.message}
-                  onChange={(e) => setNotificationForm(prev => ({ ...prev, message: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  rows={6}
-                  placeholder="Nhập nội dung thông báo..."
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  {notificationForm.message.length} ký tự
-                </p>
-              </div>
-
-              {/* Info box */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800">
-                  <strong>Lưu ý:</strong> {
-                    sendType === 'all' 
-                      ? 'Thông báo sẽ được gửi đến tất cả học viên trong các lớp mà bạn đang giảng dạy.'
-                      : sendType === 'class'
-                      ? 'Thông báo sẽ được gửi đến tất cả học viên trong lớp đã chọn.'
-                      : `Thông báo sẽ được gửi đến ${selectedStudentIds.length} học viên đã chọn.`
-                  }
-                </p>
-              </div>
-
-              {/* Message */}
-              {message && (
-                <div className={`p-4 rounded-lg ${message.includes("thành công")
-                    ? "bg-green-50 text-green-800 border border-green-200"
-                    : "bg-red-50 text-red-800 border border-red-200"
-                  }`}>
-                  {message}
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+        {/* Notification Modal */}
+        {showNotificationModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                  <Bell className="w-6 h-6 mr-2 text-blue-600" />
+                  Gửi thông báo
+                </h2>
                 <button
                   onClick={() => {
                     setShowNotificationModal(false);
                     resetNotificationForm();
                   }}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  disabled={saving}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  Hủy
+                  <X className="w-5 h-5" />
                 </button>
-                <button
-                  onClick={handleSendNotification}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                  disabled={saving || !notificationForm.title.trim() || !notificationForm.message.trim()}
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  {saving ? "Đang gửi..." : "Gửi thông báo"}
-                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Send Type Selection */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Gửi đến <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSendType('all');
+                        setSelectedClassId("");
+                        setSelectedStudentIds([]);
+                      }}
+                      className={`p-4 rounded-lg border-2 transition-all ${sendType === 'all'
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                    >
+                      <Users className={`w-6 h-6 mx-auto mb-2 ${sendType === 'all' ? 'text-blue-600' : 'text-gray-600'}`} />
+                      <p className={`text-sm font-medium ${sendType === 'all' ? 'text-blue-900' : 'text-gray-700'}`}>
+                        Tất cả lớp
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSendType('class');
+                        setSelectedStudentIds([]);
+                      }}
+                      className={`p-4 rounded-lg border-2 transition-all ${sendType === 'class'
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                    >
+                      <Users className={`w-6 h-6 mx-auto mb-2 ${sendType === 'class' ? 'text-blue-600' : 'text-gray-600'}`} />
+                      <p className={`text-sm font-medium ${sendType === 'class' ? 'text-blue-900' : 'text-gray-700'}`}>
+                        Theo lớp
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSendType('individual')}
+                      className={`p-4 rounded-lg border-2 transition-all ${sendType === 'individual'
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                    >
+                      <User className={`w-6 h-6 mx-auto mb-2 ${sendType === 'individual' ? 'text-blue-600' : 'text-gray-600'}`} />
+                      <p className={`text-sm font-medium ${sendType === 'individual' ? 'text-blue-900' : 'text-gray-700'}`}>
+                        Chọn học viên
+                      </p>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Class Selection */}
+                {(sendType === 'class' || sendType === 'individual') && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Chọn lớp học <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={selectedClassId}
+                      onChange={(e) => setSelectedClassId(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">-- Chọn lớp học --</option>
+                      {teacherClasses.map((cls) => (
+                        <option key={cls.id} value={cls.id}>
+                          {cls.tenLop}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Student Selection */}
+                {sendType === 'individual' && selectedClassId && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Chọn học viên <span className="text-red-500">*</span>
+                      </label>
+                      {classStudents.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={toggleAllStudents}
+                          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          {selectedStudentIds.length === classStudents.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="border border-gray-300 rounded-lg max-h-64 overflow-y-auto">
+                      {loadingClassStudents ? (
+                        <div className="p-8 text-center">
+                          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                          <p className="text-sm text-gray-600 mt-2">Đang tải danh sách học viên...</p>
+                        </div>
+                      ) : classStudents.length === 0 ? (
+                        <div className="p-8 text-center text-gray-500">
+                          Không có học viên nào trong lớp
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-gray-200">
+                          {classStudents.map((student) => (
+                            <label
+                              key={student.id}
+                              className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedStudentIds.includes(student.taiKhoanId)}
+                                onChange={() => toggleStudentSelection(student.taiKhoanId)}
+                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                              />
+                              <div className="ml-3 flex-1">
+                                <p className="text-sm font-medium text-gray-900">{student.hoTen}</p>
+                                <p className="text-xs text-gray-500">{student.email}</p>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {selectedStudentIds.length > 0 && (
+                      <p className="text-xs text-gray-600 mt-2">
+                        Đã chọn {selectedStudentIds.length} / {classStudents.length} học viên
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Title */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Tiêu đề thông báo <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={notificationForm.title}
+                    onChange={(e) => setNotificationForm(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Nhập tiêu đề thông báo"
+                  />
+                </div>
+
+                {/* Message */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Nội dung <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={notificationForm.message}
+                    onChange={(e) => setNotificationForm(prev => ({ ...prev, message: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    rows={6}
+                    placeholder="Nhập nội dung thông báo..."
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {notificationForm.message.length} ký tự
+                  </p>
+                </div>
+
+                {/* Info box */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800">
+                    <strong>Lưu ý:</strong> {
+                      sendType === 'all'
+                        ? 'Thông báo sẽ được gửi đến tất cả học viên trong các lớp mà bạn đang giảng dạy.'
+                        : sendType === 'class'
+                          ? 'Thông báo sẽ được gửi đến tất cả học viên trong lớp đã chọn.'
+                          : `Thông báo sẽ được gửi đến ${selectedStudentIds.length} học viên đã chọn.`
+                    }
+                  </p>
+                </div>
+
+                {/* Message */}
+                {message && (
+                  <div className={`p-4 rounded-lg ${message.includes("thành công")
+                    ? "bg-green-50 text-green-800 border border-green-200"
+                    : "bg-red-50 text-red-800 border border-red-200"
+                    }`}>
+                    {message}
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => {
+                      setShowNotificationModal(false);
+                      resetNotificationForm();
+                    }}
+                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    disabled={saving}
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleSendNotification}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    disabled={saving || !notificationForm.title.trim() || !notificationForm.message.trim()}
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    {saving ? "Đang gửi..." : "Gửi thông báo"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
+        )}
+      </div>
+      );
 }

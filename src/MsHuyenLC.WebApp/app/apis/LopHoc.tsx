@@ -1,4 +1,4 @@
-import { LopHocApiUrl } from "~/constants/apis-url";
+import { HocVienApiUrl, LopHocApiUrl } from "~/constants/apis-url";
 import { getJwtToken } from "./Auth";
 import type { 
     LopHocRequest, 
@@ -109,7 +109,7 @@ export async function getLopHocs(): Promise<ApiResponse> {
 export async function getLopHocStudents(id: string): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
-        const response = await fetch(LopHocApiUrl(`${id}/students`), {
+        const response = await fetch(HocVienApiUrl(`class/${id}`), {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

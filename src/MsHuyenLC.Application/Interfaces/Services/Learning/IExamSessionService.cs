@@ -11,6 +11,7 @@ public interface IExamSessionService
     Task<KyThi?> UpdateAsync(string id, KyThiUpdateRequest request);
     Task<bool> DeleteAsync(string id);
     Task<IEnumerable<KyThi>> GetByClassIdAsync(string classId);
+    Task<IEnumerable<KyThi>> GetByStudentIdAsync(Guid studentId);
     Task<Guid> JoinExamAsync(JoinExamRequest request);
     Task<int> CountAsync();
 }

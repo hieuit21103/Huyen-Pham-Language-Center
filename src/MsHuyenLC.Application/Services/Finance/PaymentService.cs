@@ -5,6 +5,7 @@ using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.Interfaces.Services.Finance;
 using MsHuyenLC.Application.Interfaces.Services.Learning;
 using MsHuyenLC.Domain.Entities.Finance;
+using MsHuyenLC.Domain.Entities.Learning;
 using MsHuyenLC.Domain.Enums;
 
 namespace MsHuyenLC.Application.Services.Finance;
@@ -86,12 +87,21 @@ public class PaymentService : IPaymentService
         return true;
     }
 
-    public async Task<IEnumerable<ThanhToan>> GetByRegistrationIdAsync(string registrationId)
+    public async Task<ThanhToan?> GetByRegistrationIdAsync(string registrationId)
     {
         if (!Guid.TryParse(registrationId, out var id))
-            return Enumerable.Empty<ThanhToan>();
+            return null;
 
-        return await _unitOfWork.ThanhToans.GetAllAsync(t => t.DangKyId == id);
+        var results = await _unitOfWork.ThanhToans.GetAllAsync(t => t.DangKyId == id);
+        return results.FirstOrDefault();
+    }
+
+    public async Task<IEnumerable<ThanhToan>> GetByStudentIdAsync(string studentId)
+    {
+        var results = await _unitOfWork.ThanhToans.GetAllAsync(
+            t => t.DangKy.HocVienId == Guid.Parse(studentId), 
+            includes: t => t.DangKy);
+        return results;
     }
 
     public async Task<int> CountAsync()

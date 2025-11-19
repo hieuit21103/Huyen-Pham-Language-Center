@@ -10,11 +10,6 @@ import type {
     ApiResponse 
 } from "~/types/index";
 
-// ===== ĐĂNG KÝ HỌC VIÊN =====
-
-/**
- * Đăng ký học viên vào khóa học (cho học viên tự đăng ký)
- */
 export async function registerStudent(request: DangKyRequest): Promise<ApiResponse> {
     try {
         const token = getJwtToken();

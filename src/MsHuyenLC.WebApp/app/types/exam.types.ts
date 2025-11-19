@@ -250,7 +250,7 @@ export interface SubmitRequest {
   deThiId?: string;
   tongCauHoi?: number;
   cacTraLoi?: Record<string, string>;
-  thoiGianLamBai?: string;
+  thoiGianLamBai?: number;
   tuDongCham?: boolean;
 }
 
@@ -285,6 +285,9 @@ export interface PhienLamBai {
   hocVienId?: string;
   deThiId?: string;
   deThi?: DeThi;
+  kyThiId?: string;
+  kyThi?: KyThi;
+  cacCauTraLoi?: CauTraLoi[];
   hocVien?: any;
 }
 

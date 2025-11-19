@@ -11,7 +11,8 @@ public interface IPaymentService
     Task<ThanhToan> CreateAsync(ThanhToanRequest request);
     Task<ThanhToan?> UpdateAsync(string id, ThanhToanUpdateRequest request);
     Task<bool> DeleteAsync(string id);
-    Task<IEnumerable<ThanhToan>> GetByRegistrationIdAsync(string registrationId);
+    Task<ThanhToan?> GetByRegistrationIdAsync(string registrationId);
+    Task<IEnumerable<ThanhToan>> GetByStudentIdAsync(string studentId);
     Task<int> CountAsync();
     Task<ThanhToan?> ProcessVNPayCallbackAsync(VNPayCallbackResponse callbackResult);
 }

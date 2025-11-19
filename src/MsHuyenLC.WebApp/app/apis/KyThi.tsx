@@ -310,8 +310,28 @@ export async function getKyThiResultByHocVien(kyThiId: string, hocVienId: string
 }
 
 /**
- * Tham gia kỳ thi (NEW)
- * Học viên tham gia kỳ thi -> Hệ thống tự động tạo đề thi riêng
+ * Lấy danh sách kỳ thi theo học viên
+ * Returns: { success, data: KyThi[], total }
+ */
+export async function getKyThiByHocVien(studentId: string): Promise<ApiResponse> {
+    try {
+        const token = getJwtToken();
+        const response = await fetch(KyThiApiUrl(`hoc-vien/${studentId}`), {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+        });
+
+        return await response.json();
+    } catch (error) {
+        return { success: false, message: `Lỗi: ${error}` };
+    }
+}
+
+/**
+ * Tham gia kỳ thi
  * Returns: { deThiId, kyThiId, hocVienId }
  */
 export async function joinExam(request: JoinExamRequest): Promise<ApiResponse> {

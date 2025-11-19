@@ -15,6 +15,32 @@ public class ExamSessionService : IExamSessionService
     private readonly IValidator<KyThiUpdateRequest> _updateValidator;
     private readonly IValidator<JoinExamRequest> _joinExamValidator;
     private readonly IExamService _examService;
+    
+    private static readonly TimeZoneInfo VnTimeZone = GetVietnamTimeZone();
+
+    private static TimeZoneInfo GetVietnamTimeZone()
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+        }
+        catch
+        {
+            try
+            {
+                return TimeZoneInfo.FindSystemTimeZoneById("Asia/Bangkok");
+            }
+            catch
+            {
+                return TimeZoneInfo.CreateCustomTimeZone(
+                    "GMT+7",
+                    TimeSpan.FromHours(7),
+                    "GMT+7",
+                    "GMT+7"
+                );
+            }
+        }
+    }
 
     public ExamSessionService(
         IUnitOfWork unitOfWork,
@@ -164,27 +190,26 @@ public class ExamSessionService : IExamSessionService
             throw new InvalidOperationException($"Kỳ thi chưa bắt đầu hoặc đã kết thúc. Trạng thái: {kyThi.TrangThai}");
         }
 
-        // Validate exam timing (date and time)
-        var now = DateTime.Now;
-        var today = DateOnly.FromDateTime(now);
-        var currentTime = TimeOnly.FromDateTime(now);
+        var utcNow = DateTime.UtcNow;
+        var vnNow = TimeZoneInfo.ConvertTimeFromUtc(utcNow, VnTimeZone);
+        var today = DateOnly.FromDateTime(vnNow);
+        var currentTime = TimeOnly.FromDateTime(vnNow);
 
         if (today != kyThi.NgayThi)
         {
-            throw new InvalidOperationException("Chưa đến ngày thi hoặc đã hết hạn làm bài");
+            throw new InvalidOperationException($"Chưa đến ngày thi hoặc đã hết hạn làm bài. Ngày thi: {kyThi.NgayThi:dd/MM/yyyy}, Hôm nay: {today:dd/MM/yyyy}");
         }
 
         if (currentTime < kyThi.GioBatDau)
         {
-            throw new InvalidOperationException($"Chưa đến giờ thi. Giờ bắt đầu: {kyThi.GioBatDau:HH\\:mm}");
+            throw new InvalidOperationException($"Chưa đến giờ thi. Giờ bắt đầu: {kyThi.GioBatDau:HH\\:mm}, Giờ hiện tại: {currentTime:HH\\:mm}");
         }
 
         if (currentTime > kyThi.GioKetThuc)
         {
-            throw new InvalidOperationException($"Đã hết giờ làm bài. Giờ kết thúc: {kyThi.GioKetThuc:HH\\:mm}");
+            throw new InvalidOperationException($"Đã hết giờ làm bài. Giờ kết thúc: {kyThi.GioKetThuc:HH\\:mm}, Giờ hiện tại: {currentTime:HH\\:mm}");
         }
 
-        // Check if student already joined this exam
         var existingPhienLamBai = await _unitOfWork.PhienLamBais.GetAllAsync(
             filter: p => p.KyThiId == request.KyThiId && p.HocVienId == request.HocVienId
         );
@@ -195,21 +220,31 @@ public class ExamSessionService : IExamSessionService
             return existingPhien.DeThiId;
         }
 
+        var hocVien = await _unitOfWork.HocViens.GetByIdAsync(request.HocVienId.ToString());
+        if (hocVien == null)
+            throw new KeyNotFoundException($"Không tìm thấy học viên với ID: {request.HocVienId}");
+        var taiKhoan = await _unitOfWork.TaiKhoans.GetByIdAsync(hocVien.TaiKhoanId.ToString());
+        if (taiKhoan == null)
+        {
+            throw new KeyNotFoundException($"Không tìm thấy tài khoản học viên với ID: {request.HocVienId}");
+        }
+
         var generateExamRequest = new GenerateExamRequest
         {
             KyThiId = request.KyThiId,
             HocVienId = request.HocVienId,
-            NguoiTaoId = Guid.Empty // System generated
+            NguoiTaoId = taiKhoan.Id
         };
 
         var deThi = await _examService.GenerateExamAsync(generateExamRequest);
+        
         var phienLamBai = new PhienLamBai
         {
             Id = Guid.NewGuid(),
             HocVienId = request.HocVienId,
             DeThiId = deThi.Id,
             KyThiId = request.KyThiId,
-            NgayLam = DateOnly.FromDateTime(DateTime.UtcNow),
+            NgayLam = today,
             ThoiGianLam = TimeSpan.Zero,
             TongCauHoi = deThi.CacCauHoi.Count
         };
@@ -218,5 +253,32 @@ public class ExamSessionService : IExamSessionService
         await _unitOfWork.SaveChangesAsync();
 
         return deThi.Id;
+    }
+
+    public async Task<IEnumerable<KyThi>> GetByStudentIdAsync(Guid studentId)
+    {
+        var hocVien = await _unitOfWork.HocViens.GetByIdAsync(studentId.ToString());
+        if (hocVien == null)
+            throw new KeyNotFoundException($"Không tìm thấy học viên với ID: {studentId}");
+
+        var dangKyKhoaHocs = await _unitOfWork.DangKyKhoaHocs.GetAllAsync(
+            filter: dk => dk.HocVienId == studentId && 
+                         dk.LopHocId != null
+        );
+
+        var lopHocIds = dangKyKhoaHocs
+            .Where(dk => dk.LopHocId.HasValue)
+            .Select(dk => dk.LopHocId!.Value)
+            .Distinct()
+            .ToList();
+
+        if (!lopHocIds.Any())
+            return Enumerable.Empty<KyThi>();
+
+        var kyThis = await _unitOfWork.KyThis.GetAllAsync(
+            filter: k => lopHocIds.Contains(k.LopHocId)
+        );
+
+        return kyThis;
     }
 }

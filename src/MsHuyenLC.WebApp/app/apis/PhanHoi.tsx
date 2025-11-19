@@ -1,5 +1,5 @@
 import { getJwtToken } from "./Auth";
-import type { ApiResponse } from "~/types/index";
+import type { ApiResponse, HocVien } from "~/types/index";
 import { ReportApiUrl } from "~/constants/apis-url";
 
 export interface PhanHoiRequest {
@@ -10,9 +10,9 @@ export interface PhanHoiRequest {
 }
 
 export interface PhanHoiResponse {
-  id?: string;
+  id: string;
   hocVienId?: string;
-  tenHocVien?: string;
+  hocVien?: HocVien;
   loaiPhanHoi?: string;
   tieuDe?: string;
   noiDung?: string;

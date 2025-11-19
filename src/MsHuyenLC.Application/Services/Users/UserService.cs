@@ -3,6 +3,7 @@ using MsHuyenLC.Application.DTOs.Users.TaiKhoan;
 using MsHuyenLC.Domain.Entities.Users;
 using MsHuyenLC.Application.Interfaces.Services.User;
 using MsHuyenLC.Application.Interfaces;
+using MsHuyenLC.Application.Interfaces.Services.Auth;
 
 namespace MsHuyenLC.Application.Services.Users;
 
@@ -11,15 +12,18 @@ public class UserService : IUserService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IValidator<TaiKhoanRequest> _createValidator;
     private readonly IValidator<TaiKhoanUpdateRequest> _updateValidator;
+    private readonly IPasswordHasher _passwordHasher;
 
     public UserService(
         IUnitOfWork unitOfWork,
         IValidator<TaiKhoanRequest> createValidator,
-        IValidator<TaiKhoanUpdateRequest> updateValidator)
+        IValidator<TaiKhoanUpdateRequest> updateValidator,
+        IPasswordHasher passwordHasher)
     {
         _unitOfWork = unitOfWork;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
+        _passwordHasher = passwordHasher;   
     }
     public async Task<TaiKhoan?> GetUserByIdAsync(string userId)
     {
@@ -45,7 +49,7 @@ public class UserService : IUserService
         var newUser = new TaiKhoan
         {
             TenDangNhap = request.TenDangNhap,
-            MatKhau = request.MatKhau,
+            MatKhau = _passwordHasher.HashPassword(request.MatKhau),
             Email = request.Email,
             Sdt = request.Sdt,
             VaiTro = request.VaiTro,

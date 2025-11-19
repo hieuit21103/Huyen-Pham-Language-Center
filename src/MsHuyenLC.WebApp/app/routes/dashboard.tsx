@@ -7,7 +7,6 @@ import { getLichHocByStudent } from "~/apis/LichHoc";
 import { getPhanCongByLopHoc } from "~/apis/PhanCong";
 import { getPhienLamBaiByHocVien } from "~/apis/PhienLamBai";
 import { uploadAvatar } from "~/apis/Upload";
-import { getKyThis } from "~/apis/KyThi";
 import {
   User, Calendar, BookOpen, Trophy, Clock,
   Mail, Phone, MapPin, CheckCircle,
@@ -22,7 +21,6 @@ export default function Dashboard() {
   const [student, setStudent] = useState<HocVien>();
   const [lichHocs, setLichHocs] = useState<LichHoc[]>([]);
   const [phienLamBais, setPhienLamBais] = useState<PhienLamBai[]>([]);
-  const [kyThis, setKyThis] = useState<KyThi[]>([]);
   const [teachersByClass, setTeachersByClass] = useState<Record<string, string>>({});
   const [showEditModal, setShowEditModal] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -89,17 +87,6 @@ export default function Dashboard() {
           }
           setTeachersByClass(teachersMap);
           
-          // Load exam periods for student's classes
-          if (lopHocIds.length > 0) {
-            const kyThiRes = await getKyThis();
-            if (kyThiRes.success && Array.isArray(kyThiRes.data)) {
-              // Filter to get only exams from student's classes
-              const studentKyThis = kyThiRes.data.filter((kt: KyThi) => 
-                lopHocIds.includes(kt.lopHocId || '')
-              );
-              setKyThis(studentKyThis);
-            }
-          }
         }
       }
 
@@ -169,8 +156,8 @@ export default function Dashboard() {
   };
 
   const getLoaiBaiThiText = (deThi?: any) => {
-    if (!deThi) return "—";
-    return deThi.kyThiId ? "Thi chính thức" : "Luyện tập";
+    if (!deThi) return "Luyện tập";
+    return deThi.kyThiId ?? "Thi chính thức";
   };
 
   const getVaiTroText = (vaiTro?: VaiTro) => {
@@ -485,104 +472,6 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-
-          {/* Lịch thi sắp tới (chỉ học sinh) */}
-          {isStudent && kyThis.length > 0 && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                <FileText className="w-5 h-5 mr-2" />
-                Lịch thi sắp tới
-              </h2>
-
-              <div className="space-y-3">
-                {kyThis
-                  .filter(kt => {
-                    if (!kt.ngayThi) return false;
-                    const examDate = new Date(kt.ngayThi.split('T')[0]);
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    return examDate >= today;
-                  })
-                  .sort((a, b) => {
-                    const dateA = new Date(a.ngayThi || '');
-                    const dateB = new Date(b.ngayThi || '');
-                    return dateA.getTime() - dateB.getTime();
-                  })
-                  .slice(0, 5)
-                  .map((kt, index) => {
-                    const status = getExamStatus(kt);
-                    const canTakeExam = isExamAvailable(kt);
-                    
-                    return (
-                      <div key={kt.id || index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-gray-900 mb-1">
-                              {kt.tenKyThi || "—"}
-                            </h3>
-                            <p className="text-xs text-gray-500">
-                              {kt.lopHoc?.tenLop || "—"}
-                            </p>
-                          </div>
-                          <span className={`text-xs font-semibold px-3 py-1 rounded-full ${status.color}`}>
-                            {status.text}
-                          </span>
-                        </div>
-                        
-                        <div className="space-y-1 text-sm text-gray-600 mb-3">
-                          <div className="flex items-center">
-                            <Calendar className="w-4 h-4 mr-2" />
-                            {formatDate(kt.ngayThi)}
-                          </div>
-                          {kt.gioBatDau && kt.gioKetThuc && (
-                            <div className="flex items-center">
-                              <Clock className="w-4 h-4 mr-2" />
-                              {kt.gioBatDau} - {kt.gioKetThuc}
-                            </div>
-                          )}
-                          {kt.thoiLuong && (
-                            <div className="flex items-center">
-                              <Clock className="w-4 h-4 mr-2" />
-                              Thời lượng: {kt.thoiLuong} phút
-                            </div>
-                          )}
-                        </div>
-
-                        <button
-                          onClick={() => {
-                            if (canTakeExam) {
-                              navigate(`/thi?kyThiId=${kt.id}`);
-                            }
-                          }}
-                          disabled={!canTakeExam}
-                          className={`w-full flex items-center justify-center px-4 py-2 rounded-lg font-semibold transition-colors ${
-                            canTakeExam
-                              ? 'bg-green-600 text-white hover:bg-green-700'
-                              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                          }`}
-                        >
-                          <BookOpen className="w-4 h-4 mr-2" />
-                          {canTakeExam ? 'Vào thi ngay' : 'Chưa đến giờ thi'}
-                        </button>
-                      </div>
-                    );
-                  })}
-              </div>
-
-              {kyThis.filter(kt => {
-                if (!kt.ngayThi) return false;
-                const examDate = new Date(kt.ngayThi.split('T')[0]);
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                return examDate >= today;
-              }).length === 0 && (
-                <div className="text-center py-8">
-                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-600">Không có kỳ thi nào sắp tới</p>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Bài thi đã làm (chỉ học sinh) */}
           {isStudent && (

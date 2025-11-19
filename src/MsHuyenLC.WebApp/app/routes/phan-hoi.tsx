@@ -5,10 +5,10 @@ import { getJwtToken } from "~/apis/Auth";
 import { createPhanHoi } from "~/apis/PhanHoi";
 import { getByTaiKhoanId } from "~/apis/HocVien";
 import { getProfile } from "~/apis/Profile";
+import { getCauHinhByName } from "~/apis";
 
 export default function FeedbackPage() {
   const navigate = useNavigate();
-  const [rating, setRating] = useState(5);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [hocVienId, setHocVienId] = useState<string>("");
@@ -17,8 +17,9 @@ export default function FeedbackPage() {
     noiDung: "",
     loai: "general",
   });
+  const [hotline, setHotline] = useState("");
+  const [emailSupport, setEmailSupport] = useState("");
 
-  // Check if user is logged in and get student ID
   useEffect(() => {
     const jwtToken = getJwtToken();
     if (!jwtToken) {
@@ -26,7 +27,6 @@ export default function FeedbackPage() {
       return;
     }
 
-    // Get student ID from profile
     const loadStudentId = async () => {
       try {
         const profileRes = await getProfile();
@@ -42,6 +42,23 @@ export default function FeedbackPage() {
     };
 
     loadStudentId();
+
+    const loadConfig = async () => {
+      try {
+        const hotlineRes = await getCauHinhByName("hotline");
+        if (hotlineRes.success && hotlineRes.data?.giaTri) {
+          setHotline(hotlineRes.data.giaTri);
+        }
+        const emailSupportRes = await getCauHinhByName("emailLienHe");
+        if (emailSupportRes.success && emailSupportRes.data?.giaTri) {
+          setEmailSupport(emailSupportRes.data.giaTri);
+        }
+      } catch (error) {
+        console.error("Error loading config:", error);
+      }
+    };
+
+    loadConfig();
   }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,7 +89,6 @@ export default function FeedbackPage() {
       if (result.success) {
         setMessage("Cảm ơn bạn đã gửi phản hồi! Chúng tôi sẽ xem xét và phản hồi sớm nhất.");
         setFormData({ tieuDe: "", noiDung: "", loai: "general" });
-        setRating(5);
 
         setTimeout(() => {
           navigate("/");
@@ -104,33 +120,6 @@ export default function FeedbackPage() {
         {/* Feedback Form */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Rating */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Đánh giá tổng quan
-              </label>
-              <div className="flex items-center gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => setRating(star)}
-                    className="transition-transform hover:scale-110"
-                  >
-                    <Star
-                      className={`w-10 h-10 ${
-                        star <= rating
-                          ? "fill-yellow-400 text-yellow-400"
-                          : "text-gray-300"
-                      }`}
-                    />
-                  </button>
-                ))}
-                <span className="ml-4 text-lg font-semibold text-gray-900">
-                  {rating}/5
-                </span>
-              </div>
-            </div>
 
             {/* Feedback Type */}
             <div>
@@ -227,11 +216,11 @@ export default function FeedbackPage() {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-lg p-4 border border-gray-200 text-center">
             <p className="text-sm text-gray-600 mb-1">Hotline</p>
-            <p className="font-semibold text-gray-900">1900-xxxx</p>
+            <p className="font-semibold text-gray-900">{hotline}</p>
           </div>
           <div className="bg-white rounded-lg p-4 border border-gray-200 text-center">
             <p className="text-sm text-gray-600 mb-1">Email</p>
-            <p className="font-semibold text-gray-900">support@hplc.edu.vn</p>
+            <p className="font-semibold text-gray-900">{emailSupport}</p>
           </div>
           <div className="bg-white rounded-lg p-4 border border-gray-200 text-center">
             <p className="text-sm text-gray-600 mb-1">Thời gian làm việc</p>

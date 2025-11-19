@@ -4,21 +4,24 @@ using MsHuyenLC.Application.DTOs.Learning.KyThi;
 using MsHuyenLC.Application.Interfaces.Services.Learning;
 using MsHuyenLC.Application.Interfaces.Services.System;
 using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
+using StackExchange.Redis;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "admin,giaovu")]
 public class KyThiController : BaseController
 {
     private readonly IExamSessionService _service;
+
     public KyThiController(ISystemLoggerService loggerService, IExamSessionService service) : base(loggerService)
     {
         _service = service;
     }
 
+
     [HttpGet]
+    [Authorize(Roles = "admin,giaovu")]
     public async Task<ActionResult<IEnumerable<KyThi>>> GetAll()
     {
         var kyThis = await _service.GetAllAsync();
@@ -30,6 +33,7 @@ public class KyThiController : BaseController
     }
 
     [HttpGet("{id}")]
+    [Authorize]
     public async Task<ActionResult<KyThi>> GetById(string id)
     {
         var kyThi = await _service.GetByIdAsync(id);
@@ -48,8 +52,9 @@ public class KyThiController : BaseController
             data = kyThi
         });
     }
-
+    
     [HttpPost]
+    [Authorize(Roles = "admin,giaovu")]
     public async Task<ActionResult> Create([FromBody] KyThiRequest request)
     {
         try
@@ -93,6 +98,7 @@ public class KyThiController : BaseController
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "admin,giaovu")]
     public async Task<ActionResult> Update(string id, [FromBody] KyThiUpdateRequest request)
     {
         try
@@ -168,6 +174,7 @@ public class KyThiController : BaseController
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "admin,giaovu")]
     public async Task<ActionResult> Delete(string id)
     {
         try
@@ -202,6 +209,7 @@ public class KyThiController : BaseController
     }
 
     [HttpPatch("{id}/status")]
+    [Authorize(Roles = "admin,giaovu")]
     public async Task<ActionResult> UpdateStatus(string id, [FromBody] TrangThaiKyThi trangThai)
     {
         try
@@ -245,6 +253,7 @@ public class KyThiController : BaseController
     }
 
     [HttpGet("lop/{lopHocId}")]
+    [Authorize(Roles = "admin,giaovu")]
     public async Task<ActionResult> GetByLopHoc(string lopHocId)
     {
         try
@@ -276,8 +285,61 @@ public class KyThiController : BaseController
         }
     }
 
+    [HttpGet("hoc-vien/{studentId}")]
+    [Authorize]
+    public async Task<ActionResult> GetByStudentId(string studentId)
+    {
+        try
+        {
+            if (!Guid.TryParse(studentId, out var studentGuid))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "ID học viên không hợp lệ"
+                });
+            }
+
+            var kyThis = await _service.GetByStudentIdAsync(studentGuid);
+
+            return Ok(new
+            {
+                success = true,
+                data = kyThis.Select(kt => new KyThiResponse
+                {
+                    Id = kt.Id,
+                    TenKyThi = kt.TenKyThi,
+                    NgayThi = kt.NgayThi,
+                    GioBatDau = kt.GioBatDau,
+                    GioKetThuc = kt.GioKetThuc,
+                    ThoiLuong = kt.ThoiLuong,
+                    LopHocId = kt.LopHocId,
+                    TrangThai = kt.TrangThai
+                }),
+                total = kyThis.Count()
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new
+            {
+                success = false,
+                message = ex.Message
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                success = false,
+                message = "Có lỗi xảy ra khi lấy danh sách kỳ thi",
+                error = ex.Message
+            });
+        }
+    }
+
     [HttpPost("join")]
-    [Authorize(Roles = "hocvien")]
+    [Authorize]
     public async Task<ActionResult> JoinExam([FromBody] JoinExamRequest request)
     {
         try

@@ -14,4 +14,5 @@ public class PhienLamBai
     public DeThi DeThi { get; set; } = null!;
     public Guid? KyThiId { get; set; }
     public KyThi? KyThi { get; set; }
+    public virtual ICollection<CauTraLoi> CacCauTraLoi { get; set; } = new List<CauTraLoi>();
 }

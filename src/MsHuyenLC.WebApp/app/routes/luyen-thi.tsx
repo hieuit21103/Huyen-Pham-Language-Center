@@ -19,10 +19,10 @@ export default function LuyenThi() {
     const checkLoginAndLoadData = async () => {
         setLoading(true);
         const profileRes = await getProfile();
-        
+
         if (profileRes.success && profileRes.data) {
             setIsLoggedIn(true);
-            
+
             const deThiRes = await getDeThis();
             if (deThiRes.success && Array.isArray(deThiRes.data)) {
                 const deThiLuyenTap = deThiRes.data.filter((de: DeThi) => !de.kyThiId);
@@ -31,7 +31,7 @@ export default function LuyenThi() {
         } else {
             setIsLoggedIn(false);
         }
-        
+
         setLoading(false);
     };
 
@@ -63,51 +63,50 @@ export default function LuyenThi() {
         return (
             <div>
                 <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
-                  Luyện Đề Online
+                    Luyện Đề Online
                 </h2>
                 <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl p-8 border-2 border-gray-100">
-                  <div className="text-center mb-8">
-                    <h3 className="text-3xl font-bold text-gray-900 mb-6">
-                      Ngân Hàng Đề Thi
-                    </h3>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="text-center p-6 bg-gray-50 rounded-xl border-2 border-gray-100">
-                      <div className="text-5xl mb-4"></div>
-                      <h4 className="text-xl font-bold text-gray-900 mb-2">
-                        500+ Đề Thi IELTS
-                      </h4>
-                      <p className="text-gray-600">Cập nhật liên tục từ IDP & BC</p>
+                    <div className="text-center mb-8">
+                        <h3 className="text-3xl font-bold text-gray-900 mb-6">
+                            Ngân Hàng Đề Thi
+                        </h3>
                     </div>
-                    <div className="text-center p-6 bg-gray-50 rounded-xl border-2 border-gray-100">
-                      <div className="text-5xl mb-4"></div>
-                      <h4 className="text-xl font-bold text-gray-900 mb-2">
-                        Chấm Bài Tự Động
-                      </h4>
-                      <p className="text-gray-600">AI chấm bài Speaking & Writing</p>
-                    </div>
-                    <div className="text-center p-6 bg-gray-50 rounded-xl border-2 border-gray-100">
-                      <div className="text-5xl mb-4"></div>
-                      <h4 className="text-xl font-bold text-gray-900 mb-2">
-                        Theo Dõi Tiến Độ
-                      </h4>
-                      <p className="text-gray-600">Báo cáo chi tiết năng lực</p>
-                    </div>
-                  </div>
 
-                  <div className="text-center mb-6">
-                    <p className="text-xl font-bold text-gray-900">
-                      Miễn phí cho học viên đăng ký khóa học!
-                    </p>
-                  </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div className="text-center p-6 bg-gray-50 rounded-xl border-2 border-gray-100">
+                            <div className="text-5xl mb-4"></div>
+                            <h4 className="text-xl font-bold text-gray-900 mb-2">
+                                500+ Đề Thi IELTS
+                            </h4>
+                            <p className="text-gray-600">Cập nhật liên tục từ IDP & BC</p>
+                        </div>
+                        <div className="text-center p-6 bg-gray-50 rounded-xl border-2 border-gray-100">
+                            <div className="text-5xl mb-4"></div>
+                            <h4 className="text-xl font-bold text-gray-900 mb-2">
+                                Chấm Bài Tự Động
+                            </h4>
+                        </div>
+                        <div className="text-center p-6 bg-gray-50 rounded-xl border-2 border-gray-100">
+                            <div className="text-5xl mb-4"></div>
+                            <h4 className="text-xl font-bold text-gray-900 mb-2">
+                                Theo Dõi Tiến Độ
+                            </h4>
+                            <p className="text-gray-600">Báo cáo chi tiết năng lực</p>
+                        </div>
+                    </div>
 
-                  <button
-                    onClick={handleCourseRegister}
-                    className="w-full bg-gray-900 text-white py-4 rounded-lg font-bold text-lg hover:bg-gray-800 hover:scale-105 transition-all"
-                  >
-                    Truy Cập Ngay
-                  </button>
+                    <div className="text-center mb-6">
+                        <p className="text-xl font-bold text-gray-900">
+                            Miễn phí cho học viên đăng ký khóa học!
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={handleCourseRegister}
+                        className="w-full bg-gray-900 text-white py-4 rounded-lg font-bold text-lg hover:bg-gray-800 hover:scale-105 transition-all"
+                    >
+                        Truy Cập Ngay
+                    </button>
                 </div>
             </div>
         );
@@ -184,7 +183,7 @@ export default function LuyenThi() {
                             <div className="mb-4">
                                 <h3 className="text-xl font-bold text-gray-900">{deThi.tenDe || "Đề thi"}</h3>
                             </div>
-                            
+
                             <div className="space-y-2 mb-6">
                                 <div className="flex items-center text-gray-600">
                                     <FileText className="w-4 h-4 mr-2" />
@@ -195,14 +194,15 @@ export default function LuyenThi() {
                                     <span className="text-sm">{deThi.thoiLuongPhut || 0} phút</span>
                                 </div>
                             </div>
-
-                            <button
-                                onClick={() => handleStartExam(deThi.id!)}
-                                className="w-full bg-gray-900 text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors flex items-center justify-center space-x-2"
-                            >
-                                <Play className="w-5 h-5" />
-                                <span>Bắt đầu làm bài</span>
-                            </button>
+                            <div className="mt-auto">
+                                <button
+                                    onClick={() => handleStartExam(deThi.id!)}
+                                    className="w-full bg-gray-900 text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors flex items-center justify-center space-x-2"
+                                >
+                                    <Play className="w-5 h-5" />
+                                    <span>Bắt đầu làm bài</span>
+                                </button>
+                            </div>
                         </div>
                     ))
                 )}

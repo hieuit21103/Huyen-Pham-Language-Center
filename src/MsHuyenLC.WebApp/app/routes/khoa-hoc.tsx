@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getProfile } from "~/apis/Profile";
-import { registerStudent, getDangKys } from "~/apis/DangKy";
-import type { DangKyRequest, HocVien } from "~/types/index";
+import { registerStudent, getDangKysByHocVien } from "~/apis/DangKy";
+import type { DangKyRequest } from "~/types/index";
 import { getByTaiKhoanId, getKhoaHocs } from "~/apis";
 import { Asset } from "~/assets/Asset";
 
@@ -34,10 +34,9 @@ export default function KhoaHocPage() {
             if (hocVienRes.success && hocVienRes.data) {
                 setStudentId(hocVienRes.data.id);
 
-                const dangKyRes = await getDangKys();
-                if (dangKyRes.success && Array.isArray(dangKyRes.data)) {
-                    const userRegistrations = dangKyRes.data.filter((dk: DangKy) => dk.hocVienId === hocVienRes.data.id);
-                    const courseIds = userRegistrations.map((dk: DangKy) => dk.khoaHocId).filter(Boolean) as string[];
+                const dangKyRes = await getDangKysByHocVien(hocVienRes.data.id);
+                if (dangKyRes.success && dangKyRes.data) {
+                    const courseIds = dangKyRes.data.map((dk: any) => dk.khoaHoc.id!);
                     setRegisteredCourseIds(courseIds);
                 }
             }
@@ -45,9 +44,8 @@ export default function KhoaHocPage() {
 
         try {
             const response = await getKhoaHocs();
-
-            if (Array.isArray(response.data)) {
-                const formattedCourses = response.data.map((course: any) => ({
+            if (response.success && response.data) {
+                const formattedCourses = response.data.filter((course: any) => !registeredCourseIds.includes(course.id)).map((course: any) => ({
                     id: course.id,
                     title: course.tenKhoaHoc || 'Chưa có tên',
                     description: course.moTa || 'Chưa có mô tả',

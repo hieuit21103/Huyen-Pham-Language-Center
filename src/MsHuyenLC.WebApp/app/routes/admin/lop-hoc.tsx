@@ -126,8 +126,7 @@ export default function AdminClasses() {
     
     const response = await getLopHocStudents(cls.id!);
     if (response.success && response.data) {
-      const danhSach = response.data.danhSachHocVien || [];
-      setStudents(Array.isArray(danhSach) ? danhSach : []);
+      setStudents(Array.isArray(response.data) ? response.data : []);
     } else {
       setStudents([]);
     }

@@ -5,7 +5,7 @@ namespace MsHuyenLC.Application.Interfaces.Services.Learning;
 
 public interface IRegistrationService
 {
-    Task<DangKyKhoaHoc?> GetByIdAsync(string id);
+    Task<DangKyKhoaHoc?> GetByIdAsync(string id, string userId = "");
     Task<IEnumerable<DangKyKhoaHoc>> GetAllAsync();
     Task<DangKyKhoaHoc> CreateAsync(DangKyKhoaHocRequest request);
     Task<DangKyKhoaHoc> CreateFullAsync(DangKyKhoaHocCreateRequest request);

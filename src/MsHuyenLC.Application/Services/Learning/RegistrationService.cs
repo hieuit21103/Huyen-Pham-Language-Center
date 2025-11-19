@@ -7,6 +7,7 @@ using MsHuyenLC.Domain.Entities.Courses;
 using MsHuyenLC.Domain.Entities.Learning;
 using MsHuyenLC.Domain.Entities.Finance;
 using MsHuyenLC.Domain.Enums;
+using MsHuyenLC.Domain.Entities.Users;
 
 namespace MsHuyenLC.Application.Services.Learning;
 
@@ -29,9 +30,24 @@ public class RegistrationService : IRegistrationService
         _updateValidator = updateValidator;
     }
 
-    public async Task<DangKyKhoaHoc?> GetByIdAsync(string id)
+    public async Task<DangKyKhoaHoc?> GetByIdAsync(string id, string userId = "")
     {
-        return await _unitOfWork.DangKyKhoaHocs.GetByIdAsync(id);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return await _unitOfWork.DangKyKhoaHocs.GetByIdAsync(id);
+        }
+        else
+        {
+            var dangKy = await _unitOfWork.DangKyKhoaHocs.GetByIdAsync(id);
+            if (dangKy == null || dangKy.HocVien == null)
+                return null;
+            var taiKhoan = await _unitOfWork.TaiKhoans.GetByIdAsync(dangKy.HocVien.TaiKhoanId.ToString());
+            if (taiKhoan != null && taiKhoan.Id.ToString() == userId)
+            {
+                return dangKy;
+            }
+            return null;
+        }
     }
 
     public async Task<IEnumerable<DangKyKhoaHoc>> GetAllAsync()
@@ -102,18 +118,23 @@ public class RegistrationService : IRegistrationService
         if (request.TrangThai.HasValue)
             dangKy.TrangThai = request.TrangThai.Value;
 
-        if (previousStatus == TrangThaiDangKy.choduyet && dangKy.TrangThai == TrangThaiDangKy.daduyet && dangKy.LopHocId.HasValue)
+        if (previousStatus == TrangThaiDangKy.choduyet && dangKy.TrangThai == TrangThaiDangKy.daduyet)
         {
+            await _unitOfWork.ThanhToans.AddAsync(new ThanhToan
+            {
+                DangKyId = dangKy.Id,
+                SoTien = dangKy.KhoaHoc.HocPhi,
+            });
+        }
+
+        if (previousStatus == TrangThaiDangKy.dathanhtoan && dangKy.TrangThai == TrangThaiDangKy.daxeplop)
+        {
+            dangKy.NgayXepLop = DateOnly.FromDateTime(DateTime.UtcNow);
             var lopHoc = await _unitOfWork.LopHocs.GetByIdAsync(dangKy.LopHocId.ToString() ?? "");
             if (lopHoc != null)
             {
                 lopHoc.CapNhatSiSo(1);
                 await _unitOfWork.LopHocs.UpdateAsync(lopHoc);
-                await _unitOfWork.ThanhToans.AddAsync(new ThanhToan
-                {
-                    DangKyId = dangKy.Id,
-                    SoTien = lopHoc.KhoaHoc.HocPhi,
-                });
             }
         }
 
@@ -129,12 +150,12 @@ public class RegistrationService : IRegistrationService
                 }
             }
         }
-        
-        if(previousStatus == TrangThaiDangKy.daduyet && dangKy.TrangThai == TrangThaiDangKy.dathanhtoan)
+
+        if (previousStatus == TrangThaiDangKy.daduyet && dangKy.TrangThai == TrangThaiDangKy.dathanhtoan)
         {
             var thanhToans = await _unitOfWork.ThanhToans.GetAllAsync(filter: t => t.DangKyId == dangKy.Id && t.TrangThai == TrangThaiThanhToan.chuathanhtoan);
             var thanhToan = thanhToans.FirstOrDefault();
-            if(thanhToan != null)
+            if (thanhToan != null)
             {
                 thanhToan.TrangThai = TrangThaiThanhToan.dathanhtoan;
                 thanhToan.NgayThanhToan = DateOnly.FromDateTime(DateTime.UtcNow);

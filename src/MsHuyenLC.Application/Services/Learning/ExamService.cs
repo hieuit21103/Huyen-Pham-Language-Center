@@ -127,7 +127,37 @@ public class ExamService : IExamService
             filter: d => d.Id == Guid.Parse(id),
             includes: d => d.CacCauHoi
         );
-        return deThiList.FirstOrDefault();
+        
+        var deThi = deThiList.FirstOrDefault();
+        if (deThi == null) return null;
+
+        foreach (var cauHoiDeThi in deThi.CacCauHoi)
+        {
+            if (cauHoiDeThi.CauHoiId != Guid.Empty)
+            {
+                var cauHoi = await _unitOfWork.CauHois.GetByIdAsync(cauHoiDeThi.CauHoiId.ToString());
+                if (cauHoi != null)
+                {
+                    cauHoiDeThi.CauHoi = cauHoi;
+                    
+                    var dapAns = await _unitOfWork.DapAnCauHois.GetAllAsync(
+                        filter: da => da.CauHoiId == cauHoi.Id
+                    );
+                    cauHoi.CacDapAn = dapAns.ToList();
+                }
+            }
+
+            if (cauHoiDeThi.NhomCauHoiId.HasValue)
+            {
+                var nhom = await _unitOfWork.NhomCauHois.GetByIdAsync(cauHoiDeThi.NhomCauHoiId.Value.ToString());
+                if (nhom != null)
+                {
+                    cauHoiDeThi.NhomCauHoi = nhom;
+                }
+            }
+        }
+
+        return deThi;
     }
 
     public async Task<IEnumerable<DeThi>> GetByCreatorAsync(Guid creatorId)
