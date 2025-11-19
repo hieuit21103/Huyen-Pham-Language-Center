@@ -227,38 +227,6 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.ToTable("ThanhToan", (string)null);
                 });
 
-            modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.CauHoiDeThi", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CauHoiId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("DeThiId")
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal>("Diem")
-                        .HasColumnType("numeric");
-
-                    b.Property<Guid?>("NhomCauHoiId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("ThuTuCauHoi")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CauHoiId");
-
-                    b.HasIndex("DeThiId");
-
-                    b.HasIndex("NhomCauHoiId");
-
-                    b.ToTable("CauHoiDeThi", (string)null);
-                });
-
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.DangKyKhoaHoc", b =>
                 {
                     b.Property<Guid>("Id")
@@ -345,39 +313,35 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.ToTable("DangKyTuVan", (string)null);
                 });
 
-            modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.KyThi", b =>
+            modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.CauHinhKyThi", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<TimeOnly>("GioBatDau")
-                        .HasColumnType("time without time zone");
-
-                    b.Property<TimeOnly>("GioKetThuc")
-                        .HasColumnType("time without time zone");
-
-                    b.Property<Guid>("LopHocId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateOnly>("NgayThi")
-                        .HasColumnType("date");
-
-                    b.Property<string>("TenKyThi")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("ThoiLuong")
+                    b.Property<int>("CapDo")
                         .HasColumnType("integer");
 
-                    b.Property<int>("TrangThai")
+                    b.Property<int>("CheDoCauHoi")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DoKho")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("KyNang")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("KyThiId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SoCauHoi")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LopHocId");
+                    b.HasIndex("KyThiId");
 
-                    b.ToTable("KyThi", (string)null);
+                    b.ToTable("CauHinhKyThi");
                 });
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.CauHoi", b =>
@@ -393,9 +357,6 @@ namespace MsHuyenLC.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("KyNang")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("LoaiCauHoi")
                         .HasColumnType("integer");
 
                     b.Property<string>("LoiThoai")
@@ -414,6 +375,38 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("CauHoi", (string)null);
+                });
+
+            modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.CauHoiDeThi", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CauHoiId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DeThiId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Diem")
+                        .HasColumnType("numeric");
+
+                    b.Property<Guid?>("NhomCauHoiId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ThuTuCauHoi")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CauHoiId");
+
+                    b.HasIndex("DeThiId");
+
+                    b.HasIndex("NhomCauHoiId");
+
+                    b.ToTable("CauHoiDeThi", (string)null);
                 });
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.CauTraLoi", b =>
@@ -482,9 +475,6 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.Property<Guid?>("KyThiId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("LoaiDeThi")
-                        .HasColumnType("integer");
-
                     b.Property<string>("MaDe")
                         .IsRequired()
                         .HasColumnType("text");
@@ -502,9 +492,6 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.Property<int>("ThoiLuongPhut")
                         .HasColumnType("integer");
 
-                    b.Property<int>("TongCauHoi")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("KyThiId");
@@ -512,6 +499,41 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.HasIndex("NguoiTaoId");
 
                     b.ToTable("DeThi", (string)null);
+                });
+
+            modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.KyThi", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<TimeOnly>("GioBatDau")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<TimeOnly>("GioKetThuc")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<Guid>("LopHocId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("NgayThi")
+                        .HasColumnType("date");
+
+                    b.Property<string>("TenKyThi")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ThoiLuong")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TrangThai")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LopHocId");
+
+                    b.ToTable("KyThi", (string)null);
                 });
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.NhomCauHoi", b =>
@@ -524,6 +546,9 @@ namespace MsHuyenLC.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("DoKho")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("KyNang")
                         .HasColumnType("integer");
 
                     b.Property<string>("NoiDung")
@@ -586,6 +611,9 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.Property<Guid>("HocVienId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("KyThiId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateOnly>("NgayLam")
                         .HasColumnType("date");
 
@@ -603,6 +631,8 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.HasIndex("DeThiId");
 
                     b.HasIndex("HocVienId");
+
+                    b.HasIndex("KyThiId");
 
                     b.ToTable("PhienLamBai", (string)null);
                 });
@@ -943,29 +973,6 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.Navigation("DangKy");
                 });
 
-            modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.CauHoiDeThi", b =>
-                {
-                    b.HasOne("MsHuyenLC.Domain.Entities.Learning.OnlineExam.CauHoi", "CauHoi")
-                        .WithMany()
-                        .HasForeignKey("CauHoiId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MsHuyenLC.Domain.Entities.Learning.OnlineExam.DeThi", "DeThi")
-                        .WithMany("CacCauHoi")
-                        .HasForeignKey("DeThiId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MsHuyenLC.Domain.Entities.Learning.OnlineExam.NhomCauHoi", null)
-                        .WithMany("CacCauHoiDeThi")
-                        .HasForeignKey("NhomCauHoiId");
-
-                    b.Navigation("CauHoi");
-
-                    b.Navigation("DeThi");
-                });
-
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.DangKyKhoaHoc", b =>
                 {
                     b.HasOne("MsHuyenLC.Domain.Entities.Users.HocVien", "HocVien")
@@ -1008,15 +1015,40 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.Navigation("TaiKhoanXuLy");
                 });
 
-            modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.KyThi", b =>
+            modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.CauHinhKyThi", b =>
                 {
-                    b.HasOne("MsHuyenLC.Domain.Entities.Courses.LopHoc", "LopHoc")
-                        .WithMany()
-                        .HasForeignKey("LopHocId")
+                    b.HasOne("MsHuyenLC.Domain.Entities.Learning.OnlineExam.KyThi", "KyThi")
+                        .WithMany("CauHinhKyThis")
+                        .HasForeignKey("KyThiId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("LopHoc");
+                    b.Navigation("KyThi");
+                });
+
+            modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.CauHoiDeThi", b =>
+                {
+                    b.HasOne("MsHuyenLC.Domain.Entities.Learning.OnlineExam.CauHoi", "CauHoi")
+                        .WithMany()
+                        .HasForeignKey("CauHoiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MsHuyenLC.Domain.Entities.Learning.OnlineExam.DeThi", "DeThi")
+                        .WithMany("CacCauHoi")
+                        .HasForeignKey("DeThiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MsHuyenLC.Domain.Entities.Learning.OnlineExam.NhomCauHoi", "NhomCauHoi")
+                        .WithMany("CacCauHoiDeThi")
+                        .HasForeignKey("NhomCauHoiId");
+
+                    b.Navigation("CauHoi");
+
+                    b.Navigation("DeThi");
+
+                    b.Navigation("NhomCauHoi");
                 });
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.CauTraLoi", b =>
@@ -1051,7 +1083,7 @@ namespace MsHuyenLC.Infrastructure.Migrations
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.DeThi", b =>
                 {
-                    b.HasOne("MsHuyenLC.Domain.Entities.Learning.KyThi", "KyThi")
+                    b.HasOne("MsHuyenLC.Domain.Entities.Learning.OnlineExam.KyThi", "KyThi")
                         .WithMany()
                         .HasForeignKey("KyThiId");
 
@@ -1064,6 +1096,17 @@ namespace MsHuyenLC.Infrastructure.Migrations
                     b.Navigation("KyThi");
 
                     b.Navigation("NguoiTao");
+                });
+
+            modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.KyThi", b =>
+                {
+                    b.HasOne("MsHuyenLC.Domain.Entities.Courses.LopHoc", "LopHoc")
+                        .WithMany()
+                        .HasForeignKey("LopHocId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LopHoc");
                 });
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.NhomCauHoiChiTiet", b =>
@@ -1099,9 +1142,15 @@ namespace MsHuyenLC.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("MsHuyenLC.Domain.Entities.Learning.OnlineExam.KyThi", "KyThi")
+                        .WithMany()
+                        .HasForeignKey("KyThiId");
+
                     b.Navigation("DeThi");
 
                     b.Navigation("HocVien");
+
+                    b.Navigation("KyThi");
                 });
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.PhanHoi", b =>
@@ -1196,6 +1245,11 @@ namespace MsHuyenLC.Infrastructure.Migrations
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.DeThi", b =>
                 {
                     b.Navigation("CacCauHoi");
+                });
+
+            modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.KyThi", b =>
+                {
+                    b.Navigation("CauHinhKyThis");
                 });
 
             modelBuilder.Entity("MsHuyenLC.Domain.Entities.Learning.OnlineExam.NhomCauHoi", b =>

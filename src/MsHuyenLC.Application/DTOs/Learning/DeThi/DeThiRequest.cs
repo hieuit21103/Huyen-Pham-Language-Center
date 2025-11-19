@@ -1,13 +1,12 @@
 using MsHuyenLC.Domain.Enums;
 
-namespace MsHuyenLC.Domain.Entities.Learning;
+namespace MsHuyenLC.Application.DTOs.Learning.DeThi;
 
 public class DeThiRequest
 {
     public Guid Id { get; set; }
     public string TenDe { get; set; } = null!;
     public int TongCauHoi { get; set; }
-    public LoaiDeThi LoaiDeThi { get; set; } = LoaiDeThi.LuyenTap;
     public string? KyThiId { get; set; }
     public int ThoiGianLamBai { get; set; }
     public Guid? NguoiTaoId { get; set; }

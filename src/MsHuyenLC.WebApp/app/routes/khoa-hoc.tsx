@@ -34,7 +34,7 @@ export default function KhoaHocPage() {
             if (hocVienRes.success && hocVienRes.data) {
                 setStudentId(hocVienRes.data.id);
 
-                const dangKyRes = await getDangKys({ pageNumber: 1, pageSize: 1000, sortBy: 'id', sortOrder: 'desc' });
+                const dangKyRes = await getDangKys();
                 if (dangKyRes.success && Array.isArray(dangKyRes.data)) {
                     const userRegistrations = dangKyRes.data.filter((dk: DangKy) => dk.hocVienId === hocVienRes.data.id);
                     const courseIds = userRegistrations.map((dk: DangKy) => dk.khoaHocId).filter(Boolean) as string[];
@@ -44,7 +44,7 @@ export default function KhoaHocPage() {
         }
 
         try {
-            const response = await getKhoaHocs({ pageNumber: 1, pageSize: 100, sortBy: 'id', sortOrder: 'desc' });
+            const response = await getKhoaHocs();
 
             if (Array.isArray(response.data)) {
                 const formattedCourses = response.data.map((course: any) => ({

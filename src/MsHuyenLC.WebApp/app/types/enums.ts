@@ -1,71 +1,67 @@
-// #region Status Enums
 export enum TrangThaiTaiKhoan {
-  HoatDong = 0,    // hoatdong
-  TamDung = 1,     // tamdung
-  BiKhoa = 2       // bikhoa
+  HoatDong = 0,
+  TamDung = 1,
+  BiKhoa = 2
 }
 
 export enum TrangThaiLopHoc {
-  ChoXepGiaoVien = 0,  // choxepgiaovien
-  DangHoc = 1,         // danghoc
-  KetThuc = 2,         // ketthuc
-  Huy = 3              // huy
+  ChoXepGiaoVien = 0,
+  DangHoc = 1,
+  KetThuc = 2,
+  Huy = 3
 }
 
 export enum TrangThaiHocVien {
-  DangHoc = 0,       // danghoc
-  TamNgung = 1,      // tamngung
-  DaHoanThanh = 2    // dahoanthanh
+  DangHoc = 0,
+  TamNgung = 1,
+  DaHoanThanh = 2
 }
 
 export enum TrangThaiKhoaHoc {
-  DangMo = 0,        // dangmo
-  DangDienRa = 1,    // dangdienra
-  KetThuc = 2,       // ketthuc
-  Huy = 3            // huy
+  DangMo = 0,
+  DangDienRa = 1,
+  KetThuc = 2,
+  Huy = 3
 }
 
 export enum TrangThaiDangKy {
-  ChoDuyet = 0,      // choduyet
-  DaDuyet = 1,       // daduyet
-  DaThanhToan = 2,   // dathanhtoan
-  DaXepLop = 3,      // daxeplop
-  Huy = 4            // huy
+  ChoDuyet = 0,
+  DaDuyet = 1,
+  DaThanhToan = 2,
+  DaXepLop = 3,
+  Huy = 4
 }
 
 export enum TrangThaiKyThi {
-  SapDienRa = 0,     // sapdienra
-  DangDienRa = 1,    // dangdienra
-  KetThuc = 2,       // ketthuc
-  Huy = 3            // huy
+  SapDienRa = 0,
+  DangDienRa = 1,
+  KetThuc = 2,
+  Huy = 3
 }
 
 export enum TrangThaiThanhToan {
-  ChuaThanhToan = 0,  // chuathanhtoan
-  DaThanhToan = 1,    // dathanhtoan
-  ThatBai = 2         // thatbai
+  ChuaThanhToan = 0,
+  DaThanhToan = 1,
+  ThatBai = 2
 }
-// #endregion
 
-// #region User Enums
 export enum GioiTinh {
-  Nam = 0,  // nam
-  Nu = 1    // nu
+  Nam = 0,
+  Nu = 1
 }
 
 export enum VaiTro {
-  Admin = 0,      // admin
-  GiaoVu = 1,     // giaovu
-  GiaoVien = 2,   // giaovien
-  HocVien = 3     // hocvien
+  Admin = 0,
+  GiaoVu = 1,
+  GiaoVien = 2,
+  HocVien = 3
 }
-// #endregion
 
 export enum KetQuaDangKy {
-  ChuaXuLy = 0,    // chuaxuly
-  DaTuChoi = 1,    // datuchoi
-  DaHuy = 2,       // dahuy
-  DaXuLy = 3       // daxuly
+  ChuaXuLy = 0,
+  DaTuChoi = 1,
+  DaHuy = 2,
+  DaXuLy = 3
 }
 
 export enum CapDo {
@@ -78,31 +74,28 @@ export enum CapDo {
 }
 
 export enum DoKho {
-  De = 0,           // de
-  TrungBinh = 1,    // trungbinh
-  Kho = 2           // kho
-}
-
-export enum LoaiCauHoi {
-  TracNghiem = 0,   // TracNghiem
-  TuLuan = 1        // TuLuan
+  De = 0,
+  TrungBinh = 1,
+  Kho = 2
 }
 
 export enum KyNang {
-  Nghe = 0,   // Nghe
-  Doc = 1,    // Doc
-  Viet = 2    // Viet
+  Nghe = 0,
+  Doc = 1,
+  NguPhap = 2,
+  TuVung = 3,
+  Viet = 4
 }
 
-export enum LoaiDeThi {
-  LuyenTap = 0,      // LuyenTap
-  ChinhThuc = 1      // ChinhThuc
+export enum CheDoCauHoi {
+  Don = 0,
+  Nhom = 1
 }
 
 export enum PhuongThucThanhToan {
-  TrucTuyen = 0,   // tructuyen
-  TrucTiep = 1,    // tructiep
-  Khac = 2         // khac
+  TrucTuyen = 0,
+  TrucTiep = 1,
+  Khac = 2
 }
 
 export enum DayOfWeek {

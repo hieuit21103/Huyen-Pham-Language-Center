@@ -1,8 +1,8 @@
-import { Search, Plus, Edit, Trash2, Calendar, X, Play, Pause, CheckCircle } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Calendar, X, Play, Pause, CheckCircle, PlusCircle, MinusCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getKyThis, createKyThi, updateKyThi, deleteKyThi, updateKyThiStatus } from "~/apis/KyThi";
 import { getLopHocs } from "~/apis/LopHoc";
-import type { KyThi, TrangThaiKyThi } from "~/types/index";
+import type { KyThi, TrangThaiKyThi, CauHinhKyThiRequest, CapDo, DoKho, KyNang } from "~/types/index";
 import { formatDateForInput, formatDateForDisplay } from "~/utils/date-utils";
 import { setLightTheme } from "./_layout";
 
@@ -22,6 +22,7 @@ export default function AdminExamPeriods() {
     gioBatDau: "",
     gioKetThuc: "",
     thoiLuong: 60,
+    cauHinhKyThis: [] as CauHinhKyThiRequest[],
   });
 
   useEffect(() => {
@@ -32,10 +33,7 @@ export default function AdminExamPeriods() {
 
   const loadExamPeriods = async () => {
     setLoading(true);
-    const response = await getKyThis({ 
-      sortBy: "ngayThi",
-      sortOrder: "desc"
-    });
+    const response = await getKyThis();
     if (response.success && response.data) {
       setExamPeriods(response.data);
     }
@@ -43,7 +41,7 @@ export default function AdminExamPeriods() {
   };
 
   const loadClasses = async () => {
-    const response = await getLopHocs({ pageNumber: 1, pageSize: 100 });
+    const response = await getLopHocs();
     if (response.success && response.data) {
       setClasses(response.data);
     }
@@ -58,6 +56,7 @@ export default function AdminExamPeriods() {
       gioBatDau: "",
       gioKetThuc: "",
       thoiLuong: 60,
+      cauHinhKyThis: [],
     });
     setShowModal(true);
   };
@@ -71,6 +70,7 @@ export default function AdminExamPeriods() {
       gioBatDau: period.gioBatDau || "",
       gioKetThuc: period.gioKetThuc || "",
       thoiLuong: period.thoiLuong || 60,
+      cauHinhKyThis: [],
     });
     setShowModal(true);
   };
@@ -115,20 +115,51 @@ export default function AdminExamPeriods() {
 
   const getTrangThaiText = (trangThai?: TrangThaiKyThi) => {
     switch (trangThai) {
-      case 0: return "Chưa bắt đầu";
+      case 0: return "Sắp diễn ra";
       case 1: return "Đang diễn ra";
-      case 2: return "Đã kết thúc";
+      case 2: return "Kết thúc";
+      case 3: return "Đã hủy";
       default: return "Không xác định";
     }
   };
 
   const getTrangThaiColor = (trangThai?: TrangThaiKyThi) => {
     switch (trangThai) {
-      case 0: return "bg-gray-100 text-gray-800";
+      case 0: return "bg-blue-100 text-blue-800";
       case 1: return "bg-green-100 text-green-800";
-      case 2: return "bg-red-100 text-red-800";
+      case 2: return "bg-gray-100 text-gray-800";
+      case 3: return "bg-red-100 text-red-800";
       default: return "bg-gray-100 text-gray-800";
     }
+  };
+
+  const addCauHinh = () => {
+    setFormData({
+      ...formData,
+      cauHinhKyThis: [
+        ...formData.cauHinhKyThis,
+        {
+          capDo: 0,
+          doKho: 0,
+          kyNang: 0,
+          cheDoCauHoi: 0,
+          soCauHoi: 10,
+        },
+      ],
+    });
+  };
+
+  const removeCauHinh = (index: number) => {
+    setFormData({
+      ...formData,
+      cauHinhKyThis: formData.cauHinhKyThis.filter((_, i) => i !== index),
+    });
+  };
+
+  const updateCauHinh = (index: number, field: keyof CauHinhKyThiRequest, value: any) => {
+    const updated = [...formData.cauHinhKyThis];
+    updated[index] = { ...updated[index], [field]: value };
+    setFormData({ ...formData, cauHinhKyThis: updated });
   };
 
   const filteredPeriods = examPeriods.filter(period =>
@@ -227,16 +258,25 @@ export default function AdminExamPeriods() {
                         className="flex-1 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2 text-sm"
                       >
                         <Play className="w-4 h-4" />
-                        <span>Bắt đầu</span>
+                        <span>Bắt đầu thi</span>
                       </button>
                     )}
                     {period.trangThai === 1 && (
                       <button 
                         onClick={() => handleStatusChange(period.id!, 2)}
-                        className="flex-1 bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2 text-sm"
+                        className="flex-1 bg-gray-600 text-white px-3 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center space-x-2 text-sm"
                       >
                         <CheckCircle className="w-4 h-4" />
                         <span>Kết thúc</span>
+                      </button>
+                    )}
+                    {(period.trangThai === 0 || period.trangThai === 1) && (
+                      <button 
+                        onClick={() => handleStatusChange(period.id!, 3)}
+                        className="flex-1 bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2 text-sm"
+                      >
+                        <X className="w-4 h-4" />
+                        <span>Hủy</span>
                       </button>
                     )}
                   </div>
@@ -352,6 +392,115 @@ export default function AdminExamPeriods() {
                     min="1"
                   />
                 </div>
+
+                {!editingPeriod && (
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <label className="block text-sm font-medium text-gray-700">Cấu hình đề thi</label>
+                      <button
+                        type="button"
+                        onClick={addCauHinh}
+                        className="text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1"
+                      >
+                        <PlusCircle className="w-4 h-4" />
+                        <span>Thêm cấu hình</span>
+                      </button>
+                    </div>
+
+                    {formData.cauHinhKyThis.length === 0 && (
+                      <div className="text-sm text-gray-500 italic border border-gray-200 rounded-lg p-4 text-center">
+                        Chưa có cấu hình. Nhấn "Thêm cấu hình" để thêm cấu hình đề thi.
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      {formData.cauHinhKyThis.map((cauHinh, index) => (
+                        <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="text-sm font-semibold text-gray-700">Cấu hình #{index + 1}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeCauHinh(index)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <MinusCircle className="w-5 h-5" />
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Cấp độ</label>
+                              <select
+                                value={cauHinh.capDo}
+                                onChange={(e) => updateCauHinh(index, 'capDo', Number(e.target.value))}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
+                              >
+                                <option value={0}>A1</option>
+                                <option value={1}>A2</option>
+                                <option value={2}>B1</option>
+                                <option value={3}>B2</option>
+                                <option value={4}>C1</option>
+                                <option value={5}>C2</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Độ khó</label>
+                              <select
+                                value={cauHinh.doKho}
+                                onChange={(e) => updateCauHinh(index, 'doKho', Number(e.target.value))}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
+                              >
+                                <option value={0}>Dễ</option>
+                                <option value={1}>Trung bình</option>
+                                <option value={2}>Khó</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Kỹ năng</label>
+                              <select
+                                value={cauHinh.kyNang}
+                                onChange={(e) => updateCauHinh(index, 'kyNang', Number(e.target.value))}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
+                              >
+                                <option value={0}>Nghe</option>
+                                <option value={1}>Đọc</option>
+                                <option value={2}>Ngữ pháp</option>
+                                <option value={3}>Từ vựng</option>
+                                <option value={4}>Viết</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Chế độ câu hỏi</label>
+                              <select
+                                value={cauHinh.cheDoCauHoi}
+                                onChange={(e) => updateCauHinh(index, 'cheDoCauHoi', Number(e.target.value))}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
+                              >
+                                <option value={0}>Đơn</option>
+                                <option value={1}>Nhóm</option>
+                              </select>
+                            </div>
+
+                            <div className="col-span-2">
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Số câu hỏi</label>
+                              <input
+                                type="number"
+                                value={cauHinh.soCauHoi}
+                                onChange={(e) => updateCauHinh(index, 'soCauHoi', Number(e.target.value))}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
+                                min="1"
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex space-x-4 pt-4">
                   <button

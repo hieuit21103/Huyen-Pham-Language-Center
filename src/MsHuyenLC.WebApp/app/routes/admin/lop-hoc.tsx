@@ -48,12 +48,7 @@ export default function AdminClasses() {
 
   const loadClasses = async () => {
     setLoading(true);
-    const response = await getLopHocs({ 
-      pageNumber: 1,
-      pageSize: 1000,
-      sortBy: "tenLop",
-      sortOrder: "asc"
-    });
+    const response = await getLopHocs();
     if (response.success && response.data) {
       setClasses(response.data);
     }
@@ -61,14 +56,14 @@ export default function AdminClasses() {
   };
 
   const loadCourses = async () => {
-    const response = await getKhoaHocs({ pageNumber: 1, pageSize: 100 });
+    const response = await getKhoaHocs();
     if (response.success && response.data) {
       setCourses(response.data);
     }
   };
 
   const loadTeachers = async () => {
-    const response = await getGiaoViens({ pageNumber: 1, pageSize: 100 });
+    const response = await getGiaoViens();
     if (response.success && response.data) {
       setTeachers(response.data);
     }

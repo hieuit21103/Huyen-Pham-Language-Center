@@ -39,12 +39,7 @@ export default function AdminSystemLogger() {
 
   const loadLogs = async () => {
     setLoading(true);
-    const response = await getSystemLogs({ 
-      pageNumber: 1, 
-      pageSize: 1000,
-      sortBy: 'createdAt',
-      sortOrder: 'desc'
-    });
+    const response = await getSystemLogs();
     
     if (response.success && Array.isArray(response.data)) {
       setLogs(response.data);
@@ -59,20 +54,14 @@ export default function AdminSystemLogger() {
     setCurrentPage(1);
     
     if (fromDate && toDate) {
-      const response = await getSystemLogsByDateRange(fromDate, toDate, {
-        pageNumber: 1,
-        pageSize: 1000
-      });
+      const response = await getSystemLogsByDateRange(fromDate, toDate);
       if (response.success && Array.isArray(response.data)) {
         setLogs(response.data);
       } else if (response.success && response.data?.items) {
         setLogs(response.data.items);
       }
     } else if (filterAction) {
-      const response = await searchSystemLogs("", filterAction, {
-        pageNumber: 1,
-        pageSize: 1000
-      });
+      const response = await searchSystemLogs("", filterAction);
       if (response.success && Array.isArray(response.data)) {
         setLogs(response.data);
       } else if (response.success && response.data?.items) {

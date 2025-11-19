@@ -1,14 +1,12 @@
 // Exam Types - Câu hỏi, Đề thi, Bài thi
 
 import type { 
-  LoaiCauHoi, 
   KyNang, 
   CapDo, 
-  DoKho, 
-  LoaiDeThi,
+  DoKho,
+  CheDoCauHoi,
   TrangThaiKyThi,
 } from './enums';
-import type { PaginationParams } from './common.types';
 import type { LopHoc } from './course.types';
 
 // Câu hỏi
@@ -21,7 +19,6 @@ export interface DapAnRequest {
 
 export interface CauHoiRequest {
   noiDungCauHoi?: string;
-  loaiCauHoi?: LoaiCauHoi;
   kyNang?: KyNang;
   urlHinhAnh?: string;
   urlAmThanh?: string;
@@ -34,7 +31,6 @@ export interface CauHoiRequest {
 
 export interface CauHoiUpdateRequest {
   noiDungCauHoi?: string;
-  loaiCauHoi?: LoaiCauHoi;
   kyNang?: KyNang;
   urlHinhAnh?: string;
   urlAmThanh?: string;
@@ -43,8 +39,7 @@ export interface CauHoiUpdateRequest {
   doKho?: DoKho;
 }
 
-export interface CauHoiFilterParams extends PaginationParams {
-  loaiCauHoi?: LoaiCauHoi;
+export interface CauHoiFilterParams {
   kyNang?: KyNang;
   capDo?: CapDo;
   doKho?: DoKho;
@@ -54,7 +49,6 @@ export interface CauHoiFilterParams extends PaginationParams {
 export interface CauHoi {
   id?: string;
   noiDungCauHoi?: string;
-  loaiCauHoi?: LoaiCauHoi;
   kyNang?: KyNang;
   urlHinh?: string;
   urlAmThanh?: string;
@@ -128,7 +122,6 @@ export interface DeThiRequest {
   id?: string;
   tenDe?: string;
   soCauHoi?: number;
-  loaiDeThi?: LoaiDeThi;
   kyThiId?: string;
   kyThi?: any;
   thoiGianLamBai?: number;
@@ -139,34 +132,40 @@ export interface DeThiUpdateRequest {
   tenDe?: string;
   soCauHoi?: number;
   thoiGianLamBai?: number;
-  loaiDeThi?: LoaiDeThi;
   kyThiId?: string;
   cauHoiIds?: string[];
 }
 
-export interface GenerateTestRequest {
-  tenDe?: string;
-  soCauHoi?: number;
-  thoiGianLamBai?: number;
-  loaiDeThi?: LoaiDeThi;
-  loaiCauHoi?: LoaiCauHoi;
-  kyNang?: KyNang;
-  capDo?: CapDo;
-  doKho?: DoKho;
-  kyThiId?: string;
+// New dynamic exam generation request
+export interface GenerateExamRequest {
+  kyThiId: string;
+  hocVienId: string;
+  nguoiTaoId: string;
 }
 
-export interface GenerateTestWithDifficultyRequest {
-  tenDe?: string;
-  soCauDe?: number;
-  soCauTrungBinh?: number;
-  soCauKho?: number;
-  thoiGianLamBai?: number;
-  loaiDeThi?: LoaiDeThi;
-  loaiCauHoi?: LoaiCauHoi;
-  kyNang?: KyNang;
-  capDo?: CapDo;
-  kyThiId?: string;
+// Join exam request
+export interface JoinExamRequest {
+  kyThiId: string;
+  hocVienId?: string; // Optional, auto-filled by backend from token
+}
+
+// Grouped questions response
+export interface QuestionGroupedItem {
+  nhomCauHoiId?: string;
+  cauHoi: CauHoi;
+  thuTu: number;
+}
+
+export interface StandaloneQuestionItem {
+  cauHoi: CauHoi;
+  thuTu: number;
+}
+
+export interface QuestionsGroupedResponse {
+  deThi: DeThi;
+  groupedQuestions: QuestionGroupedItem[];
+  standaloneQuestions: StandaloneQuestionItem[];
+  totalQuestions: number;
 }
 
 export interface DeThi {
@@ -174,7 +173,6 @@ export interface DeThi {
   maDe?: string;
   tenDe?: string;
   tongCauHoi?: number;
-  loaiDeThi?: LoaiDeThi;
   kyThiId?: string;
   kyThi?: KyThi;
   thoiLuongPhut?: number; 
@@ -193,14 +191,24 @@ export interface CauHoiDeThi {
   cauHoi?: CauHoi;
 }
 
+// Cấu hình kỳ thi
+export interface CauHinhKyThiRequest {
+  capDo: CapDo;
+  doKho: DoKho;
+  kyNang: KyNang;
+  cheDoCauHoi: number;
+  soCauHoi: number;
+}
+
 // Kỳ thi
 export interface KyThiRequest {
-  tenKyThi?: string;
-  ngayThi?: string;
-  gioBatDau?: string;
-  gioKetThuc?: string;
-  thoiLuong?: number;
-  lopHocId?: string;
+  tenKyThi: string;
+  ngayThi: string;
+  gioBatDau: string;
+  gioKetThuc: string;
+  thoiLuong: number;
+  lopHocId: string;
+  cauHinhKyThis: CauHinhKyThiRequest[];
 }
 
 export interface KyThiUpdateRequest {
@@ -211,6 +219,7 @@ export interface KyThiUpdateRequest {
   thoiLuong?: number;
   lopHocId?: string;
   trangThai?: TrangThaiKyThi;
+  cauHinhKyThis?: CauHinhKyThiRequest[];
 }
 
 export interface KyThi {

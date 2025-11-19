@@ -14,23 +14,17 @@ public class CauHoiUpdateRequestValidator : AbstractValidator<CauHoiUpdateReques
                 .MaximumLength(2000).WithMessage("Nội dung câu hỏi không được quá 2000 ký tự");
         });
 
-        When(x => x.LoaiCauHoi.HasValue, () =>
-        {
-            RuleFor(x => x.LoaiCauHoi!.Value)
-                .IsInEnum().WithMessage("Loại câu hỏi không hợp lệ");
-
-            When(x => x.LoaiCauHoi == LoaiCauHoi.TracNghiem && x.CacDapAn != null, () =>
-            {
-                RuleFor(x => x.CacDapAn)
-                    .Must(dapAn => dapAn!.Count >= 2).WithMessage("Câu hỏi trắc nghiệm phải có ít nhất 2 đáp án")
-                    .Must(dapAn => dapAn!.Count(d => d.Dung) == 1).WithMessage("Phải có đúng 1 đáp án đúng");
-            });
-        });
-
         When(x => x.KyNang.HasValue, () =>
         {
             RuleFor(x => x.KyNang!.Value)
                 .IsInEnum().WithMessage("Kỹ năng không hợp lệ");
+
+            When(x => x.KyNang != KyNang.Viet && x.CacDapAn != null, () =>
+            {
+                RuleFor(x => x.CacDapAn)
+                    .Must(dapAn => dapAn!.Count >= 2).WithMessage("Câu hỏi phải có ít nhất 2 đáp án")
+                    .Must(dapAn => dapAn!.Count(d => d.Dung) == 1).WithMessage("Phải có đúng 1 đáp án đúng");
+            });
         });
 
         When(x => !string.IsNullOrWhiteSpace(x.UrlHinhAnh), () =>

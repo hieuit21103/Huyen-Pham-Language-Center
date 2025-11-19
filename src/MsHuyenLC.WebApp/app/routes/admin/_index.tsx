@@ -43,10 +43,10 @@ export default function AdminDashboard() {
     }
 
     const [hocViensRes, giaoViensRes, khoaHocsRes, dangKysRes] = await Promise.all([
-      getHocViens({ pageNumber: 1, pageSize: 1000 }),
-      getGiaoViens({ pageNumber: 1, pageSize: 1000 }),
-      getKhoaHocs({ pageNumber: 1, pageSize: 1000 }),
-      getDangKys({ pageNumber: 1, pageSize: 10, sortBy: 'ngayDangKy', sortOrder: 'desc' }),
+      getHocViens(),
+      getGiaoViens(),
+      getKhoaHocs(),
+      getDangKys(),
     ]);
 
     const newStats = [...stats];

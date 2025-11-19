@@ -28,19 +28,18 @@ public class ExcelService : IExcelService
                     var request = new CauHoiImportRequest
                     {
                         NoiDungCauHoi = noiDungCauHoi,
-                        LoaiCauHoi = NormalizeEnumValue(row.Cell(2).GetString()),
-                        KyNang = NormalizeEnumValue(row.Cell(3).GetString()),
-                        DoKho = NormalizeEnumValue(row.Cell(4).GetString()),
-                        CapDo = row.Cell(5).GetString().Trim().ToUpper(),
-                        UrlAmThanh = GetNullableString(row.Cell(6)),
-                        UrlHinhAnh = GetNullableString(row.Cell(7)),
-                        LoiThoai = GetNullableString(row.Cell(8)),
-                        DapAnA = row.Cell(9).GetString().Trim(),
-                        DapAnB = GetNullableString(row.Cell(10)),
-                        DapAnC = GetNullableString(row.Cell(11)),
-                        DapAnD = GetNullableString(row.Cell(12)),
-                        DapAnDung = row.Cell(13).GetString().Trim().ToUpper(),
-                        GiaiThich = GetNullableString(row.Cell(14))
+                        KyNang = NormalizeEnumValue(row.Cell(2).GetString()),
+                        DoKho = NormalizeEnumValue(row.Cell(3).GetString()),
+                        CapDo = row.Cell(4).GetString().Trim().ToUpper(),
+                        UrlAmThanh = GetNullableString(row.Cell(5)),
+                        UrlHinhAnh = GetNullableString(row.Cell(6)),
+                        LoiThoai = GetNullableString(row.Cell(7)),
+                        DapAnA = row.Cell(8).GetString().Trim(),
+                        DapAnB = GetNullableString(row.Cell(9)),
+                        DapAnC = GetNullableString(row.Cell(10)),
+                        DapAnD = GetNullableString(row.Cell(11)),
+                        DapAnDung = row.Cell(12).GetString().Trim().ToUpper(),
+                        GiaiThich = GetNullableString(row.Cell(13))
                     };
 
                     if (!string.IsNullOrWhiteSpace(request.DapAnA) && 

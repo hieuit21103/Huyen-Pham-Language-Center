@@ -30,10 +30,7 @@ export default function AdminAccounts() {
 
   const loadAccounts = async () => {
     setLoading(true);
-    const response = await getTaiKhoans({ 
-      sortBy: "tenDangNhap",
-      sortOrder: "asc"
-    });
+    const response = await getTaiKhoans();
     if (response.success && response.data) {
       setAccounts(response.data);
     }

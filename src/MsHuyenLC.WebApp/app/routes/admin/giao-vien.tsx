@@ -30,10 +30,7 @@ export default function AdminTeachers() {
 
   const loadTeachers = async () => {
     setLoading(true);
-    const response = await getGiaoViens({ 
-      sortBy: "hoTen",
-      sortOrder: "asc"
-    });
+    const response = await getGiaoViens();
     if (response.success && response.data) {
       setTeachers(response.data);
     }
@@ -41,7 +38,7 @@ export default function AdminTeachers() {
   };
 
   const loadAccounts = async () => {
-    const response = await getTaiKhoans({ pageNumber: 1, pageSize: 1000 });
+    const response = await getTaiKhoans();
     if (response.success && response.data) {
       setAccounts(response.data);
     }

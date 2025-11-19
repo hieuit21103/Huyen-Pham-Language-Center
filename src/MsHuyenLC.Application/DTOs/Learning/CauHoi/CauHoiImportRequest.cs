@@ -3,7 +3,6 @@ namespace MsHuyenLC.Application.DTOs.Learning.CauHoi;
 public class CauHoiImportRequest
 {
     public string NoiDungCauHoi { get; set; } = string.Empty;
-    public string LoaiCauHoi { get; set; } = "TracNghiem";
     public string KyNang { get; set; } = "Doc";
     public string DoKho { get; set; } = "trungbinh";
     public string CapDo { get; set; } = "A1";

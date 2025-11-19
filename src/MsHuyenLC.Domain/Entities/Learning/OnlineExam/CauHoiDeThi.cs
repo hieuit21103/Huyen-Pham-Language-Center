@@ -1,6 +1,4 @@
-using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
-
-namespace MsHuyenLC.Domain.Entities.Learning;
+namespace MsHuyenLC.Domain.Entities.Learning.OnlineExam;
 
 public class CauHoiDeThi
 {
@@ -9,6 +7,8 @@ public class CauHoiDeThi
     public Guid CauHoiId { get; set; }
     public int ThuTuCauHoi { get; set; }
     public decimal Diem { get; set; } = 1;
+    public Guid? NhomCauHoiId { get; set; }
     public virtual DeThi DeThi { get; set; } = null!;
     public virtual CauHoi CauHoi { get; set; } = null!;
+    public virtual NhomCauHoi? NhomCauHoi { get; set; }
 }

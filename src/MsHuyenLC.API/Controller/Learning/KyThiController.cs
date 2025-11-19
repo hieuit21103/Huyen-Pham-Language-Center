@@ -1,13 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Learning.KyThi;
-using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Interfaces.Repositories;
-using MsHuyenLC.Application.Interfaces.Services;
 using MsHuyenLC.Application.Interfaces.Services.Learning;
 using MsHuyenLC.Application.Interfaces.Services.System;
-using MsHuyenLC.Domain.Entities.Learning;
-using MsHuyenLC.Domain.Enums;
+using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
 
 namespace MsHuyenLC.API.Controller.Learning;
 
@@ -279,6 +275,59 @@ public class KyThiController : BaseController
             });
         }
     }
-}
 
+    [HttpPost("join")]
+    [Authorize(Roles = "hocvien")]
+    public async Task<ActionResult> JoinExam([FromBody] JoinExamRequest request)
+    {
+        try
+        {
+            if (request.HocVienId == Guid.Empty)
+            {
+                request.HocVienId = GetCurrentUserId();
+            }
+
+            var deThiId = await _service.JoinExamAsync(request);
+
+            return Ok(new
+            {
+                success = true,
+                message = "Tham gia kỳ thi thành công",
+                data = new
+                {
+                    deThiId,
+                    kyThiId = request.KyThiId,
+                    hocVienId = request.HocVienId
+                }
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new
+            {
+                success = false,
+                message = ex.Message,
+                error = "NOT_FOUND"
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = ex.Message,
+                error = "INVALID_OPERATION"
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                success = false,
+                message = "Có lỗi xảy ra khi tham gia kỳ thi",
+                error = ex.Message
+            });
+        }
+    }
+}
 

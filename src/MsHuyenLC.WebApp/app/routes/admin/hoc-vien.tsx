@@ -30,10 +30,7 @@ export default function AdminStudents() {
 
   const loadStudents = async () => {
     setLoading(true);
-    const response = await getHocViens({ 
-      sortBy: 'ngayDangKy',
-      sortOrder: 'desc'
-    });
+    const response = await getHocViens();
     if (response.success && response.data) {
       setStudents(response.data);
     }
@@ -41,7 +38,7 @@ export default function AdminStudents() {
   };
 
   const loadAccounts = async () => {
-    const response = await getTaiKhoans({ pageNumber: 1, pageSize: 1000 });
+    const response = await getTaiKhoans();
     if (response.success && response.data) {
       setAccounts(response.data);
     }

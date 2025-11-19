@@ -19,7 +19,6 @@ export default function PaymentHistoryPage() {
   const [filterStatus, setFilterStatus] = useState<number | "all">("all");
   const [filterMethod, setFilterMethod] = useState<number | "all">("all");
   
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 

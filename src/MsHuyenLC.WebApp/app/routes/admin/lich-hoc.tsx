@@ -49,17 +49,10 @@ export default function AdminSchedule() {
     try {
       // Load schedules, classes, and rooms in parallel
       const [scheduleResponse, classResponse, roomResponse] = await Promise.all([
-        getLichHocs({ 
-          pageNumber: 1, 
-          pageSize: 1000,
-          sortBy: "tuNgay",
-          sortOrder: "asc"
-        }),
-        getLopHocs({ pageNumber: 1, pageSize: 1000 }),
-        getPhongHocs({ pageNumber: 1, pageSize: 1000 })
+        getLichHocs(),
+        getLopHocs(),
+        getPhongHocs()
       ]);
-
-      console.log("Schedule Response:", scheduleResponse);
       
       if (scheduleResponse.success && scheduleResponse.data) {
         const dataArray = Array.isArray(scheduleResponse.data) ? scheduleResponse.data : [];

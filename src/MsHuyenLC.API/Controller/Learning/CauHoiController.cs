@@ -129,7 +129,6 @@ public class CauHoiController : BaseController
         {
             Id = existingCauHoi.Id,
             NoiDungCauHoi = existingCauHoi.NoiDungCauHoi,
-            LoaiCauHoi = existingCauHoi.LoaiCauHoi,
             KyNang = existingCauHoi.KyNang,
             UrlHinhAnh = existingCauHoi.UrlHinhAnh,
             UrlAmThanh = existingCauHoi.UrlAmThanh,

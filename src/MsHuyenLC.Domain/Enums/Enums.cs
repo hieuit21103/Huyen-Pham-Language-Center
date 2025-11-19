@@ -97,23 +97,19 @@ public enum DoKho
     kho
 }
 
-public enum LoaiCauHoi
-{
-    TracNghiem,
-    TuLuan,
-}
-
 public enum KyNang
 {
     Nghe,
     Doc,
+    NguPhap,
+    TuVung,
     Viet
 }
 
-public enum LoaiDeThi
+public enum CheDoCauHoi
 {
-    LuyenTap,
-    ChinhThuc
+    Don,
+    Nhom
 }
 
 public enum PhuongThucThanhToan

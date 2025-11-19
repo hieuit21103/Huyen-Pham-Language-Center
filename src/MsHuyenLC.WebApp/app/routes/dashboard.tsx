@@ -91,7 +91,7 @@ export default function Dashboard() {
           
           // Load exam periods for student's classes
           if (lopHocIds.length > 0) {
-            const kyThiRes = await getKyThis({ pageNumber: 1, pageSize: 100 });
+            const kyThiRes = await getKyThis();
             if (kyThiRes.success && Array.isArray(kyThiRes.data)) {
               // Filter to get only exams from student's classes
               const studentKyThis = kyThiRes.data.filter((kt: KyThi) => 
@@ -168,12 +168,9 @@ export default function Dashboard() {
     return gioiTinh === 0 ? "Nam" : "Nữ";
   };
 
-  const getLoaiBaiThiText = (loaiBaiThi?: number) => {
-    switch (loaiBaiThi) {
-      case 0: return "Luyện tập";
-      case 1: return "Thi chính thức";
-      default: return "—";
-    }
+  const getLoaiBaiThiText = (deThi?: any) => {
+    if (!deThi) return "—";
+    return deThi.kyThiId ? "Thi chính thức" : "Luyện tập";
   };
 
   const getVaiTroText = (vaiTro?: VaiTro) => {
@@ -554,7 +551,7 @@ export default function Dashboard() {
                         <button
                           onClick={() => {
                             if (canTakeExam) {
-                              navigate(`/luyen-thi?kyThiId=${kt.id}`);
+                              navigate(`/thi?kyThiId=${kt.id}`);
                             }
                           }}
                           disabled={!canTakeExam}
@@ -565,7 +562,7 @@ export default function Dashboard() {
                           }`}
                         >
                           <BookOpen className="w-4 h-4 mr-2" />
-                          {canTakeExam ? 'Làm bài ngay' : 'Chưa đến giờ thi'}
+                          {canTakeExam ? 'Vào thi ngay' : 'Chưa đến giờ thi'}
                         </button>
                       </div>
                     );
@@ -624,11 +621,11 @@ export default function Dashboard() {
                             )}
                           </td>
                           <td className="px-4 py-3 text-sm">
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${plb.deThi?.loaiDeThi === 1
-                                ? "bg-green-100 text-green-800"
-                                : "bg-yellow-100 text-yellow-800"
+                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${plb.deThi?.kyThiId
+                                ? "bg-purple-100 text-purple-800"
+                                : "bg-green-100 text-green-800"
                               }`}>
-                              {getLoaiBaiThiText(plb.deThi?.loaiDeThi)}
+                              {getLoaiBaiThiText(plb.deThi?.kyThiId)}
                             </span>
                           </td>
                         </tr>

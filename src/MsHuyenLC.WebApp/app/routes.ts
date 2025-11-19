@@ -5,7 +5,7 @@ export default [
     index("routes/trang-chu.tsx"),
     route("khoa-hoc", "routes/khoa-hoc.tsx"),
     route("luyen-thi", "routes/luyen-thi.tsx"),
-    route("lam-bai-thi", "routes/lam-bai-thi.tsx"),
+    route("thi", "routes/thi.tsx"),
     route("ket-qua-thi", "routes/ket-qua-thi.tsx"),
     route("dashboard", "routes/dashboard.tsx"),
     route("dashboard-giao-vien", "routes/dashboard-giao-vien.tsx"),

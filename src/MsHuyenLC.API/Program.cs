@@ -32,7 +32,6 @@ using MsHuyenLC.Application.Validators.Users;
 using FluentValidation;
 using Microsoft.OpenApi.Models;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -178,10 +177,10 @@ builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IAssignmentService, AssignmentService>();
 
 // ========== Learning Services ==========
-builder.Services.AddScoped<ITestService, TestService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IGroupQuestionService, GroupQuestionService>();
 builder.Services.AddScoped<IExamSessionService, ExamSessionService>();
+builder.Services.AddScoped<IExamService, ExamService>();
 builder.Services.AddScoped<ITestSessionService, TestSessionService>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<IGuestRegistrationService, GuestRegistrationService>();

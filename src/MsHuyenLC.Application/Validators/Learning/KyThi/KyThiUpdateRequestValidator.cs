@@ -32,12 +32,18 @@ public class KyThiUpdateRequestValidator : AbstractValidator<KyThiUpdateRequest>
             .GreaterThan(0).WithMessage("Thời lượng phải lớn hơn 0")
             .LessThanOrEqualTo(300).WithMessage("Thời lượng không được vượt quá 300 phút");
 
-        RuleFor(x => x.LopHocId)
-            .NotEmpty().WithMessage("Lớp học không được để trống")
-            .MustAsync(LopHocExists).WithMessage("Lớp học không tồn tại");
+        When(x => x.LopHocId.HasValue, () =>
+        {
+            RuleFor(x => x.LopHocId)
+                .MustAsync((id, ct) => LopHocExists(id!.Value, ct))
+                .WithMessage("Lớp học không tồn tại");
+        });
 
-        RuleFor(x => x.TrangThai)
-            .IsInEnum().WithMessage("Trạng thái không hợp lệ");
+        When(x => x.TrangThai.HasValue, () =>
+        {
+            RuleFor(x => x.TrangThai)
+                .IsInEnum().WithMessage("Trạng thái không hợp lệ");
+        });
     }
 
     private async Task<bool> LopHocExists(Guid lopHocId, CancellationToken cancellationToken)

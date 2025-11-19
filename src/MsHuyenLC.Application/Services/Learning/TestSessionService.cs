@@ -43,7 +43,6 @@ public class TestSessionService : ITestSessionService
     }
     public async Task<PhienLamBai?> SubmitAsync(SubmitRequest request, Guid taiKhoanId)
     {
-        // Validate request
         await _submitValidator.ValidateAndThrowAsync(request);
 
         var hocVien = await _unitOfWork.HocViens.GetAllAsync(filter: hv => hv.TaiKhoanId == taiKhoanId);
@@ -51,49 +50,123 @@ public class TestSessionService : ITestSessionService
             return null;
 
         var hocVienId = hocVien.First().Id;
+        
+        if (request == null)
+            return null;
+
+        if (!Guid.TryParse(request.DeThiId, out var deThiGuid))
+            return null;
+
+        var deThiList = await _unitOfWork.DeThis.GetAllAsync(
+            filter: d => d.Id == deThiGuid,
+            includes: d => d.CacCauHoi
+        );
+        var deThi = deThiList.FirstOrDefault();
+        if (deThi == null)
+            return null;
+
+        var existingPhienList = await _unitOfWork.PhienLamBais.GetAllAsync(
+            filter: p => p.HocVienId == hocVienId && p.DeThiId == deThiGuid
+        );
+        var existingPhien = existingPhienList.FirstOrDefault();
+
+        if (existingPhien != null)
         {
-            if (request == null)
-                return null;
-
-            // Validate đề thi tồn tại
-            if (!Guid.TryParse(request.DeThiId, out var deThiGuid))
-                return null;
-
-            var deThi = await _unitOfWork.DeThis.GetByIdAsync(request.DeThiId);
-            if (deThi == null)
-                return null;
-
-            // Kiểm tra học viên đã làm bài chưa
-            var existed = await HasSubmittedAsync(hocVienId.ToString(), request.DeThiId);
-            if (existed)
-                return null;
-
-            // Tính điểm nếu tự động chấm
-            int? soCauDung = null;
-            decimal? diem = null;
-
-            if (request.TuDongCham)
+            var existingAnswers = await _unitOfWork.CauTraLois.GetAllAsync(
+                filter: ct => ct.PhienId == existingPhien.Id
+            );
+            
+            if (existingPhien.KyThiId.HasValue && existingAnswers.Any())
             {
-                soCauDung = 0;
-                foreach (var answer in request.CacTraLoi)
-                {
-                    var dapAn = await _unitOfWork.DapAnCauHois.GetAllAsync(
-                        filter: da => da.CauHoiId == answer.Key && da.Dung == true
-                    );
+                throw new InvalidOperationException("Bạn đã nộp bài thi chính thức này rồi. Chỉ được thi một lần.");
+            }
+            
+            if (!existingPhien.KyThiId.HasValue && existingAnswers.Any())
+            {
+                existingPhien = null; // Force create new PhienLamBai for practice retry
+            }
+        }
 
-                    var dapAnDung = dapAn.FirstOrDefault();
-                    if (dapAnDung != null && dapAnDung.NoiDung?.Trim().ToLower() == answer.Value?.Trim().ToLower())
-                    {
-                        soCauDung++;
-                    }
+        var allCauHoiIds = deThi.CacCauHoi.Select(ch => ch.CauHoiId).ToList();
+        var allCauHois = await _unitOfWork.CauHois.GetAllAsync(
+            filter: ch => allCauHoiIds.Contains(ch.Id)
+        );
+
+        int? soCauDung = null;
+        int soCauTracNghiem = 0;
+        int soCauTuLuan = 0;
+        decimal? diem = null;
+
+        if (request.TuDongCham)
+        {
+            soCauDung = 0;
+            
+            foreach (var answer in request.CacTraLoi)
+            {
+                var cauHoi = allCauHois.FirstOrDefault(ch => ch.Id == answer.Key);
+                if (cauHoi == null) continue;
+
+                // Essay questions (KyNang.Viet = 4) cannot be auto-graded
+                if (cauHoi.KyNang == Domain.Enums.KyNang.Viet)
+                {
+                    soCauTuLuan++;
+                    continue;
                 }
 
-                if (request.TongCauHoi > 0)
+                soCauTracNghiem++;
+
+                // Check if answer is correct (multiple choice)
+                var dapAns = await _unitOfWork.DapAnCauHois.GetAllAsync(
+                    filter: da => da.CauHoiId == answer.Key && da.Dung == true
+                );
+
+                var dapAnDung = dapAns.FirstOrDefault();
+                if (dapAnDung != null && 
+                    dapAnDung.NoiDung?.Trim().Equals(answer.Value?.Trim(), StringComparison.OrdinalIgnoreCase) == true)
                 {
-                    diem = Math.Round((decimal)soCauDung.Value * 10 / request.TongCauHoi, 2);
+                    soCauDung++;
                 }
             }
 
+            // Calculate score only for multiple choice questions
+            if (soCauTracNghiem > 0)
+            {
+                // If there are essay questions, calculate partial score
+                if (soCauTuLuan > 0)
+                {
+                    // Score for multiple choice part (weighted by ratio)
+                    decimal tracNghiemRatio = (decimal)soCauTracNghiem / request.TongCauHoi;
+                    diem = Math.Round((decimal)soCauDung.Value * 10 * tracNghiemRatio / soCauTracNghiem, 2);
+                }
+                else
+                {
+                    // All multiple choice - calculate normally
+                    diem = Math.Round((decimal)soCauDung.Value * 10 / request.TongCauHoi, 2);
+                }
+            }
+            else if (soCauTuLuan > 0)
+            {
+                // All essay - cannot auto-grade, needs teacher review
+                diem = null;
+            }
+        }
+
+        PhienLamBai result;
+
+        if (existingPhien != null)
+        {
+            // Update existing PhienLamBai (from JoinExamAsync)
+            existingPhien.TongCauHoi = request.TongCauHoi;
+            existingPhien.SoCauDung = soCauDung;
+            existingPhien.Diem = diem;
+            existingPhien.ThoiGianLam = TimeSpan.FromSeconds(request.ThoiGianLamBai);
+            existingPhien.NgayLam = DateOnly.FromDateTime(DateTime.UtcNow);
+            
+            result = existingPhien;
+        }
+        else
+        {
+            // Create new PhienLamBai (for practice tests without join)
             var phienLamBai = new PhienLamBai
             {
                 TongCauHoi = request.TongCauHoi,
@@ -102,35 +175,45 @@ public class TestSessionService : ITestSessionService
                 ThoiGianLam = TimeSpan.FromSeconds(request.ThoiGianLamBai),
                 NgayLam = DateOnly.FromDateTime(DateTime.UtcNow),
                 HocVienId = hocVienId,
-                DeThiId = deThiGuid
+                DeThiId = deThiGuid,
+                KyThiId = deThi.KyThiId
             };
 
-            var result = await _unitOfWork.PhienLamBais.AddAsync(phienLamBai);
+            result = await _unitOfWork.PhienLamBais.AddAsync(phienLamBai);
+        }
 
-            foreach (var answer in request.CacTraLoi)
+        // Save answers
+        foreach (var answer in request.CacTraLoi)
+        {
+            var cauHoi = allCauHois.FirstOrDefault(ch => ch.Id == answer.Key);
+            bool isDung = false;
+
+            // Only mark as correct for multiple choice questions
+            if (cauHoi != null && cauHoi.KyNang != Domain.Enums.KyNang.Viet)
             {
-                var dapAn = await _unitOfWork.DapAnCauHois.GetAllAsync(
+                var dapAns = await _unitOfWork.DapAnCauHois.GetAllAsync(
                     filter: da => da.CauHoiId == answer.Key && da.Dung == true
                 );
 
-                var dapAnDung = dapAn.FirstOrDefault();
-                bool isDung = dapAnDung != null && dapAnDung.NoiDung?.Trim().ToLower() == answer.Value?.Trim().ToLower();
-
-                var cauTraLoi = new CauTraLoi
-                {
-                    PhienId = result.Id,
-                    CauHoiId = answer.Key,
-                    CauTraLoiText = answer.Value,
-                    Dung = isDung
-                };
-
-                await _unitOfWork.CauTraLois.AddAsync(cauTraLoi);
+                var dapAnDung = dapAns.FirstOrDefault();
+                isDung = dapAnDung != null && 
+                         dapAnDung.NoiDung?.Trim().Equals(answer.Value?.Trim(), StringComparison.OrdinalIgnoreCase) == true;
             }
 
-            await _unitOfWork.SaveChangesAsync();
+            var cauTraLoi = new CauTraLoi
+            {
+                PhienId = result.Id,
+                CauHoiId = answer.Key,
+                CauTraLoiText = answer.Value,
+                Dung = isDung
+            };
 
-            return result;
+            await _unitOfWork.CauTraLois.AddAsync(cauTraLoi);
         }
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return result;
     }
 
     public async Task<PhienLamBai?> GradeAsync(string id, GradingRequest request)

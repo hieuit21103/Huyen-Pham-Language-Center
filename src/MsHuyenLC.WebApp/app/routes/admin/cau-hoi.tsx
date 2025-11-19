@@ -5,7 +5,6 @@ import {
   createCauHoi, 
   updateCauHoi, 
   deleteCauHoi, 
-  searchCauHois, 
   deleteBulkCauHois,
   importCauHoisFromExcel,
   downloadImportTemplate
@@ -13,7 +12,7 @@ import {
 import { getNhomCauHois } from "~/apis/NhomCauHoi";
 import { uploadImage, uploadAudio } from "~/apis/Upload";
 import Pagination from "~/components/Pagination";
-import type { LoaiCauHoi, KyNang, CapDo, DoKho, NhomCauHoiChiTiet } from "~/types/index";
+import type { KyNang, CapDo, DoKho, NhomCauHoiChiTiet, CheDoCauHoi } from "~/types/index";
 import { setLightTheme } from "./_layout";
 import type { NhomCauHoi, CauHoi } from "~/types/index";
 import type { DapAnCauHoi } from "~/types/exam.types";
@@ -35,7 +34,6 @@ export default function AdminQuestionBank() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   
-  const [filterLoaiCauHoi, setFilterLoaiCauHoi] = useState<string>("");
   const [filterKyNang, setFilterKyNang] = useState<string>("");
   const [filterCapDo, setFilterCapDo] = useState<string>("");
   const [filterDoKho, setFilterDoKho] = useState<string>("");
@@ -54,7 +52,6 @@ export default function AdminQuestionBank() {
   
   const [formData, setFormData] = useState({
     noiDungCauHoi: "",
-    loaiCauHoi: 0 as LoaiCauHoi,
     kyNang: 0 as KyNang,
     urlHinhAnh: "",
     urlAmThanh: "",
@@ -76,7 +73,7 @@ export default function AdminQuestionBank() {
 
   useEffect(() => {
     setCurrentPage(1); 
-  }, [filterLoaiCauHoi, filterKyNang, filterCapDo, filterDoKho, searchTerm]);
+  }, [filterKyNang, filterCapDo, filterDoKho, searchTerm]);
 
   useEffect(() => {
     loadQuestions();
@@ -85,12 +82,7 @@ export default function AdminQuestionBank() {
 
   const loadQuestions = async () => {
     setLoading(true);
-    const response = await getCauHois({ 
-      pageNumber: 1,
-      pageSize: 1000,
-      sortBy: 'id', 
-      sortOrder: 'desc' 
-    });
+    const response = await getCauHois();
     if (response.success && Array.isArray(response.data)) {
       setQuestions(response.data);
     }
@@ -98,12 +90,7 @@ export default function AdminQuestionBank() {
   };
 
   const loadNhomCauHois = async () => {
-    const response = await getNhomCauHois({ 
-      pageNumber: 1,
-      pageSize: 1000,
-      sortBy: 'id', 
-      sortOrder: 'desc' 
-    });
+    const response = await getNhomCauHois();
     if (response.success && Array.isArray(response.data)) {
       setNhomCauHois(response.data);
     }
@@ -113,7 +100,6 @@ export default function AdminQuestionBank() {
     setEditingQuestion(null);
     setFormData({
       noiDungCauHoi: "",
-      loaiCauHoi: 0,
       kyNang: 0,
       urlHinhAnh: "",
       urlAmThanh: "",
@@ -138,7 +124,6 @@ export default function AdminQuestionBank() {
     setEditingQuestion(question);
     setFormData({
       noiDungCauHoi: question.noiDungCauHoi || "",
-      loaiCauHoi: question.loaiCauHoi ?? 0,
       kyNang: question.kyNang ?? 0,
       urlHinhAnh: question.urlHinh || "",
       urlAmThanh: question.urlAmThanh || "",
@@ -383,10 +368,6 @@ export default function AdminQuestionBank() {
     }
   };
 
-  const getLoaiCauHoiText = (loai?: LoaiCauHoi) => {
-    return loai === 0 ? "Trắc nghiệm" : "Tự luận";
-  };
-
   const getKyNangText = (kyNang?: KyNang) => {
     switch(kyNang) {
       case 0: return "Listening";
@@ -425,11 +406,6 @@ export default function AdminQuestionBank() {
       return false;
     }
     
-    // Filter by loaiCauHoi
-    if (filterLoaiCauHoi && q.loaiCauHoi !== parseInt(filterLoaiCauHoi)) {
-      return false;
-    }
-    
     // Filter by kyNang
     if (filterKyNang && q.kyNang !== parseInt(filterKyNang)) {
       return false;
@@ -461,11 +437,13 @@ export default function AdminQuestionBank() {
 
   const stats = {
     total: filteredQuestions.length,
-    tracNghiem: filteredQuestions.filter(q => q.loaiCauHoi === 0).length,
-    tuLuan: filteredQuestions.filter(q => q.loaiCauHoi === 1).length,
-    reading: filteredQuestions.filter(q => q.kyNang === 1).length,
-    writing: filteredQuestions.filter(q => q.kyNang === 2).length,
+    tracNghiem: filteredQuestions.filter(q => q.kyNang !== 4).length,
+    tuLuan: filteredQuestions.filter(q => q.kyNang === 4).length,
     listening: filteredQuestions.filter(q => q.kyNang === 0).length,
+    reading: filteredQuestions.filter(q => q.kyNang === 1).length,
+    grammar: filteredQuestions.filter(q => q.kyNang === 2).length,
+    vocabulary: filteredQuestions.filter(q => q.kyNang === 3).length,
+    writing: filteredQuestions.filter(q => q.kyNang === 4).length,
   };
 
   return (
@@ -565,15 +543,6 @@ export default function AdminQuestionBank() {
             />
           </div>
           <select
-            value={filterLoaiCauHoi}
-            onChange={(e) => setFilterLoaiCauHoi(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
-          >
-            <option value="">Tất cả loại</option>
-            <option value="0">Trắc nghiệm</option>
-            <option value="1">Tự luận</option>
-          </select>
-          <select
             value={filterKyNang}
             onChange={(e) => setFilterKyNang(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
@@ -581,7 +550,9 @@ export default function AdminQuestionBank() {
             <option value="">Tất cả kỹ năng</option>
             <option value="0">Listening</option>
             <option value="1">Reading</option>
-            <option value="2">Writing</option>
+            <option value="2">Grammar</option>
+            <option value="3">Vocabulary</option>
+            <option value="4">Writing</option>
           </select>
           <select
             value={filterCapDo}
@@ -673,8 +644,12 @@ export default function AdminQuestionBank() {
                         </p>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {getLoaiCauHoiText(question.loaiCauHoi)}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        question.kyNang === 4 ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {question.kyNang === 4 ? 'Tự luận' : 'Trắc nghiệm'}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {getKyNangText(question.kyNang)}
@@ -754,27 +729,17 @@ export default function AdminQuestionBank() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Loại câu hỏi</label>
-                    <select
-                      value={formData.loaiCauHoi}
-                      onChange={(e) => setFormData({ ...formData, loaiCauHoi: Number(e.target.value) as LoaiCauHoi })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
-                    >
-                      <option value={0}>Trắc nghiệm</option>
-                      <option value={1}>Tự luận</option>
-                    </select>
-                  </div>
-
-                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Kỹ năng</label>
                     <select
                       value={formData.kyNang}
                       onChange={(e) => setFormData({ ...formData, kyNang: Number(e.target.value) as KyNang })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
                     >
-                      <option value={0}>Reading</option>
-                      <option value={1}>Writing</option>
-                      <option value={2}>Listening</option>
+                      <option value={0}>Listening</option>
+                      <option value={1}>Reading</option>
+                      <option value={2}>Ngữ pháp</option>
+                      <option value={3}>Từ vựng</option>
+                      <option value={4}>Writing (Tự luận)</option>
                     </select>
                   </div>
                 </div>

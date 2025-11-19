@@ -82,10 +82,7 @@ export default function PaymentPage() {
         return;
       }
     } else {
-      const dangKysRes = await getDangKys({
-        sortBy: 'ngayDangKy',
-        sortOrder: 'desc'
-      });
+      const dangKysRes = await getDangKys();
 
       if (dangKysRes.success && dangKysRes.data) {
         const dataArray = Array.isArray(dangKysRes.data)

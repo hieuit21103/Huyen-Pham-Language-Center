@@ -24,10 +24,7 @@ export default function AdminRooms() {
 
   const loadRooms = async () => {
     setLoading(true);
-    const response = await getPhongHocs({ 
-      sortBy: "tenPhong",
-      sortOrder: "asc"
-    });
+    const response = await getPhongHocs();
     if (response.success && response.data) {
       setRooms(response.data);
     }

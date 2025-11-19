@@ -69,12 +69,7 @@ export default function ThongBaoAdmin() {
 
   const loadClasses = async () => {
     try {
-      const result = await getLopHocs({ 
-        pageNumber: 1, 
-        pageSize: 1000,
-        sortBy: "tenLop",
-        sortOrder: "asc"
-      });
+      const result = await getLopHocs();
       if (result.success && result.data) {
         setClasses(result.data);
       }

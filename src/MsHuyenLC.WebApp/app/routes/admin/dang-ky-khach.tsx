@@ -34,8 +34,8 @@ export default function AdminRegistrations() {
     const loadData = async () => {
         setLoading(true);
         const [registrationsRes, coursesRes] = await Promise.all([
-            getDangKyKhachs({ pageNumber: 1, pageSize: 1000, sortBy: 'ngayDangKy', sortOrder: 'desc' }),
-            getKhoaHocs({ pageNumber: 1, pageSize: 1000 })
+            getDangKyKhachs(),
+            getKhoaHocs()
         ]);
 
         if (registrationsRes.success && Array.isArray(registrationsRes.data)) {

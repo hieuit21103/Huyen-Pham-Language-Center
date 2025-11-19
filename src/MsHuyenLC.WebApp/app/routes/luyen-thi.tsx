@@ -1,18 +1,16 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate } from "react-router";
 import { getProfile } from "~/apis/Profile";
-import { getDeThis, getDeThiByKyThi } from "~/apis/DeThi";
+import { getDeThis } from "~/apis/DeThi";
 import { BookOpen, Clock, FileText, Play } from "lucide-react";
-import type { DeThi, LoaiDeThi } from "~/types/index";
+import type { DeThi } from "~/types/index";
 
 export default function LuyenThi() {
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [loading, setLoading] = useState(true);
     const [deThis, setDeThis] = useState<DeThi[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
-    const [filterLoai, setFilterLoai] = useState<string>("");
 
     useEffect(() => {
         checkLoginAndLoadData();
@@ -25,24 +23,9 @@ export default function LuyenThi() {
         if (profileRes.success && profileRes.data) {
             setIsLoggedIn(true);
             
-            const kyThiId = searchParams.get('kyThiId');
-            
-            if (kyThiId) {
-                const deThiRes = await getDeThiByKyThi(kyThiId);
-                if (deThiRes.success && Array.isArray(deThiRes.data) && deThiRes.data.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * deThiRes.data.length);
-                    const selectedDeThi = deThiRes.data[randomIndex];
-                    
-                    if (selectedDeThi.id) {
-                        navigate(`/lam-bai-thi?deThiId=${selectedDeThi.id}`);
-                        return;
-                    }
-                }
-            }
-            
-            const deThiRes = await getDeThis({ pageNumber: 1, pageSize: 1000, sortBy: 'id', sortOrder: 'desc' });
+            const deThiRes = await getDeThis();
             if (deThiRes.success && Array.isArray(deThiRes.data)) {
-                const deThiLuyenTap = deThiRes.data.filter((de: DeThi) => de.loaiDeThi === 0);
+                const deThiLuyenTap = deThiRes.data.filter((de: DeThi) => !de.kyThiId);
                 setDeThis(deThiLuyenTap);
             }
         } else {
@@ -57,17 +40,12 @@ export default function LuyenThi() {
     };
 
     const handleStartExam = (deThiId: string) => {
-        navigate(`/lam-bai-thi?deThiId=${deThiId}`);
-    };
-
-    const getLoaiDeThiText = (loai?: LoaiDeThi) => {
-        return loai === 0 ? "Luyện tập" : "Thi thử";
+        navigate(`/thi?deThiId=${deThiId}`);
     };
 
     const filteredDeThis = deThis.filter(de => {
         const matchSearch = de.tenDe?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchLoai = !filterLoai || de.loaiDeThi?.toString() === filterLoai;
-        return matchSearch && matchLoai;
+        return matchSearch;
     });
 
     if (loading) {
@@ -158,7 +136,7 @@ export default function LuyenThi() {
                         <FileText className="w-10 h-10 text-green-600" />
                         <div>
                             <p className="text-green-700 text-sm font-medium">Đề luyện tập</p>
-                            <p className="text-3xl font-bold text-green-900">{deThis.filter(d => d.loaiDeThi === 0).length}</p>
+                            <p className="text-3xl font-bold text-green-900">{deThis.length}</p>
                         </div>
                     </div>
                 </div>
@@ -184,24 +162,13 @@ export default function LuyenThi() {
 
             {/* Filters */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input
-                        type="text"
-                        placeholder="Tìm kiếm đề thi..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
-                    />
-                    <select
-                        value={filterLoai}
-                        onChange={(e) => setFilterLoai(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
-                    >
-                        <option value="">Tất cả loại đề</option>
-                        <option value="0">Luyện tập</option>
-                        <option value="1">Thi thử</option>
-                    </select>
-                </div>
+                <input
+                    type="text"
+                    placeholder="Tìm kiếm đề thi..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
+                />
             </div>
 
             {/* Exam List */}
@@ -214,11 +181,8 @@ export default function LuyenThi() {
                 ) : (
                     filteredDeThis.map((deThi) => (
                         <div key={deThi.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
-                            <div className="flex items-start justify-between mb-4">
-                                <h3 className="text-xl font-bold text-gray-900 flex-1">{deThi.tenDe || "Đề thi"}</h3>
-                                <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">
-                                    {getLoaiDeThiText(deThi.loaiDeThi)}
-                                </span>
+                            <div className="mb-4">
+                                <h3 className="text-xl font-bold text-gray-900">{deThi.tenDe || "Đề thi"}</h3>
                             </div>
                             
                             <div className="space-y-2 mb-6">

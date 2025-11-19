@@ -26,7 +26,7 @@ export default function AdminSettings() {
 
   const loadConfigs = async () => {
     setLoading(true);
-    const response = await getCauHinhs({ pageSize: 100 });
+    const response = await getCauHinhs();
     
     if (response.success && Array.isArray(response.data)) {
       const configMap: Record<string, CauHinhHeThong> = {};

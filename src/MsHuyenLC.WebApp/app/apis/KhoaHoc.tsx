@@ -1,15 +1,11 @@
 import { KhoaHocApiUrl } from "~/constants/apis-url";
 import { getJwtToken } from "./Auth";
 import type { 
-    KhoaHocRequest,
+    KhoaHocRequest, 
     KhoaHocUpdateRequest,
-    PaginationParams,
     ApiResponse 
 } from "~/types/index";
 
-/**
- * Tạo khóa học mới
- */
 export async function createKhoaHoc(request: KhoaHocRequest): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
@@ -90,22 +86,12 @@ export async function getKhoaHoc(id: string): Promise<ApiResponse> {
 }
 
 /**
- * Lấy danh sách khóa học (có phân trang)
+ * Lấy danh sách khóa học
  */
-export async function getKhoaHocs(params?: PaginationParams): Promise<ApiResponse> {
+export async function getKhoaHocs(): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
-        const queryParams = new URLSearchParams();
-        if (params?.pageNumber) queryParams.append('pageNumber', params.pageNumber.toString());
-        if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
-        if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-        if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
-
-        const url = queryParams.toString() 
-            ? `${KhoaHocApiUrl()}?${queryParams.toString()}`
-            : KhoaHocApiUrl();
-
-        const response = await fetch(url, {
+        const response = await fetch(KhoaHocApiUrl(), {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

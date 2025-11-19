@@ -6,11 +6,7 @@ import {
   updateNhomCauHoi, 
   deleteNhomCauHoi,
   getCauHoisInNhom,
-  addCauHoiToNhom,
-  removeCauHoiFromNhom,
-  cloneNhomCauHoi,
-  searchNhomCauHois,
-  exportNhomCauHoiToPDF
+  addCauHoiToNhom
 } from "~/apis/NhomCauHoi";
 import { getCauHois } from "~/apis/CauHoi";
 import { uploadImage, uploadAudio } from "~/apis/Upload";
@@ -85,12 +81,8 @@ export default function AdminNhomCauHoi() {
       if (filterDoKho) filters.doKho = parseInt(filterDoKho);
       if (searchTerm) filters.keyword = searchTerm;
       
-      const response = await searchNhomCauHois(filters);
-      if (response.success && Array.isArray(response.data)) {
-        setNhomCauHois(response.data);
-      }
     } else {
-      const response = await getNhomCauHois({ pageNumber: 1, pageSize: 1000, sortBy: 'id', sortOrder: 'desc' });
+      const response = await getNhomCauHois();
       if (response.success && Array.isArray(response.data)) {
         setNhomCauHois(response.data);
       }
@@ -99,7 +91,7 @@ export default function AdminNhomCauHoi() {
   };
 
   const loadAllCauHois = async () => {
-    const response = await getCauHois({ pageNumber: 1, pageSize: 1000 });
+    const response = await getCauHois();
     if (response.success && Array.isArray(response.data)) {
       setAllCauHois(response.data);
     }
@@ -206,15 +198,6 @@ export default function AdminNhomCauHoi() {
     }
   };
 
-  const handleClone = async (id: string) => {
-    const response = await cloneNhomCauHoi(id);
-    setMessage(response.message || "");
-    if (response.success) {
-      loadNhomCauHois();
-      setTimeout(() => setMessage(""), 3000);
-    }
-  };
-
   const handleViewQuestions = async (nhom: NhomCauHoi) => {
     setSelectedNhom(nhom);
     setSearchQuestionTerm("");
@@ -232,35 +215,6 @@ export default function AdminNhomCauHoi() {
     setMessage(response.message || "");
     if (response.success) {
       handleViewQuestions(selectedNhom);
-      setTimeout(() => setMessage(""), 3000);
-    }
-  };
-
-  const handleRemoveQuestion = async (cauHoiId: string) => {
-    if (!selectedNhom) return;
-    
-    const response = await removeCauHoiFromNhom(selectedNhom.id!, cauHoiId);
-    setMessage(response.message || "");
-    if (response.success) {
-      handleViewQuestions(selectedNhom);
-      setTimeout(() => setMessage(""), 3000);
-    }
-  };
-
-  const handleExportPDF = async (id: string) => {
-    const response = await exportNhomCauHoiToPDF(id);
-    if (response.success && response.data) {
-      const blob = response.data as Blob;
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `NhomCauHoi_${id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } else {
-      setMessage(response.message || "Xuất PDF thất bại");
       setTimeout(() => setMessage(""), 3000);
     }
   };
@@ -464,13 +418,6 @@ export default function AdminNhomCauHoi() {
                   >
                     <List className="w-4 h-4" />
                     <span>Xem câu hỏi</span>
-                  </button>
-                  <button
-                    onClick={() => handleClone(nhom.id!)}
-                    className="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition-colors"
-                    title="Sao chép"
-                  >
-                    <Copy className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleEdit(nhom)}
@@ -735,13 +682,6 @@ export default function AdminNhomCauHoi() {
                                 </div>
                               </div>
                             </div>
-                            <button
-                              onClick={() => handleRemoveQuestion(q.id!)}
-                              className="ml-3 text-red-600 hover:text-white hover:bg-red-600 p-2 rounded-lg transition-colors"
-                              title="Xóa câu hỏi khỏi nhóm"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
                           </div>
                         </div>
                       ))}

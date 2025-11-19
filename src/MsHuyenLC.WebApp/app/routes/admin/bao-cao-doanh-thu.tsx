@@ -34,7 +34,7 @@ export default function BaoCaoDoanhThu() {
     }
 
     // Load đăng ký để lấy thông tin học viên và khóa học
-    const dkResponse = await getDangKys({ pageNumber: 1, pageSize: 1000 });
+    const dkResponse = await getDangKys();
     if (dkResponse.success && dkResponse.data) {
       setDangKys(dkResponse.data);
     }

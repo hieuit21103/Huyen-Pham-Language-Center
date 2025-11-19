@@ -10,4 +10,5 @@ public class KyThiRequest
     public TimeOnly GioKetThuc { get; set; }
     public int ThoiLuong { get; set; }
     public Guid LopHocId { get; set; }
+    public ICollection<CauHinhKyThiRequest> CauHinhKyThis { get; set; } = new List<CauHinhKyThiRequest>();
 }

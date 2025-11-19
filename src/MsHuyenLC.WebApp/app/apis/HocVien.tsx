@@ -2,7 +2,6 @@ import { HocVienApiUrl } from "~/constants/apis-url";
 import { getJwtToken } from "./Auth";
 import type { 
     HocVienUpdateRequest,
-    PaginationParams,
     ApiResponse 
 } from "~/types/index";
 
@@ -75,20 +74,10 @@ export async function getByTaiKhoanId(taiKhoanId: string): Promise<ApiResponse> 
     }
 }
 
-export async function getHocViens(params?: PaginationParams): Promise<ApiResponse> {
+export async function getHocViens(): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
-        const queryParams = new URLSearchParams();
-        if (params?.pageNumber) queryParams.append('pageNumber', params.pageNumber.toString());
-        if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
-        if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-        if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
-
-        const url = queryParams.toString() 
-            ? `${HocVienApiUrl()}?${queryParams.toString()}`
-            : HocVienApiUrl();
-
-        const response = await fetch(url, {
+        const response = await fetch(HocVienApiUrl(), {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

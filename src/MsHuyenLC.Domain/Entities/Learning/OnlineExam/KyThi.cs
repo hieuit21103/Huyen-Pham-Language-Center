@@ -1,6 +1,6 @@
 using MsHuyenLC.Domain.Entities.Courses;
 
-namespace MsHuyenLC.Domain.Entities.Learning;
+namespace MsHuyenLC.Domain.Entities.Learning.OnlineExam;
 
 public class KyThi
 {
@@ -13,4 +13,5 @@ public class KyThi
     public TrangThaiKyThi TrangThai { get; set; } = TrangThaiKyThi.sapdienra;
     public Guid LopHocId { get; set; }
     public LopHoc LopHoc { get; set; } = null!;
+    public ICollection<CauHinhKyThi> CauHinhKyThis { get; set; } = new List<CauHinhKyThi>();
 }

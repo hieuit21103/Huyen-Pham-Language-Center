@@ -4,7 +4,6 @@ import type {
     CauHoiRequest, 
     CauHoiUpdateRequest,
     CauHoiFilterParams,
-    PaginationParams,
     ApiResponse 
 } from "~/types/index";
 
@@ -92,55 +91,12 @@ export async function getCauHoi(id: string): Promise<ApiResponse> {
 }
 
 /**
- * Lấy danh sách câu hỏi (có phân trang)
+ * Lấy danh sách câu hỏi
  */
-export async function getCauHois(params?: PaginationParams): Promise<ApiResponse> {
+export async function getCauHois(): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
-        const queryParams = new URLSearchParams();
-        if (params?.pageNumber) queryParams.append('pageNumber', params.pageNumber.toString());
-        if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
-        if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-        if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
-
-        const url = queryParams.toString() 
-            ? `${CauHoiApiUrl()}?${queryParams.toString()}`
-            : CauHoiApiUrl();
-
-        const response = await fetch(url, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                ...(token && { "Authorization": `Bearer ${token}` }),
-            },
-        });
-
-        return await response.json();
-    } catch (error) {
-        return { success: false, message: `Lỗi: ${error}` };
-    }
-}
-
-/**
- * Tìm kiếm câu hỏi theo bộ lọc
- */
-export async function searchCauHois(filters: CauHoiFilterParams): Promise<ApiResponse> {
-    try {
-        const token = getJwtToken();
-        const queryParams = new URLSearchParams();
-        if (filters.pageNumber) queryParams.append('pageNumber', filters.pageNumber.toString());
-        if (filters.pageSize) queryParams.append('pageSize', filters.pageSize.toString());
-        if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
-        if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
-        if (filters.loaiCauHoi !== undefined) queryParams.append('loaiCauHoi', filters.loaiCauHoi.toString());
-        if (filters.kyNang !== undefined) queryParams.append('kyNang', filters.kyNang.toString());
-        if (filters.capDo !== undefined) queryParams.append('capDo', filters.capDo.toString());
-        if (filters.doKho !== undefined) queryParams.append('doKho', filters.doKho.toString());
-        if (filters.keyword) queryParams.append('keyword', filters.keyword);
-
-        const url = `${CauHoiApiUrl('search')}?${queryParams.toString()}`;
-
-        const response = await fetch(url, {
+        const response = await fetch(CauHoiApiUrl(), {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

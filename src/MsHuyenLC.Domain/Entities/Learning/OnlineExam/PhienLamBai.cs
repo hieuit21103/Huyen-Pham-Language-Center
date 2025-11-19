@@ -12,4 +12,6 @@ public class PhienLamBai
     public HocVien HocVien { get; set; } = null!;
     public Guid DeThiId { get; set; }
     public DeThi DeThi { get; set; } = null!;
+    public Guid? KyThiId { get; set; }
+    public KyThi? KyThi { get; set; }
 }

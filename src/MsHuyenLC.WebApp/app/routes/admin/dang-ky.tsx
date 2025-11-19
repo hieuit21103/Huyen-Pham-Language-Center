@@ -43,18 +43,12 @@ export default function AdminRegistrations() {
   const loadData = async () => {
     setLoading(true);
     const [registrationsRes, coursesRes, classesRes] = await Promise.all([
-      getDangKys({ 
-        pageNumber: 1,
-        pageSize: 1000,
-        sortBy: 'ngayDangKy', 
-        sortOrder: 'desc' 
-      }),
-      getKhoaHocs({ pageNumber: 1, pageSize: 1000 }),
-      getLopHocs({ pageNumber: 1, pageSize: 1000 })
+      getDangKys(),
+      getKhoaHocs(),
+      getLopHocs()
     ]);
 
     if (registrationsRes.success && registrationsRes.data) {
-      // Response có thể là array trực tiếp hoặc object với items
       const dataArray = Array.isArray(registrationsRes.data) 
         ? registrationsRes.data 
         : registrationsRes.data.items || [];

@@ -29,10 +29,7 @@ export default function AdminCourses() {
 
   const loadCourses = async () => {
     setLoading(true);
-    const response = await getKhoaHocs({ 
-      sortBy: "tenKhoaHoc",
-      sortOrder: "asc"
-    });
+    const response = await getKhoaHocs();
     if (response.success && response.data) {
       setCourses(response.data);
     }

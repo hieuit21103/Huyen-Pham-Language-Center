@@ -43,12 +43,7 @@ export default function AdminGiaoVu() {
 
   const loadGiaoVus = async () => {
     setLoading(true);
-    const response = await getGiaoVus({
-      pageNumber: currentPage,
-      pageSize: pageSize,
-      sortBy: 'hoTen',
-      sortOrder: 'asc'
-    });
+    const response = await getGiaoVus();
     
     if (response.success && Array.isArray(response.data)) {
       setGiaoVus(response.data);
@@ -58,7 +53,7 @@ export default function AdminGiaoVu() {
   };
 
   const loadTaiKhoans = async () => {
-    const response = await getTaiKhoans({ pageSize: 1000 });
+    const response = await getTaiKhoans();
     if (response.success && Array.isArray(response.data)) {
       // Filter only accounts without existing GiaoVu
       setTaiKhoans(response.data);

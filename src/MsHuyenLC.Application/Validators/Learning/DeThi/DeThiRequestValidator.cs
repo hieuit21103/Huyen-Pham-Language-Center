@@ -1,5 +1,5 @@
 using FluentValidation;
-using MsHuyenLC.Domain.Entities.Learning;
+using MsHuyenLC.Application.DTOs.Learning.DeThi;
 
 namespace MsHuyenLC.Application.Validators.Learning;
 
@@ -14,9 +14,6 @@ public class DeThiRequestValidator : AbstractValidator<DeThiRequest>
         RuleFor(x => x.TongCauHoi)
             .GreaterThan(0).WithMessage("Tổng số câu hỏi phải lớn hơn 0")
             .LessThanOrEqualTo(200).WithMessage("Tổng số câu hỏi không được vượt quá 200");
-
-        RuleFor(x => x.LoaiDeThi)
-            .IsInEnum().WithMessage("Loại đề thi không hợp lệ");
 
         RuleFor(x => x.ThoiGianLamBai)
             .GreaterThan(0).WithMessage("Thời gian làm bài phải lớn hơn 0")

@@ -163,7 +163,6 @@ public class GroupQuestionService : IGroupQuestionService
         return new CauHoiResponse
         {
             NoiDungCauHoi = entity.NoiDungCauHoi,
-            LoaiCauHoi = entity.LoaiCauHoi,
             KyNang = entity.KyNang,
             UrlHinhAnh = entity.UrlHinhAnh,
             UrlAmThanh = entity.UrlAmThanh,

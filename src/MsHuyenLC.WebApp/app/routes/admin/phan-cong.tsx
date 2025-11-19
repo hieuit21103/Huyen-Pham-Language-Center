@@ -38,19 +38,19 @@ export default function AdminPhanCong() {
         setLoading(true);
 
         // Load phân công
-        const pcResponse = await getPhanCongs({ pageNumber: 1, pageSize: 1000 });
+        const pcResponse = await getPhanCongs();
         if (pcResponse.success && pcResponse.data) {
             setPhanCongs(pcResponse.data);
         }
 
         // Load giáo viên
-        const gvResponse = await getGiaoViens({ pageNumber: 1, pageSize: 1000 });
+        const gvResponse = await getGiaoViens();
         if (gvResponse.success && gvResponse.data) {
             setGiaoViens(gvResponse.data);
         }
 
         // Load lớp học
-        const lhResponse = await getLopHocs({ pageNumber: 1, pageSize: 1000 });
+        const lhResponse = await getLopHocs();
         if (lhResponse.success && lhResponse.data) {
             setLopHocs(lhResponse.data);
         }

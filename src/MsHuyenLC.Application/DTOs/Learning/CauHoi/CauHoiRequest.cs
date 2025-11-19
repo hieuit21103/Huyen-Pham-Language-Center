@@ -7,7 +7,6 @@ namespace MsHuyenLC.Application.DTOs.Learning.CauHoi;
 public class CauHoiRequest
 {
     public string NoiDungCauHoi { get; set; } = null!;
-    public LoaiCauHoi LoaiCauHoi { get; set; } = LoaiCauHoi.TracNghiem;
     public KyNang KyNang { get; set; } = KyNang.Doc;
     public string? UrlHinhAnh { get; set; }
     public string? UrlAmThanh { get; set; }

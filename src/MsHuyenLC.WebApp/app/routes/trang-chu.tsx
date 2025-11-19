@@ -25,7 +25,7 @@ export default function LanguageCenterLanding() {
   const fetchCourses = async () => {
       try {
         setLoading(true);
-        const response = await getKhoaHocs({ pageNumber: 1, pageSize: 10, sortBy: 'id', sortOrder: 'asc' });
+        const response = await getKhoaHocs();
         if (Array.isArray(response.data)) {
           const courses = response.data.map((course: any) => ({
             id: course.id,

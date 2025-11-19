@@ -1,15 +1,11 @@
 import { TaiKhoanApiUrl } from "~/constants/apis-url";
 import { getJwtToken } from "./Auth";
 import type { 
-    TaiKhoanRequest,
+    TaiKhoanRequest, 
     TaiKhoanUpdateRequest,
-    PaginationParams,
     ApiResponse 
 } from "~/types/index";
 
-/**
- * Tạo tài khoản mới
- */
 export async function createTaiKhoan(request: TaiKhoanRequest): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
@@ -70,22 +66,12 @@ export async function deleteTaiKhoan(id: string): Promise<ApiResponse> {
 }
 
 /**
- * Lấy danh sách tài khoản (có phân trang)
+ * Lấy danh sách tài khoản
  */
-export async function getTaiKhoans(params?: PaginationParams): Promise<ApiResponse> {
+export async function getTaiKhoans(): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
-        const queryParams = new URLSearchParams();
-        if (params?.pageNumber) queryParams.append('pageNumber', params.pageNumber.toString());
-        if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
-        if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-        if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
-
-        const url = queryParams.toString() 
-            ? `${TaiKhoanApiUrl()}?${queryParams.toString()}`
-            : TaiKhoanApiUrl();
-
-        const response = await fetch(url, {
+        const response = await fetch(TaiKhoanApiUrl(), {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -103,11 +89,10 @@ export async function getTaiKhoans(params?: PaginationParams): Promise<ApiRespon
 /**
  * Tìm kiếm tài khoản
  */
-export async function searchTaiKhoan(
+export async function searchTaiKhoans(
     keyword?: string, 
     vaiTro?: number, 
-    trangThai?: number,
-    params?: PaginationParams
+    trangThai?: number
 ): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
@@ -115,8 +100,6 @@ export async function searchTaiKhoan(
         if (keyword) queryParams.append('keyword', keyword);
         if (vaiTro !== undefined) queryParams.append('vaiTro', vaiTro.toString());
         if (trangThai !== undefined) queryParams.append('trangThai', trangThai.toString());
-        if (params?.pageNumber) queryParams.append('pageNumber', params.pageNumber.toString());
-        if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
 
         const url = queryParams.toString() 
             ? `${TaiKhoanApiUrl('search')}?${queryParams.toString()}`

@@ -7,7 +7,6 @@ import type {
     DangKyKhachRequest,
     DangKyKhachCreateRequest,
     DangKyKhachUpdateRequest,
-    PaginationParams,
     ApiResponse 
 } from "~/types/index";
 
@@ -119,19 +118,11 @@ export async function getDangKy(id: string): Promise<ApiResponse> {
 /**
  * Lấy danh sách đăng ký (có phân trang)
  */
-export async function getDangKys(params?: PaginationParams): Promise<ApiResponse> {
+export async function getDangKys(): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
-        const queryParams = new URLSearchParams();
-        if (params?.pageNumber) queryParams.append('pageNumber', params.pageNumber.toString());
-        if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
-        if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-        if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
 
-        const url = queryParams.toString() 
-            ? `${DangKyApiUrl()}?${queryParams.toString()}`
-            : DangKyApiUrl();
-
+        const url = DangKyApiUrl();
         const response = await fetch(url, {
             method: "GET",
             headers: {
@@ -269,23 +260,11 @@ export async function getDangKyKhach(id: string): Promise<ApiResponse> {
     }
 }
 
-/**
- * Lấy danh sách đăng ký khách (có phân trang)
- */
-export async function getDangKyKhachs(params?: PaginationParams): Promise<ApiResponse> {
+export async function getDangKyKhachs(): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
-        const queryParams = new URLSearchParams();
-        if (params?.pageNumber) queryParams.append('pageNumber', params.pageNumber.toString());
-        if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
-        if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-        if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
 
-        const url = queryParams.toString() 
-            ? `${DangKyKhachApiUrl()}?${queryParams.toString()}`
-            : DangKyKhachApiUrl();
-
-        const response = await fetch(url, {
+        const response = await fetch(DangKyKhachApiUrl(), {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

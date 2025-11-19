@@ -25,9 +25,6 @@ public class DeThiUpdateRequestValidator : AbstractValidator<DeThiUpdateRequest>
             .GreaterThan(0).WithMessage("Thời gian làm bài phải lớn hơn 0")
             .LessThanOrEqualTo(300).WithMessage("Thời gian làm bài không được vượt quá 300 phút");
 
-        RuleFor(x => x.LoaiDeThi)
-            .IsInEnum().WithMessage("Loại đề thi không hợp lệ");
-
         When(x => x.KyThiId.HasValue, () =>
         {
             RuleFor(x => x.KyThiId!.Value)

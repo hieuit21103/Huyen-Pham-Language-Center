@@ -1,13 +1,10 @@
 import { GiaoVienApiUrl } from "~/constants/apis-url";
 import { getJwtToken } from "./Auth";
 import type { 
-    GiaoVienRequest,
+    GiaoVienRequest, 
     GiaoVienUpdateRequest,
-    PaginationParams,
     ApiResponse 
-} from "~/types/index";
-
-/**
+} from "~/types/index";/**
  * Tạo giáo viên mới
  */
 export async function createGiaoVien(request: GiaoVienRequest): Promise<ApiResponse> {
@@ -90,22 +87,12 @@ export async function getGiaoVien(id: string): Promise<ApiResponse> {
 }
 
 /**
- * Lấy danh sách giáo viên (có phân trang)
+ * Lấy danh sách giáo viên
  */
-export async function getGiaoViens(params?: PaginationParams): Promise<ApiResponse> {
+export async function getGiaoViens(): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
-        const queryParams = new URLSearchParams();
-        if (params?.pageNumber) queryParams.append('pageNumber', params.pageNumber.toString());
-        if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
-        if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-        if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
-
-        const url = queryParams.toString() 
-            ? `${GiaoVienApiUrl()}?${queryParams.toString()}`
-            : GiaoVienApiUrl();
-
-        const response = await fetch(url, {
+        const response = await fetch(GiaoVienApiUrl(), {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

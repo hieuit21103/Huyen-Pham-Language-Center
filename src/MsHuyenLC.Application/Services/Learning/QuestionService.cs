@@ -44,7 +44,6 @@ public class QuestionService : IQuestionService
         var cauHoi = new CauHoi
         {
             NoiDungCauHoi = request.NoiDungCauHoi,
-            LoaiCauHoi = request.LoaiCauHoi,
             KyNang = request.KyNang,
             DoKho = request.DoKho,
             CapDo = request.CapDo,
@@ -73,7 +72,6 @@ public class QuestionService : IQuestionService
             return null;
         
         cauHoi.NoiDungCauHoi = request.NoiDungCauHoi ?? cauHoi.NoiDungCauHoi;
-        cauHoi.LoaiCauHoi = request.LoaiCauHoi ?? cauHoi.LoaiCauHoi;
         cauHoi.KyNang = request.KyNang ?? cauHoi.KyNang;
         cauHoi.DoKho = request.DoKho ?? cauHoi.DoKho;
         cauHoi.CapDo = request.CapDo ?? cauHoi.CapDo;
@@ -130,11 +128,6 @@ public class QuestionService : IQuestionService
     public async Task<IEnumerable<CauHoi>> GetByLevelAsync(CapDo level)
     {
         return await _unitOfWork.CauHois.GetAllAsync(filter: ch => ch.CapDo == level);
-    }
-
-    public async Task<IEnumerable<CauHoi>> GetByTypeAsync(LoaiCauHoi type)
-    {
-        return await _unitOfWork.CauHois.GetAllAsync(filter: ch => ch.LoaiCauHoi == type);
     }
 
     public async Task<CauHoi> AddAnswerToQuestionAsync(string questionId, DapAnRequest answerRequest)
@@ -240,7 +233,6 @@ public class QuestionService : IQuestionService
         var request = new CauHoiRequest
         {
             NoiDungCauHoi = importRequest.NoiDungCauHoi,
-            LoaiCauHoi = Enum.Parse<LoaiCauHoi>(importRequest.LoaiCauHoi, true),
             KyNang = Enum.Parse<KyNang>(importRequest.KyNang, true),
             DoKho = Enum.Parse<DoKho>(importRequest.DoKho, true),
             CapDo = Enum.Parse<CapDo>(importRequest.CapDo, true),

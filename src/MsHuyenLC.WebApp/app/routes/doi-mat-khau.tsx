@@ -11,7 +11,6 @@ export default function DoiMatKhauPage() {
     const [loading, setLoading] = useState(false);
 
     const handleChangePassword = async () => {
-        // Validation
         if (!oldPassword || !newPassword || !confirmPassword) {
             setMessage("Vui lòng điền đầy đủ thông tin!");
             setMessageType("error");

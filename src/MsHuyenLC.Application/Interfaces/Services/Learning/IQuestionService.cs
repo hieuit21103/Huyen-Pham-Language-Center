@@ -15,7 +15,6 @@ public interface IQuestionService
     Task<IEnumerable<CauHoi>> GetBySkillAsync(KyNang skill);
     Task<IEnumerable<CauHoi>> GetByDifficultyAsync(DoKho difficulty);
     Task<IEnumerable<CauHoi>> GetByLevelAsync(CapDo level);
-    Task<IEnumerable<CauHoi>> GetByTypeAsync(LoaiCauHoi type);
     Task<CauHoi> AddAnswerToQuestionAsync(string questionId, DapAnRequest answerRequest);
     Task<CauHoi?> GetQuestionWithAnswersAsync(string id);
     Task<CauHoiImportResult> ImportQuestionsAsync(Stream fileStream);

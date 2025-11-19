@@ -36,7 +36,7 @@ export default function AdminBaoCaoKetQua() {
   }, [selectedHocVien, tuNgay, denNgay]);
 
   const loadHocViens = async () => {
-    const response = await getHocViens({ pageSize: 1000 });
+    const response = await getHocViens();
     if (response.success && Array.isArray(response.data)) {
       setHocViens(response.data);
     }
@@ -44,12 +44,7 @@ export default function AdminBaoCaoKetQua() {
 
   const loadPhienLamBais = async () => {
     setLoading(true);
-    const response = await getPhienLamBais({
-      pageNumber: currentPage,
-      pageSize: pageSize,
-      sortBy: 'thoiGianBatDau',
-      sortOrder: 'desc'
-    });
+    const response = await getPhienLamBais();
     
     if (response.success && Array.isArray(response.data)) {
       setPhienLamBais(response.data);

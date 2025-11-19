@@ -3,7 +3,6 @@ import { getJwtToken } from "./Auth";
 import type { 
     SubmitRequest, 
     GradingRequest,
-    PaginationParams,
     ApiResponse 
 } from "~/types/index";
 
@@ -112,22 +111,12 @@ export async function getPhienLamBaiByDeThi(deThiId: string): Promise<ApiRespons
 }
 
 /**
- * Lấy danh sách phiên làm bài (có phân trang)
+ * Lấy danh sách phiên làm bài
  */
-export async function getPhienLamBais(params?: PaginationParams): Promise<ApiResponse> {
+export async function getPhienLamBais(): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
-        const queryParams = new URLSearchParams();
-        if (params?.pageNumber) queryParams.append('pageNumber', params.pageNumber.toString());
-        if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
-        if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-        if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
-
-        const url = queryParams.toString() 
-            ? `${PhienLamBaiApiUrl()}?${queryParams.toString()}`
-            : PhienLamBaiApiUrl();
-
-        const response = await fetch(url, {
+        const response = await fetch(PhienLamBaiApiUrl(), {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

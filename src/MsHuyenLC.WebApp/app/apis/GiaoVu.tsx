@@ -1,6 +1,6 @@
 import { GiaoVuApiUrl } from "~/constants/apis-url";
 import { getJwtToken } from "./Auth";
-import type { ApiResponse, PaginationParams } from "~/types/index";
+import type { ApiResponse } from "~/types/index";
 import type { GiaoVu, GiaoVuRequest } from "~/types/index";
 
 /**
@@ -45,23 +45,12 @@ export async function createGiaoVu(request: GiaoVuRequest): Promise<ApiResponse<
 }
 
 /**
- * Lấy danh sách giáo vụ (có phân trang)
+ * Lấy danh sách giáo vụ
  */
-export async function getGiaoVus(params?: PaginationParams): Promise<ApiResponse<GiaoVu[]>> {
+export async function getGiaoVus(): Promise<ApiResponse<GiaoVu[]>> {
     try {
         const token = getJwtToken();
-        const queryParams = new URLSearchParams();
-        
-        if (params?.pageNumber) queryParams.append('pageNumber', params.pageNumber.toString());
-        if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
-        if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-        if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
-
-        const url = queryParams.toString() 
-            ? `${GiaoVuApiUrl()}?${queryParams.toString()}`
-            : GiaoVuApiUrl();
-
-        const response = await fetch(url, {
+        const response = await fetch(GiaoVuApiUrl(), {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

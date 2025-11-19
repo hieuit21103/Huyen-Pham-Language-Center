@@ -2,7 +2,6 @@ import { PhanCongApiUrl } from "~/constants/apis-url";
 import { getJwtToken } from "./Auth";
 import type { 
     PhanCongRequest,
-    PaginationParams,
     ApiResponse 
 } from "~/types/index";
 
@@ -68,22 +67,12 @@ export async function getPhanCong(id: string): Promise<ApiResponse> {
 }
 
 /**
- * Lấy danh sách phân công (có phân trang)
+ * Lấy danh sách phân công
  */
-export async function getPhanCongs(params?: PaginationParams): Promise<ApiResponse> {
+export async function getPhanCongs(): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
-        const queryParams = new URLSearchParams();
-        if (params?.pageNumber) queryParams.append('pageNumber', params.pageNumber.toString());
-        if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
-        if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-        if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
-
-        const url = queryParams.toString() 
-            ? `${PhanCongApiUrl()}?${queryParams.toString()}`
-            : PhanCongApiUrl();
-
-        const response = await fetch(url, {
+        const response = await fetch(PhanCongApiUrl(), {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

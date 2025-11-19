@@ -1,6 +1,6 @@
 import { CauHinhHeThongApiUrl } from "~/constants/apis-url";
 import { getJwtToken } from "./Auth";
-import type { ApiResponse, PaginationParams } from "~/types/index";
+import type { ApiResponse } from "~/types/index";
 import type { CauHinhHeThong, CauHinhHeThongRequest, CauHinhHeThongUpdateRequest } from "~/types/index";
 
 /**
@@ -47,20 +47,11 @@ export async function createCauHinh(request: CauHinhHeThongRequest): Promise<Api
 /**
  * Lấy danh sách cấu hình (có phân trang)
  */
-export async function getCauHinhs(params?: PaginationParams): Promise<ApiResponse<CauHinhHeThong[]>> {
+export async function getCauHinhs(): Promise<ApiResponse<CauHinhHeThong[]>> {
     try {
         const token = getJwtToken();
-        const queryParams = new URLSearchParams();
-        
-        if (params?.pageNumber) queryParams.append('pageNumber', params.pageNumber.toString());
-        if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
-        if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-        if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
 
-        const url = queryParams.toString() 
-            ? `${CauHinhHeThongApiUrl()}?${queryParams.toString()}`
-            : CauHinhHeThongApiUrl();
-
+        const url = CauHinhHeThongApiUrl();
         const response = await fetch(url, {
             method: "GET",
             headers: {

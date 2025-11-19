@@ -1,5 +1,6 @@
 using FluentValidation;
 using MsHuyenLC.Application.DTOs.Learning.CauHoi;
+using MsHuyenLC.Domain.Enums;
 
 namespace MsHuyenLC.Application.Validators.Learning;
 
@@ -10,9 +11,6 @@ public class CauHoiRequestValidator : AbstractValidator<CauHoiRequest>
         RuleFor(x => x.NoiDungCauHoi)
             .NotEmpty().WithMessage("Nội dung câu hỏi không được để trống")
             .MaximumLength(2000).WithMessage("Nội dung câu hỏi không được vượt quá 2000 ký tự");
-
-        RuleFor(x => x.LoaiCauHoi)
-            .IsInEnum().WithMessage("Loại câu hỏi không hợp lệ");
 
         RuleFor(x => x.KyNang)
             .IsInEnum().WithMessage("Kỹ năng không hợp lệ");
@@ -37,7 +35,7 @@ public class CauHoiRequestValidator : AbstractValidator<CauHoiRequest>
 
         RuleFor(x => x.CacDapAn)
             .NotEmpty().WithMessage("Câu hỏi phải có ít nhất 1 đáp án")
-            .Must(x => x != null && x.Count >= 2).WithMessage("Câu hỏi trắc nghiệm phải có ít nhất 2 đáp án")
-            .When(x => x.LoaiCauHoi == Domain.Enums.LoaiCauHoi.TracNghiem);
+            .Must(x => x != null && x.Count >= 2).WithMessage("Câu hỏi phải có ít nhất 2 đáp án")
+            .When(x => x.KyNang != KyNang.Viet);
     }
 }

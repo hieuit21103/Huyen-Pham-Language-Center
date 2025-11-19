@@ -4,7 +4,7 @@ import type {
     KyThiRequest,
     KyThiUpdateRequest,
     TrangThaiKyThi,
-    PaginationParams,
+    JoinExamRequest,
     ApiResponse 
 } from "~/types/index";
 
@@ -89,22 +89,32 @@ export async function deleteKyThi(id: string): Promise<ApiResponse> {
 }
 
 /**
- * Lấy danh sách kỳ thi (có phân trang)
+ * Lấy danh sách kỳ thi
  */
-export async function getKyThis(params?: PaginationParams): Promise<ApiResponse> {
+export async function getKyThis(): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
-        const queryParams = new URLSearchParams();
-        if (params?.pageNumber) queryParams.append('pageNumber', params.pageNumber.toString());
-        if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
-        if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-        if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+        const response = await fetch(KyThiApiUrl(), {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+        });
 
-        const url = queryParams.toString() 
-            ? `${KyThiApiUrl()}?${queryParams.toString()}`
-            : KyThiApiUrl();
+        return await response.json();
+    } catch (error) {
+        return { success: false, message: `Lỗi: ${error}` };
+    }
+}
 
-        const response = await fetch(url, {
+/**
+ * Lấy thông tin kỳ thi theo ID
+ */
+export async function getKyThiById(id: string): Promise<ApiResponse> {
+    try {
+        const token = getJwtToken();
+        const response = await fetch(KyThiApiUrl(id), {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -291,6 +301,29 @@ export async function getKyThiResultByHocVien(kyThiId: string, hocVienId: string
                 "Content-Type": "application/json",
                 ...(token && { "Authorization": `Bearer ${token}` }),
             },
+        });
+
+        return await response.json();
+    } catch (error) {
+        return { success: false, message: `Lỗi: ${error}` };
+    }
+}
+
+/**
+ * Tham gia kỳ thi (NEW)
+ * Học viên tham gia kỳ thi -> Hệ thống tự động tạo đề thi riêng
+ * Returns: { deThiId, kyThiId, hocVienId }
+ */
+export async function joinExam(request: JoinExamRequest): Promise<ApiResponse> {
+    try {
+        const token = getJwtToken();
+        const response = await fetch(KyThiApiUrl('join'), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+            body: JSON.stringify(request),
         });
 
         return await response.json();
