@@ -11,14 +11,18 @@ export function ExamTimer({
   onTimeUp,
   isPaused = false,
 }: ExamTimerProps) {
-  const [secondsLeft, setSecondsLeft] = useState(totalMinutes * 60);
+  const [secondsLeft, setSecondsLeft] = useState(() => {
+    const saved = localStorage.getItem("exam-time-left");
+    return saved ? parseInt(saved) : totalMinutes * 60;
+  });
+  const [totalSeconds] = useState(() => {
+    const saved = localStorage.getItem("exam-total-time");
+    return saved ? parseInt(saved) : totalMinutes * 60;
+  });
 
   useEffect(() => {
-    // Initialize from localStorage if available
-    const saved = localStorage.getItem("exam-time-left");
-    if (saved) {
-      setSecondsLeft(parseInt(saved));
-    }
+    // Save total time on mount
+    localStorage.setItem("exam-total-time", totalSeconds.toString());
   }, []);
 
   useEffect(() => {
@@ -47,7 +51,7 @@ export function ExamTimer({
   const seconds = secondsLeft % 60;
 
   const getTimerColor = () => {
-    const percentLeft = (secondsLeft / (totalMinutes * 60)) * 100;
+    const percentLeft = (secondsLeft / totalSeconds) * 100;
     if (percentLeft > 20) return "text-green-600 bg-green-50 border-green-200";
     if (percentLeft > 10)
       return "text-yellow-600 bg-yellow-50 border-yellow-200";
@@ -104,7 +108,7 @@ export function ExamTimer({
         <div
           className="h-2 rounded-full transition-all duration-1000"
           style={{
-            width: `${(secondsLeft / (totalMinutes * 60)) * 100}%`,
+            width: `${(secondsLeft / totalSeconds) * 100}%`,
             backgroundColor:
               secondsLeft <= 60
                 ? "#ef4444"

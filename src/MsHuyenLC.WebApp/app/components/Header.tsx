@@ -1,4 +1,4 @@
-import { Menu, X, User, LogOut, Key, LayoutDashboard, ChevronDown, Bell, icons, CreditCard, Calendar, FileCheck } from "lucide-react";
+import { Menu, X, User, LogOut, Key, LayoutDashboard, ChevronDown, Bell, icons, CreditCard, Calendar, FileCheck, GraduationCap } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { Asset } from "~/assets/Asset";
@@ -91,6 +91,7 @@ export default function Header() {
 
     if (userRole === 2) {
       baseItems.push(
+        { name: 'Lớp Của Tôi', href: '/lop-cua-toi-giao-vien', icon: GraduationCap },
         { name: 'Chấm Điểm', href: '/cham-diem-giao-vien', icon: FileCheck }
       );
     }

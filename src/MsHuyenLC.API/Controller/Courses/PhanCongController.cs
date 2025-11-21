@@ -83,7 +83,7 @@ public class PhanCongController : BaseController
     }
 
     [HttpGet("giaovien/{id}")]
-    [Authorize(Roles = "admin,giaovu")]
+    [Authorize(Roles = "admin,giaovu,giaovien")]
     public async Task<IActionResult> GetTeacherClasses(string id)
     {
         var phanCongs = await _service.GetByTeacherIdAsync(id);

@@ -1,10 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Users.GiaoVien;
-using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Interfaces.Repositories;
-using MsHuyenLC.Application.Interfaces.Services;
-using MsHuyenLC.Application.Interfaces.Services.Auth;
 using MsHuyenLC.Application.Interfaces.Services.System;
 using MsHuyenLC.Application.Interfaces.Services.User;
 
@@ -12,7 +8,6 @@ namespace MsHuyenLC.API.Controller.Users;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "admin,giaovu")]
 public class GiaoVienController : BaseController
 {
     private readonly ITeacherService _service;
@@ -24,6 +19,7 @@ public class GiaoVienController : BaseController
     }
 
     [HttpGet]
+    [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> GetAll()
     {
         var entities = await _service.GetAllAsync();
@@ -38,6 +34,7 @@ public class GiaoVienController : BaseController
     }
 
     [HttpGet("{id}")]
+    [Authorize(Roles = "admin,giaovu,giaovien")]
     public async Task<IActionResult> GetById(string id)
     {
         var entity = await _service.GetByIdAsync(id);
@@ -56,7 +53,28 @@ public class GiaoVienController : BaseController
         });
     }
 
+    [HttpGet("taikhoan/{id}")]
+    [Authorize(Roles = "admin,giaovu,giaovien")]
+    public async Task<IActionResult> GetByAccountId(string id)
+    {
+        var entity = await _service.GetByAccountIdAsync(id);
+        if (entity == null)
+            return NotFound(new
+            {
+                success = false,
+                message = "Không tìm thấy giáo viên"
+            });
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy thông tin giáo viên thành công",
+            data = entity
+        });
+    }
+
     [HttpPost]
+    [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> Create([FromBody] GiaoVienRequest request)
     {
         if (!ModelState.IsValid)
@@ -96,6 +114,7 @@ public class GiaoVienController : BaseController
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> Update(string id, [FromBody] GiaoVienUpdateRequest request)
     {
         if (!ModelState.IsValid)
@@ -123,6 +142,7 @@ public class GiaoVienController : BaseController
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> Delete(string id)
     {
         var giaoVien = await _service.GetByIdAsync(id);

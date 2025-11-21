@@ -17,6 +17,20 @@ public class SystemLoggerController : BaseController
     {
     }
 
+    [HttpGet]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> GetAll()
+    {
+        var logs = await _logService.GetAllAsync();
+
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy tất cả nhật ký hệ thống thành công",
+            data = logs
+        });
+    }
+
     [HttpGet("by-user/{taiKhoanId}")]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> GetByUser(Guid taiKhoanId)

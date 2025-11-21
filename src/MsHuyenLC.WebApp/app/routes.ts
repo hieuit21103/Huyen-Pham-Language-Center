@@ -7,6 +7,7 @@ export default [
     route("luyen-thi", "routes/luyen-thi.tsx"),
     route("ky-thi-cua-toi", "routes/ky-thi-cua-toi.tsx"),
     route("cham-diem-giao-vien", "routes/cham-diem-giao-vien.tsx"),
+    route("lop-cua-toi-giao-vien", "routes/lop-cua-toi-giao-vien.tsx"),
     route("thi", "routes/thi.tsx"),
     route("ket-qua-thi", "routes/ket-qua-thi.tsx"),
     route("dashboard", "routes/dashboard.tsx"),

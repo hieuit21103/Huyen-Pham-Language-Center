@@ -614,11 +614,11 @@ export default function AdminClasses() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white font-semibold">
-                                {assignment.tenGiaoVien?.charAt(0) || "?"}
+                                {assignment.giaoVien?.hoTen?.charAt(0) || "?"}
                               </div>
                               <div className="ml-3">
                                 <p className="text-sm font-medium text-gray-900">
-                                  {assignment.tenGiaoVien || "Chưa có tên"}
+                                  {assignment.giaoVien?.hoTen || "Chưa có tên"}
                                 </p>
                               </div>
                             </div>

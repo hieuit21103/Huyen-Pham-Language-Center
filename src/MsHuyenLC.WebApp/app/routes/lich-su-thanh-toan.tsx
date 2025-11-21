@@ -9,7 +9,7 @@ import { getProfile } from "~/apis/Profile";
 import { getThanhToansByStudentId, type ThanhToan } from "~/apis/ThanhToan";
 import { VaiTro } from "~/types/index";
 import Pagination from "~/components/Pagination";
-import { getByTaiKhoanId } from "~/apis";
+import { getByTaiKhoanId } from "~/apis/HocVien";
 
 export default function PaymentHistoryPage() {
   const navigate = useNavigate();

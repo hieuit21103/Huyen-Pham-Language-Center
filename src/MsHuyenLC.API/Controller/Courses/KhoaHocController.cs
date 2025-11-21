@@ -149,15 +149,33 @@ public class KhoaHocController : BaseController
             TrangThai = existingKhoaHoc.TrangThai
         };
 
-        await _service.UpdateAsync(id, request);
-        await LogUpdateAsync(oldData, existingKhoaHoc);
+        var updatedKhoaHoc = await _service.UpdateAsync(id, request);
+        if (updatedKhoaHoc == null)
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Cập nhật khóa học thất bại" 
+            });
+        
+        await LogUpdateAsync(oldData, updatedKhoaHoc);
+
+        var response = new KhoaHocResponse
+        {
+            Id = updatedKhoaHoc.Id,
+            TenKhoaHoc = updatedKhoaHoc.TenKhoaHoc,
+            MoTa = updatedKhoaHoc.MoTa,
+            HocPhi = updatedKhoaHoc.HocPhi,
+            ThoiLuong = updatedKhoaHoc.ThoiLuong,
+            NgayKhaiGiang = updatedKhoaHoc.NgayKhaiGiang,
+            TrangThai = updatedKhoaHoc.TrangThai
+        };
 
         return Ok(
             new
             {
                 success = true,
                 message = "Cập nhật khóa học thành công",
-                data = existingKhoaHoc
+                data = response
             }
         );
     }

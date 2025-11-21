@@ -1,6 +1,9 @@
 import { Database, Download, Upload, HardDrive, Clock, CheckCircle, AlertCircle, Trash2, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { setLightTheme } from "./_layout";
+import { getProfile } from "~/apis/Profile";
+import { VaiTro } from "~/types/enums";
 
 interface BackupFile {
   id: string;
@@ -12,7 +15,9 @@ interface BackupFile {
 }
 
 export default function SaoLuuDuLieu() {
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error">("success");
   const [backupFiles, setBackupFiles] = useState<BackupFile[]>([]);
@@ -42,8 +47,23 @@ export default function SaoLuuDuLieu() {
 
   useEffect(() => {
     setLightTheme();
-    loadBackupFiles();
+    checkAdminAccess();
   }, []);
+
+  const checkAdminAccess = async () => {
+    const response = await getProfile();
+    if (!response.success || !response.data) {
+      navigate("/dang-nhap");
+      return;
+    }
+    if (response.data.vaiTro !== VaiTro.Admin) {
+      setIsAdmin(false);
+      setLoading(false);
+      return;
+    }
+    setIsAdmin(true);
+    loadBackupFiles();
+  };
 
   const loadBackupFiles = async () => {
     setLoading(true);
@@ -250,9 +270,41 @@ export default function SaoLuuDuLieu() {
     return loai === "full" ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800";
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mb-4"></div>
+          <p className="text-gray-600">Đang kiểm tra quyền truy cập...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Truy cập bị từ chối</h2>
+          <p className="text-gray-600 mb-6">
+            Chỉ Quản trị viên mới có quyền truy cập trang này.
+          </p>
+          <button
+            onClick={() => navigate("/admin")}
+            className="w-full bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            Quay lại Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {message && (
+    <div className="space-y-6">{message && (
         <div
           className={`${
             messageType === "success"

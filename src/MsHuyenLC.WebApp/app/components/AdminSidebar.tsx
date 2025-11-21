@@ -72,8 +72,10 @@ export default function AdminSidebar({ onCollapsedChange }: AdminSidebarProps) {
       items: [
         { icon: Users, label: "Học viên", path: "/admin/hoc-vien" },
         { icon: GraduationCap, label: "Giáo viên", path: "/admin/giao-vien" },
-        { icon: Briefcase, label: "Giáo vụ", path: "/admin/giao-vu" },
-        { icon: UserCog, label: "Tài khoản", path: "/admin/tai-khoan" },
+        ...(role === VaiTro.Admin ? [
+          { icon: Briefcase, label: "Giáo vụ", path: "/admin/giao-vu" },
+          { icon: UserCog, label: "Tài khoản", path: "/admin/tai-khoan" },
+        ] : []),
         { icon: Bell, label: "Thông báo", path: "/admin/thong-bao" },
       ]
     },
@@ -117,7 +119,6 @@ export default function AdminSidebar({ onCollapsedChange }: AdminSidebarProps) {
     }
   ];
 
-  // Admin-only group
   const adminOnlyGroup = {
     title: "Hệ thống",
     items: [

@@ -1,14 +1,19 @@
-import { Settings as SettingsIcon, Save, Mail, Loader2 } from "lucide-react";
+import { Settings as SettingsIcon, Save, Mail, Loader2, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { getCauHinhs, updateCauHinh, createCauHinh } from "~/apis/CauHinhHeThong";
 import type { CauHinhHeThong } from "~/types/index";
 import { setLightTheme } from "./_layout";
+import { getProfile } from "~/apis/Profile";
+import { VaiTro } from "~/types/enums";
 
 export default function AdminSettings() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [configs, setConfigs] = useState<Record<string, CauHinhHeThong>>({});
+  const [isAdmin, setIsAdmin] = useState(false);
   
   const [formData, setFormData] = useState({
     tenTrungTam: "",
@@ -21,8 +26,23 @@ export default function AdminSettings() {
 
   useEffect(() => {
     setLightTheme();
-    loadConfigs();
+    checkAdminAccess();
   }, []);
+
+  const checkAdminAccess = async () => {
+    const response = await getProfile();
+    if (!response.success || !response.data) {
+      navigate("/dang-nhap");
+      return;
+    }
+    if (response.data.vaiTro !== VaiTro.Admin) {
+      setIsAdmin(false);
+      setLoading(false);
+      return;
+    }
+    setIsAdmin(true);
+    loadConfigs();
+  };
 
   const loadConfigs = async () => {
     setLoading(true);
@@ -93,7 +113,29 @@ export default function AdminSettings() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-gray-900 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Đang tải cấu hình...</p>
+          <p className="text-gray-600">Đang kiểm tra quyền truy cập...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Truy cập bị từ chối</h2>
+          <p className="text-gray-600 mb-6">
+            Chỉ Quản trị viên mới có quyền truy cập trang này.
+          </p>
+          <button
+            onClick={() => navigate("/admin")}
+            className="w-full bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            Quay lại Dashboard
+          </button>
         </div>
       </div>
     );

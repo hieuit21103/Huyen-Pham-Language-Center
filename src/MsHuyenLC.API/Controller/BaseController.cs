@@ -39,45 +39,34 @@ public abstract class BaseController : ControllerBase
 
     protected async Task LogCreateAsync(object entity)
     {
-        if (_logService != null)
-        {
-            await _logService.LogCreateAsync(GetCurrentUserId(), entity, GetClientIpAddress());
-            await _logService.SaveChangesAsync();
-        }
+        await _logService.LogCreateAsync(GetCurrentUserId(), entity, GetClientIpAddress());
+        await _logService.SaveChangesAsync();
     }
 
     protected async Task LogUpdateAsync(object oldEntity, object newEntity)
     {
-        if (_logService != null)
-        {
-            await _logService.LogUpdateAsync(GetCurrentUserId(), oldEntity, newEntity, GetClientIpAddress());
-            await _logService.SaveChangesAsync();
-        }
+        await _logService.LogUpdateAsync(GetCurrentUserId(), oldEntity, newEntity, GetClientIpAddress());
+        await _logService.SaveChangesAsync();
+
     }
 
     protected async Task LogDeleteAsync(object entity)
     {
-        if (_logService != null)
-        {
-            await _logService.LogDeleteAsync(GetCurrentUserId(), entity, GetClientIpAddress());
-            await _logService.SaveChangesAsync();
-        }
+        await _logService.LogDeleteAsync(GetCurrentUserId(), entity, GetClientIpAddress());
+        await _logService.SaveChangesAsync();
     }
 
     protected async Task LogAsync(string hanhDong, string? chiTiet = null, string duLieuCu = "", string duLieuMoi = "")
     {
-        if (_logService != null)
-        {
-            await _logService.LogAsync(
-                GetCurrentUserId(),
-                hanhDong,
-                chiTiet,
-                duLieuCu,
-                duLieuMoi,
-                GetClientIpAddress()
-            );
-            await _logService.SaveChangesAsync();
-        }
+        await _logService.LogAsync(
+            GetCurrentUserId(),
+            hanhDong,
+            chiTiet,
+            duLieuCu,
+            duLieuMoi,
+            GetClientIpAddress()
+        );
+        await _logService.SaveChangesAsync();
     }
 
     #endregion

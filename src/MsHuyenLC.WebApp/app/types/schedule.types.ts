@@ -66,8 +66,8 @@ export interface PhanCongResponse {
   id?: string;
   giaoVienId?: string;
   lopHocId?: string;
-  tenGiaoVien?: string;
-  tenLop?: string;
+  giaoVien?: GiaoVien;
+  lopHoc?: LopHoc;
   ngayPhanCong?: string;
 }
 

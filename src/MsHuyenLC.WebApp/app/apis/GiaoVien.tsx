@@ -105,3 +105,20 @@ export async function getGiaoViens(): Promise<ApiResponse> {
         return { success: false, message: `Lỗi: ${error}` };
     }
 }
+
+export async function getByTaiKhoanId(taiKhoanId: string): Promise<ApiResponse> {
+    try {
+        const token = getJwtToken();
+        const response = await fetch(GiaoVienApiUrl(`taikhoan/${taiKhoanId}`), {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+        });
+
+        return await response.json();
+    } catch (error) {
+        return { success: false, message: `Lỗi: ${error}` };
+    }
+}

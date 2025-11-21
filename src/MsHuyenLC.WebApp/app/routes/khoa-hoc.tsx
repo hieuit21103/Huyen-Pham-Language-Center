@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { getProfile } from "~/apis/Profile";
 import { registerStudent, getDangKysByHocVien } from "~/apis/DangKy";
 import type { DangKyRequest } from "~/types/index";
-import { getByTaiKhoanId, getKhoaHocs } from "~/apis";
+import { getByTaiKhoanId } from "~/apis/HocVien";
+import { getKhoaHocs } from "~/apis/KhoaHoc";
 import { Asset } from "~/assets/Asset";
 
 interface DangKy {

@@ -253,6 +253,7 @@ export default function TakeExam() {
         localStorage.removeItem(`exam_${targetDeThiId}_answers`);
         localStorage.removeItem(`exam_${targetDeThiId}_flags`);
         localStorage.removeItem("exam-time-left");
+        localStorage.removeItem("exam-total-time");
 
         navigate(`/ket-qua-thi?phienId=${response.data?.phienLamBaiId || ""}`);
       } else {

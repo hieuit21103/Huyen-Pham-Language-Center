@@ -1,5 +1,6 @@
 import { Search, Calendar, User, Activity, Filter, Download, RefreshCw, FileText, Clock, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { 
   getSystemLogs, 
   getSystemLogsByDateRange,
@@ -9,12 +10,16 @@ import { formatDateTime } from "~/utils/date-utils";
 import { setLightTheme } from "./_layout";
 import Pagination from "~/components/Pagination";
 import type { NhatKyHeThong } from "~/types/system.types";
+import { getProfile } from "~/apis/Profile";
+import { VaiTro } from "~/types/enums";
 
 
 export default function AdminSystemLogger() {
+  const navigate = useNavigate();
   const [logs, setLogs] = useState<NhatKyHeThong[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [filterAction, setFilterAction] = useState("");
@@ -27,15 +32,27 @@ export default function AdminSystemLogger() {
 
   useEffect(() => {
     setLightTheme();
+    checkAdminAccess();
   }, []);
+
+  const checkAdminAccess = async () => {
+    const response = await getProfile();
+    if (!response.success || !response.data) {
+      navigate("/dang-nhap");
+      return;
+    }
+    if (response.data.vaiTro !== VaiTro.Admin) {
+      setIsAdmin(false);
+      setLoading(false);
+      return;
+    }
+    setIsAdmin(true);
+    loadLogs();
+  };
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, filterAction, fromDate, toDate]);
-
-  useEffect(() => {
-    loadLogs();
-  }, []);
 
   const loadLogs = async () => {
     setLoading(true);
@@ -152,9 +169,41 @@ export default function AdminSystemLogger() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mb-4"></div>
+          <p className="text-gray-600">Đang kiểm tra quyền truy cập...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Truy cập bị từ chối</h2>
+          <p className="text-gray-600 mb-6">
+            Chỉ Quản trị viên mới có quyền truy cập trang này.
+          </p>
+          <button
+            onClick={() => navigate("/admin")}
+            className="w-full bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            Quay lại Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {message && (
+    <div className="space-y-6">{message && (
         <div className="bg-blue-100 border-blue-400 text-blue-700 border px-4 py-3 rounded-lg">
           {message}
         </div>
@@ -164,7 +213,7 @@ export default function AdminSystemLogger() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Nhật ký hệ thống</h1>
-          <p className="text-gray-600 mt-1">Theo dõi hoạt động và audit trail</p>
+          <p className="text-gray-600 mt-1">Theo dõi hoạt động</p>
         </div>
         <div className="flex gap-2">
           <button 

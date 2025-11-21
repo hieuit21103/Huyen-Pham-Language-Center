@@ -372,7 +372,7 @@ export default function DashboardGiaoVien() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-900 to-blue-700 rounded-xl p-8 text-white">
+      <div className="bg-gradient-to-r from-gray-900 to-gray-700 rounded-xl p-8 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center overflow-hidden">
@@ -463,6 +463,24 @@ export default function DashboardGiaoVien() {
               <Send className="w-5 h-5 mr-2" />
               Gửi thông báo mới
             </button>
+          </div>
+
+          {/* Lớp của tôi - Quick Link */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+              <GraduationCap className="w-5 h-5 mr-2" />
+              Quản lý lớp học
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Xem danh sách học viên
+            </p>
+            <a
+              href="/lop-cua-toi-giao-vien"
+              className="w-full flex items-center justify-center px-4 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors duration-200"
+            >
+              <Users className="w-5 h-5 mr-2" />
+              Xem lớp của tôi
+            </a>
           </div>
           </div>
 

@@ -119,46 +119,6 @@ export default function LuyenThi() {
                 <p className="text-gray-600">Hệ thống đề thi luyện tập</p>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                    <div className="flex items-center space-x-3">
-                        <BookOpen className="w-10 h-10 text-blue-600" />
-                        <div>
-                            <p className="text-blue-700 text-sm font-medium">Tổng số đề</p>
-                            <p className="text-3xl font-bold text-blue-900">{deThis.length}</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                    <div className="flex items-center space-x-3">
-                        <FileText className="w-10 h-10 text-green-600" />
-                        <div>
-                            <p className="text-green-700 text-sm font-medium">Đề luyện tập</p>
-                            <p className="text-3xl font-bold text-green-900">{deThis.length}</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
-                    <div className="flex items-center space-x-3">
-                        <Clock className="w-10 h-10 text-purple-600" />
-                        <div>
-                            <p className="text-purple-700 text-sm font-medium">Đã hoàn thành</p>
-                            <p className="text-3xl font-bold text-purple-900">0</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
-                    <div className="flex items-center space-x-3">
-                        <Play className="w-10 h-10 text-orange-600" />
-                        <div>
-                            <p className="text-orange-700 text-sm font-medium">Điểm TB</p>
-                            <p className="text-3xl font-bold text-orange-900">--</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             {/* Filters */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <input
@@ -179,9 +139,9 @@ export default function LuyenThi() {
                     </div>
                 ) : (
                     filteredDeThis.map((deThi) => (
-                        <div key={deThi.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                        <div key={deThi.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow flex flex-col">
                             <div className="mb-4">
-                                <h3 className="text-xl font-bold text-gray-900">{deThi.tenDe || "Đề thi"}</h3>
+                                <h3 className="text-xl font-bold text-gray-900 min-h-[56px] flex items-center">{deThi.tenDe || "Đề thi"}</h3>
                             </div>
 
                             <div className="space-y-2 mb-6">
