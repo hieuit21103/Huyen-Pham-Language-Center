@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using MsHuyenLC.Domain.Entities.Courses;
 
 namespace MsHuyenLC.Domain.Entities.Learning.OnlineExam;
@@ -5,7 +7,11 @@ namespace MsHuyenLC.Domain.Entities.Learning.OnlineExam;
 public class KyThi
 {
     public Guid Id { get; set; }
+    
+    [MaxLength(200)]
+    [Column(TypeName = "varchar(200)")]
     public string TenKyThi { get; set; } = null!;
+    
     public DateOnly NgayThi { get; set; }
     public TimeOnly GioBatDau { get; set; }
     public TimeOnly GioKetThuc { get; set; }

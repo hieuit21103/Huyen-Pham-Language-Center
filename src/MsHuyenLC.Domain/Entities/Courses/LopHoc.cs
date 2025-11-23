@@ -1,9 +1,16 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace MsHuyenLC.Domain.Entities.Courses;
 
 public class LopHoc
 {
     public Guid Id { get; set; }
+    
+    [MaxLength(100)]
+    [Column(TypeName = "varchar(100)")]
     public string TenLop { get; set; } = null!;
+    
     public int SiSoHienTai { get; set; }
     public int SiSoToiDa { get; set; }
     public TrangThaiLopHoc TrangThai { get; set; } = TrangThaiLopHoc.danghoc;
