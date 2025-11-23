@@ -59,9 +59,19 @@ export default function AdminSystemLogger() {
     const response = await getSystemLogs();
     
     if (response.success && Array.isArray(response.data)) {
-      setLogs(response.data);
+      const sortedLogs = response.data.sort((a: NhatKyHeThong, b: NhatKyHeThong) => {
+        const dateA = new Date(a.thoiGian || 0).getTime();
+        const dateB = new Date(b.thoiGian || 0).getTime();
+        return dateB - dateA; 
+      });
+      setLogs(sortedLogs);
     } else if (response.success && response.data?.items) {
-      setLogs(response.data.items);
+      const sortedLogs = response.data.items.sort((a: NhatKyHeThong, b: NhatKyHeThong) => {
+        const dateA = new Date(a.thoiGian || 0).getTime();
+        const dateB = new Date(b.thoiGian || 0).getTime();
+        return dateB - dateA; 
+      });
+      setLogs(sortedLogs);
     }
     setLoading(false);
   };
@@ -73,16 +83,36 @@ export default function AdminSystemLogger() {
     if (fromDate && toDate) {
       const response = await getSystemLogsByDateRange(fromDate, toDate);
       if (response.success && Array.isArray(response.data)) {
-        setLogs(response.data);
+        const sortedLogs = response.data.sort((a: NhatKyHeThong, b: NhatKyHeThong) => {
+          const dateA = new Date(a.thoiGian || 0).getTime();
+          const dateB = new Date(b.thoiGian || 0).getTime();
+          return dateB - dateA;
+        });
+        setLogs(sortedLogs);
       } else if (response.success && response.data?.items) {
-        setLogs(response.data.items);
+        const sortedLogs = response.data.items.sort((a: NhatKyHeThong, b: NhatKyHeThong) => {
+          const dateA = new Date(a.thoiGian || 0).getTime();
+          const dateB = new Date(b.thoiGian || 0).getTime();
+          return dateB - dateA;
+        });
+        setLogs(sortedLogs);
       }
     } else if (filterAction) {
       const response = await searchSystemLogs("", filterAction);
       if (response.success && Array.isArray(response.data)) {
-        setLogs(response.data);
+        const sortedLogs = response.data.sort((a: NhatKyHeThong, b: NhatKyHeThong) => {
+          const dateA = new Date(a.thoiGian || 0).getTime();
+          const dateB = new Date(b.thoiGian || 0).getTime();
+          return dateB - dateA;
+        });
+        setLogs(sortedLogs);
       } else if (response.success && response.data?.items) {
-        setLogs(response.data.items);
+        const sortedLogs = response.data.items.sort((a: NhatKyHeThong, b: NhatKyHeThong) => {
+          const dateA = new Date(a.thoiGian || 0).getTime();
+          const dateB = new Date(b.thoiGian || 0).getTime();
+          return dateB - dateA;
+        });
+        setLogs(sortedLogs);
       }
     } else {
       await loadLogs();
@@ -385,7 +415,13 @@ export default function AdminSystemLogger() {
                               <div className="mb-3">
                                 <p className="text-xs font-semibold text-red-600 mb-1">Dữ liệu cũ:</p>
                                 <pre className="text-xs bg-red-50 p-2 rounded overflow-x-auto max-h-40">
-                                  {JSON.stringify(JSON.parse(log.duLieuCu), null, 2)}
+                                  {(() => {
+                                    try {
+                                      return JSON.stringify(JSON.parse(log.duLieuCu), null, 2);
+                                    } catch {
+                                      return log.duLieuCu;
+                                    }
+                                  })()}
                                 </pre>
                               </div>
                             )}
@@ -393,7 +429,13 @@ export default function AdminSystemLogger() {
                               <div>
                                 <p className="text-xs font-semibold text-green-600 mb-1">Dữ liệu mới:</p>
                                 <pre className="text-xs bg-green-50 p-2 rounded overflow-x-auto max-h-40">
-                                  {JSON.stringify(JSON.parse(log.duLieuMoi), null, 2)}
+                                  {(() => {
+                                    try {
+                                      return JSON.stringify(JSON.parse(log.duLieuMoi), null, 2);
+                                    } catch {
+                                      return log.duLieuMoi;
+                                    }
+                                  })()}
                                 </pre>
                               </div>
                             )}

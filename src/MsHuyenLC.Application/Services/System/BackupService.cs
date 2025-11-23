@@ -202,7 +202,7 @@ public class BackupService : IBackupService
             var processInfo = new ProcessStartInfo
             {
                 FileName = "pg_dump",
-                Arguments = $"-h {connectionParams.Host} -p {connectionParams.Port} -U {connectionParams.Username} -d {connectionParams.Database} -F p -f \"{localFilePath}\"",
+                Arguments = $"-h {connectionParams.Host} -p {connectionParams.Port} -U {connectionParams.Username} -d {connectionParams.Database} -F p --clean --if-exists -f \"{localFilePath}\"",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
