@@ -128,6 +128,10 @@ export function HealthApiUrl() {
     return `${BASE_API_URL.replace('/api', '')}/health`;
 }
 
+export function BackupApiUrl(path: string = '') {
+    return path ? `${BASE_API_URL}/SaoLuuDuLieu/${path}` : `${BASE_API_URL}/SaoLuuDuLieu`;
+}
+
 // Legacy support
 export const BASE_COURSE_API_URL = KhoaHocApiUrl();
 

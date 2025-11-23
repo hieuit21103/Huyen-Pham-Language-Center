@@ -15,22 +15,24 @@ import {
 import { getProfile } from "~/apis/Profile";
 import { getByTaiKhoanId as getGiaoVienByTaiKhoanId } from "~/apis/HocVien";
 import { getLopHocs } from "~/apis/LopHoc";
-import { getPhienLamBais } from "~/apis/PhienLamBai";
+import { getKyThis } from "~/apis/KyThi";
+import { getPhienLamBais, getPhienLamBaiById } from "~/apis/PhienLamBai";
 import { gradePhienLamBai } from "~/apis/PhienLamBai";
-import type { LopHoc, PhienLamBai } from "~/types/index";
-import Header from "~/components/Header";
-import Footer from "~/components/Footer";
+import type { LopHoc, PhienLamBai, KyThi, CauTraLoi } from "~/types/index";
 
 export default function TeacherGrading() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<LopHoc[]>([]);
+  const [kyThis, setKyThis] = useState<KyThi[]>([]);
   const [sessions, setSessions] = useState<PhienLamBai[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<PhienLamBai[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
+  const [selectedExam, setSelectedExam] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [showGradeModal, setShowGradeModal] = useState(false);
   const [selectedSession, setSelectedSession] = useState<PhienLamBai | null>(null);
+  const [sessionDetails, setSessionDetails] = useState<PhienLamBai | null>(null);
   const [gradeValue, setGradeValue] = useState("");
 
   useEffect(() => {
@@ -39,7 +41,7 @@ export default function TeacherGrading() {
 
   useEffect(() => {
     applyFilters();
-  }, [sessions, selectedClass, searchTerm]);
+  }, [sessions, selectedClass, selectedExam, searchTerm]);
 
   const loadData = async () => {
     setLoading(true);
@@ -55,6 +57,11 @@ export default function TeacherGrading() {
       const classesRes = await getLopHocs();
       if (classesRes.success && classesRes.data) {
         setClasses(classesRes.data);
+      }
+
+      const kyThisRes = await getKyThis();
+      if (kyThisRes.success && kyThisRes.data) {
+        setKyThis(kyThisRes.data);
       }
     }
 
@@ -75,6 +82,12 @@ export default function TeacherGrading() {
       );
     }
 
+    if (selectedExam) {
+      filtered = filtered.filter(
+        (session) => session.kyThiId === selectedExam
+      );
+    }
+
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
@@ -88,9 +101,18 @@ export default function TeacherGrading() {
     setFilteredSessions(filtered);
   };
 
-  const handleGrade = (session: PhienLamBai) => {
+  const handleGrade = async (session: PhienLamBai) => {
     setSelectedSession(session);
     setGradeValue(session.diem !== null && session.diem !== undefined ? session.diem.toString() : "");
+    
+    // Load full session details with answers
+    if (session.id) {
+      const detailsRes = await getPhienLamBaiById(session.id);
+      if (detailsRes.success && detailsRes.data) {
+        setSessionDetails(detailsRes.data);
+      }
+    }
+    
     setShowGradeModal(true);
   };
 
@@ -207,7 +229,7 @@ export default function TeacherGrading() {
 
           {/* Filters */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Filter className="w-4 h-4 inline mr-2" />
@@ -222,6 +244,25 @@ export default function TeacherGrading() {
                   {classes.map((cls) => (
                     <option key={cls.id} value={cls.id}>
                       {cls.tenLop}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Filter className="w-4 h-4 inline mr-2" />
+                  Lọc theo kỳ thi
+                </label>
+                <select
+                  value={selectedExam}
+                  onChange={(e) => setSelectedExam(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                >
+                  <option value="">Tất cả kỳ thi</option>
+                  {kyThis.map((kyThi) => (
+                    <option key={kyThi.id} value={kyThi.id}>
+                      {kyThi.tenKyThi}
                     </option>
                   ))}
                 </select>
@@ -418,6 +459,44 @@ export default function TeacherGrading() {
                   </p>
                 </div>
               </div>
+
+              {/* Answers Section */}
+              {sessionDetails?.cacCauTraLoi && sessionDetails.cacCauTraLoi.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Câu trả lời của học viên</h3>
+                  <div className="space-y-4 max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                    {sessionDetails.cacCauTraLoi.map((answer, index) => (
+                      <div
+                        key={answer.id || index}
+                        className={`p-4 rounded-lg border-2 ${
+                          answer.dung
+                            ? "bg-green-50 border-green-300"
+                            : "bg-red-50 border-red-300"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <p className="text-sm font-medium text-gray-900">
+                            Câu {index + 1}: {answer.noiDungCauHoi || "—"}
+                          </p>
+                          {answer.dung ? (
+                            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 ml-2" />
+                          ) : (
+                            <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 ml-2" />
+                          )}
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">Trả lời: </span>
+                            <span className={answer.dung ? "text-green-700" : "text-red-700"}>
+                              {answer.cauTraLoiText || "Không trả lời"}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

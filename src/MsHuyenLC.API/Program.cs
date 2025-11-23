@@ -151,6 +151,7 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 // ========== System Services ==========
 builder.Services.AddScoped<ISystemLoggerService, SystemLoggerService>();
 builder.Services.AddScoped<ISystemConfigService, SystemConfigService>();
+builder.Services.AddScoped<IBackupService, BackupService>();
 
 // ========== Email Services ==========
 builder.Services.AddScoped<IEmailService, EmailService>();

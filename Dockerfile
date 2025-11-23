@@ -44,8 +44,9 @@ RUN dotnet publish "MsHuyenLC.API.csproj" -c Release -o /app/publish /p:UseAppHo
 FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS final
 WORKDIR /app
 
-# Install required packages
-RUN apk add --no-cache icu-libs curl
+# Install required packages including PostgreSQL 18 client tools
+RUN apk add --no-cache icu-libs curl && \
+    apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main postgresql18-client
 
 # Set environment variables
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
