@@ -4,30 +4,25 @@ import {
   FileCheck,
   Search,
   Calendar,
-  Users,
   CheckCircle,
   XCircle,
   Eye,
   X,
   Filter,
-  TrendingUp,
 } from "lucide-react";
 import { getProfile } from "~/apis/Profile";
-import { getByTaiKhoanId as getGiaoVienByTaiKhoanId } from "~/apis/HocVien";
-import { getLopHocs } from "~/apis/LopHoc";
+import { getByTaiKhoanId as getGiaoVienByTaiKhoanId } from "~/apis/GiaoVien";
 import { getKyThis } from "~/apis/KyThi";
 import { getPhienLamBais, getPhienLamBaiById } from "~/apis/PhienLamBai";
 import { gradePhienLamBai } from "~/apis/PhienLamBai";
-import type { LopHoc, PhienLamBai, KyThi, CauTraLoi } from "~/types/index";
+import type { PhienLamBai, KyThi, CauTraLoi } from "~/types/index";
 
 export default function TeacherGrading() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [classes, setClasses] = useState<LopHoc[]>([]);
   const [kyThis, setKyThis] = useState<KyThi[]>([]);
   const [sessions, setSessions] = useState<PhienLamBai[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<PhienLamBai[]>([]);
-  const [selectedClass, setSelectedClass] = useState<string>("");
   const [selectedExam, setSelectedExam] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [showGradeModal, setShowGradeModal] = useState(false);
@@ -41,7 +36,7 @@ export default function TeacherGrading() {
 
   useEffect(() => {
     applyFilters();
-  }, [sessions, selectedClass, selectedExam, searchTerm]);
+  }, [sessions, selectedExam, searchTerm]);
 
   const loadData = async () => {
     setLoading(true);
@@ -54,20 +49,25 @@ export default function TeacherGrading() {
 
     const teacherRes = await getGiaoVienByTaiKhoanId(profileRes.data.id!);
     if (teacherRes.success && teacherRes.data) {
-      const classesRes = await getLopHocs();
-      if (classesRes.success && classesRes.data) {
-        setClasses(classesRes.data);
-      }
-
       const kyThisRes = await getKyThis();
       if (kyThisRes.success && kyThisRes.data) {
         setKyThis(kyThisRes.data);
+        
+        const sessionsRes = await getPhienLamBais();
+        if (sessionsRes.success && sessionsRes.data) {
+          const filteredData = sessionsRes.data.filter((session: PhienLamBai) => session.kyThiId);
+          
+          const enrichedSessions = filteredData.map((session: PhienLamBai) => {
+            const kyThi = kyThisRes.data.find((kt: KyThi) => kt.id === session.kyThiId);
+            return {
+              ...session,
+              kyThi: kyThi || session.kyThi
+            };
+          });
+          
+          setSessions(enrichedSessions);
+        }
       }
-    }
-
-    const sessionsRes = await getPhienLamBais();
-    if (sessionsRes.success && sessionsRes.data) {
-      setSessions(sessionsRes.data);
     }
 
     setLoading(false);
@@ -75,12 +75,6 @@ export default function TeacherGrading() {
 
   const applyFilters = () => {
     let filtered = [...sessions];
-
-    if (selectedClass) {
-      filtered = filtered.filter(
-        (session) => session.hocVien?.lopHocId === selectedClass
-      );
-    }
 
     if (selectedExam) {
       filtered = filtered.filter(
@@ -105,7 +99,6 @@ export default function TeacherGrading() {
     setSelectedSession(session);
     setGradeValue(session.diem !== null && session.diem !== undefined ? session.diem.toString() : "");
     
-    // Load full session details with answers
     if (session.id) {
       const detailsRes = await getPhienLamBaiById(session.id);
       if (detailsRes.success && detailsRes.data) {
@@ -149,17 +142,6 @@ export default function TeacherGrading() {
   const ungradedCount = filteredSessions.filter(
     (s) => s.diem === null || s.diem === undefined
   ).length;
-  const passedCount = filteredSessions.filter((s) => s.diem && s.diem >= 5).length;
-  const failedCount = filteredSessions.filter((s) => s.diem && s.diem < 5).length;
-  const averageScore =
-    filteredSessions.filter((s) => s.diem !== null && s.diem !== undefined).length > 0
-      ? (
-          filteredSessions
-            .filter((s) => s.diem !== null && s.diem !== undefined)
-            .reduce((sum, s) => sum + (s.diem || 0), 0) /
-          filteredSessions.filter((s) => s.diem !== null && s.diem !== undefined).length
-        ).toFixed(2)
-      : "N/A";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -171,7 +153,7 @@ export default function TeacherGrading() {
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -197,58 +179,11 @@ export default function TeacherGrading() {
                 </div>
               </div>
             </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Đạt / Không đạt</p>
-                  <p className="text-3xl font-bold mt-1">
-                    <span className="text-green-600">{passedCount}</span>
-                    <span className="text-gray-400 text-xl mx-1">/</span>
-                    <span className="text-red-600">{failedCount}</span>
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-6 h-6 text-green-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Điểm trung bình</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-1">{averageScore}</p>
-                </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-purple-600" />
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Filters */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Filter className="w-4 h-4 inline mr-2" />
-                  Lọc theo lớp
-                </label>
-                <select
-                  value={selectedClass}
-                  onChange={(e) => setSelectedClass(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                >
-                  <option value="">Tất cả lớp</option>
-                  {classes.map((cls) => (
-                    <option key={cls.id} value={cls.id}>
-                      {cls.tenLop}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Filter className="w-4 h-4 inline mr-2" />
@@ -307,9 +242,6 @@ export default function TeacherGrading() {
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[120px]">
                           Học viên
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[100px]">
-                          Lớp
-                        </th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[150px]">
                           Kỳ thi / Đề thi
                         </th>
@@ -321,9 +253,6 @@ export default function TeacherGrading() {
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-20">
                           Điểm
-                        </th>
-                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-28">
-                          Kết quả
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
                           Thao tác
@@ -339,11 +268,6 @@ export default function TeacherGrading() {
                           <td className="px-4 py-4">
                             <div className="text-sm font-medium text-gray-900 truncate max-w-[150px]" title={session.hocVien?.hoTen || "—"}>
                               {session.hocVien?.hoTen || "—"}
-                            </div>
-                          </td>
-                          <td className="px-4 py-4">
-                            <div className="text-sm text-gray-600 truncate max-w-[120px]" title={session.hocVien?.lopHoc?.tenLop || "—"}>
-                              {session.hocVien?.lopHoc?.tenLop || "—"}
                             </div>
                           </td>
                           <td className="px-4 py-4">
@@ -366,25 +290,6 @@ export default function TeacherGrading() {
                             >
                               {session.diem !== null && session.diem !== undefined ? session.diem.toFixed(2) : "—"}
                             </span>
-                          </td>
-                          <td className="px-4 py-4 text-center">
-                            {session.diem !== null && session.diem !== undefined ? (
-                              session.diem >= 5 ? (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  Đạt
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
-                                  <XCircle className="w-3 h-3 mr-1" />
-                                  Không đạt
-                                </span>
-                              )
-                            ) : (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
-                                Chưa chấm
-                              </span>
-                            )}
                           </td>
                           <td className="px-4 py-4 text-center">
                             <button
@@ -422,16 +327,10 @@ export default function TeacherGrading() {
 
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="col-span-2">
                   <p className="text-sm text-gray-600">Học viên</p>
                   <p className="text-base font-medium text-gray-900">
                     {selectedSession.hocVien?.hoTen || "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Lớp</p>
-                  <p className="text-base font-medium text-gray-900">
-                    {selectedSession.hocVien?.lopHoc?.tenLop || "—"}
                   </p>
                 </div>
                 <div>
@@ -465,35 +364,61 @@ export default function TeacherGrading() {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Câu trả lời của học viên</h3>
                   <div className="space-y-4 max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
-                    {sessionDetails.cacCauTraLoi.map((answer, index) => (
-                      <div
-                        key={answer.id || index}
-                        className={`p-4 rounded-lg border-2 ${
-                          answer.dung
-                            ? "bg-green-50 border-green-300"
-                            : "bg-red-50 border-red-300"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <p className="text-sm font-medium text-gray-900">
-                            Câu {index + 1}: {answer.noiDungCauHoi || "—"}
-                          </p>
-                          {answer.dung ? (
-                            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 ml-2" />
-                          ) : (
-                            <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 ml-2" />
-                          )}
+                    {sessionDetails.cacCauTraLoi.map((answer, index) => {
+                      const correctAnswer = answer.cauHoi?.cacDapAn?.find((da) => da.dung);
+                      const studentAnswerText = answer.cauTraLoiText
+                        ? answer.cauHoi?.cacDapAn?.find((da) => da.nhan === answer.cauTraLoiText)?.noiDung || answer.cauTraLoiText
+                        : "Không trả lời";
+                      
+                      return (
+                        <div
+                          key={answer.id || index}
+                          className={`p-4 rounded-lg border-2 ${
+                            answer.dung
+                              ? "bg-green-50 border-green-300"
+                              : "bg-red-50 border-red-300"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <p className="text-sm font-medium text-gray-900 flex-1">
+                              Câu {index + 1}: {answer.cauHoi?.noiDungCauHoi || "—"}
+                            </p>
+                            {answer.dung ? (
+                              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 ml-2" />
+                            ) : (
+                              <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 ml-2" />
+                            )}
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-start">
+                              <span className="text-sm font-medium text-gray-600 min-w-[100px]">Học viên chọn:</span>
+                              <span className={`text-sm font-medium ${answer.dung ? "text-green-700" : "text-red-700"}`}>
+                                {studentAnswerText}
+                              </span>
+                            </div>
+                            
+                            {!answer.dung && correctAnswer && (
+                              <div className="flex items-start">
+                                <span className="text-sm font-medium text-gray-600 min-w-[100px]">Đáp án đúng:</span>
+                                <span className="text-sm font-medium text-green-700">
+                                  {correctAnswer.noiDung}
+                                </span>
+                              </div>
+                            )}
+                            
+                            {correctAnswer?.giaiThich && (
+                              <div className="flex items-start mt-2 pt-2 border-t border-gray-200">
+                                <span className="text-sm font-medium text-gray-600 min-w-[100px]">Giải thích:</span>
+                                <span className="text-sm text-gray-700 italic">
+                                  {correctAnswer.giaiThich}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="mt-2">
-                          <p className="text-sm text-gray-600">
-                            <span className="font-medium">Trả lời: </span>
-                            <span className={answer.dung ? "text-green-700" : "text-red-700"}>
-                              {answer.cauTraLoiText || "Không trả lời"}
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

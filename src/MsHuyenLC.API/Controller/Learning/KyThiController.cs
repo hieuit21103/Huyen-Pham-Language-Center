@@ -21,7 +21,7 @@ public class KyThiController : BaseController
 
 
     [HttpGet]
-    [Authorize(Roles = "admin,giaovu")]
+    [Authorize(Roles = "admin,giaovu,giaovien")]
     public async Task<ActionResult<IEnumerable<KyThi>>> GetAll()
     {
         var kyThis = await _service.GetAllAsync();

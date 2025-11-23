@@ -293,8 +293,11 @@ export interface PhienLamBai {
 
 export interface CauTraLoi {
   id?: string;
+  phienId?: string;
   cauHoiId?: string;
   cauTraLoiText?: string;
   dung?: boolean;
   noiDungCauHoi?: string;
+  phien?: any;
+  cauHoi?: CauHoi;
 }

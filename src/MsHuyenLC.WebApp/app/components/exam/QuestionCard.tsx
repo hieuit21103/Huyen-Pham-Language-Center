@@ -71,25 +71,6 @@ export function QuestionCard({
         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white font-semibold mr-3 flex-shrink-0">
           {questionNumber}
         </span>
-        <div className="flex-1">
-          <div className="flex gap-2 mb-2">
-            {question.kyNang && (
-              <span className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded">
-                {question.kyNang}
-              </span>
-            )}
-            {question.capDo && (
-              <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
-                {question.capDo}
-              </span>
-            )}
-            {question.doKho && (
-              <span className="px-2 py-1 text-xs bg-orange-100 text-orange-700 rounded">
-                {question.doKho}
-              </span>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* Question Content */}

@@ -10,7 +10,7 @@ import {
   User, Calendar, Clock, Mail, Phone, MapPin, Edit, X, Camera,
   Bell, Send, Users, GraduationCap, FileText
 } from "lucide-react";
-import { getGiaoVien } from "~/apis";
+import { getByTaiKhoanId } from "~/apis/GiaoVien";
 
 export default function DashboardGiaoVien() {
   const navigate = useNavigate();
@@ -68,7 +68,12 @@ export default function DashboardGiaoVien() {
       navigate("/dashboard");
       return;
     }
-    const lichDayRes = await getLichHocByTeacher(profileRes.data.id!);
+    const giaoVienRes = await getByTaiKhoanId(profileRes.data.id!);
+    if (!giaoVienRes.success || !giaoVienRes.data) {
+      navigate("/dashboard");
+      return;
+    }
+    const lichDayRes = await getLichHocByTeacher(giaoVienRes.data.id!);
     if (lichDayRes.success && Array.isArray(lichDayRes.data)) {
       setLichHocs(lichDayRes.data);
 
