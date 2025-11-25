@@ -14,5 +14,7 @@ public interface IBackupService
     Task<bool> RestoreBackupAsync(string id);
     Task<string> ExportDatabaseAsync();
     Task<bool> ImportDatabaseAsync(string filePath);
+    Task<string> UploadBackupFileAsync(Stream fileStream, string fileName);
+    Task<string> GetPresignedUrlAsync(string objectName);
     Task SaveChangesAsync();
 }

@@ -8,7 +8,6 @@ import { getPhienLamBaiByHocVien } from "~/apis/PhienLamBai";
 import type { KyThi, PhienLamBai, HocVien } from "~/types/index";
 import Header from "~/components/Header";
 import Footer from "~/components/Footer";
-import { formatDateTime } from "~/utils/date-utils";
 
 export default function MyExams() {
   const navigate = useNavigate();
@@ -169,7 +168,7 @@ export default function MyExams() {
                             <div className="flex items-center text-sm text-gray-600">
                               <Calendar className="w-4 h-4 mr-2" />
                               <span>
-                                {formatDateTime(exam.ngayThi)}
+                                {exam.ngayThi}
                               </span>
                             </div>
                             <div className="flex items-center text-sm text-gray-600">
@@ -269,7 +268,7 @@ export default function MyExams() {
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {formatDateTime(session.ngayLam!)}
+                                {session.ngayLam!}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
                                 {session.tongCauHoi}
@@ -357,7 +356,7 @@ export default function MyExams() {
                 <div>
                   <p className="text-sm text-gray-600">Ngày làm</p>
                   <p className="text-base font-medium text-gray-900">
-                    {formatDateTime(selectedSession.ngayLam!)}
+                    {selectedSession.ngayLam!}
                   </p>
                 </div>
                 <div>

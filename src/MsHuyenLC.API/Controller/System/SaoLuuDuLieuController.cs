@@ -24,11 +24,25 @@ public class SaoLuuDuLieuController : BaseController
         try
         {
             var backups = await _backupService.GetAllAsync();
+            
+            var backupsWithUrls = new List<object>();
+            foreach (var backup in backups)
+            {
+                var presignedUrl = await _backupService.GetPresignedUrlAsync(backup.DuongDan);
+                backupsWithUrls.Add(new
+                {
+                    backup.Id,
+                    backup.NgaySaoLuu,
+                    DuongDan = presignedUrl,
+                    ObjectName = backup.DuongDan
+                });
+            }
+            
             return Ok(new
             {
                 success = true,
                 message = "Lấy danh sách sao lưu thành công",
-                data = backups
+                data = backupsWithUrls
             });
         }
         catch (Exception ex)
@@ -276,6 +290,44 @@ public class SaoLuuDuLieuController : BaseController
             {
                 success = false,
                 message = $"Lỗi khi xóa bản sao lưu: {ex.Message}"
+            });
+        }
+    }
+
+    [HttpPost("upload")]
+    public async Task<IActionResult> UploadBackupFile([FromForm] IFormFile file)
+    {
+        try
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Vui lòng chọn tệp sao lưu để tải lên"
+                });
+            }
+            
+            await using var stream = file.OpenReadStream();
+            var minioPath = await _backupService.UploadBackupFileAsync(stream, file.FileName);
+            var backup = await _backupService.CreateBackupAsync(minioPath);
+            await _backupService.SaveChangesAsync();
+
+            await LogCreateAsync(backup);
+
+            return Ok(new
+            {
+                success = true,
+                message = "Tải lên tệp sao lưu thành công",
+                data = backup
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                success = false,
+                message = $"Lỗi khi tải lên tệp sao lưu: {ex.Message}"
             });
         }
     }

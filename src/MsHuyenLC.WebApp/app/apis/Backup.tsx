@@ -142,3 +142,26 @@ export async function deleteBackup(id: string): Promise<ApiResponse> {
         };
     }
 }
+
+export async function uploadBackup(file: File): Promise<ApiResponse> {
+    try {
+        const token = getJwtToken();
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch(BackupApiUrl("upload"), {
+            method: "POST",
+            headers: {
+                ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+            body: formData,
+        });
+
+        return await response.json();
+    } catch (error: any) {
+        return {
+            success: false,
+            message: error.message || "Đã xảy ra lỗi",
+        };
+    }
+}

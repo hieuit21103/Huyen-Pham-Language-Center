@@ -87,20 +87,13 @@ public class BackupService : IBackupService
         if (backup == null)
             return false;
 
-        if (backup.DuongDan.StartsWith("http") && backup.DuongDan.Contains(_minioBucket))
+        if (!string.IsNullOrEmpty(backup.DuongDan) && !backup.DuongDan.StartsWith("/") && !backup.DuongDan.Contains(":"))
         {
             try
             {
-                var uri = new Uri(backup.DuongDan);
-                var objectName = uri.AbsolutePath.TrimStart('/');
-                if (objectName.StartsWith($"{_minioBucket}/"))
-                {
-                    objectName = objectName.Substring($"{_minioBucket}/".Length);
-                }
-
                 await _minioClient.RemoveObjectAsync(new RemoveObjectArgs()
                     .WithBucket(_minioBucket)
-                    .WithObject(objectName));
+                    .WithObject(backup.DuongDan));
             }
             catch
             {
@@ -132,19 +125,12 @@ public class BackupService : IBackupService
             string localFilePath;
             bool needsCleanup = false;
 
-            if (backup.DuongDan.StartsWith("http") && backup.DuongDan.Contains(_minioBucket))
+            if (!string.IsNullOrEmpty(backup.DuongDan) && !backup.DuongDan.StartsWith("/") && !backup.DuongDan.Contains(":"))
             {
-                var uri = new Uri(backup.DuongDan);
-                var objectName = uri.AbsolutePath.TrimStart('/');
-                if (objectName.StartsWith($"{_minioBucket}/"))
-                {
-                    objectName = objectName.Substring($"{_minioBucket}/".Length);
-                }
-
                 localFilePath = Path.Combine(_backupDirectory, $"restore_{Guid.NewGuid()}.sql");
                 await _minioClient.GetObjectAsync(new GetObjectArgs()
                     .WithBucket(_minioBucket)
-                    .WithObject(objectName)
+                    .WithObject(backup.DuongDan)
                     .WithFile(localFilePath));
                 needsCleanup = true;
             }
@@ -193,8 +179,8 @@ public class BackupService : IBackupService
     {
         try
         {
-            var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
-            var fileName = $"backup_{timestamp}.sql";
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            var fileName = $"{timestamp}.sql";
             var localFilePath = Path.Combine(_backupDirectory, fileName);
 
             var connectionParams = ParseConnectionString(_connectionString);
@@ -244,8 +230,7 @@ public class BackupService : IBackupService
 
             File.Delete(localFilePath);
 
-            var minioUrl = $"{_minioDomain}/{_minioBucket}/{objectName}";
-            return minioUrl;
+            return objectName;
         }
         catch (Exception ex)
         {
@@ -288,6 +273,43 @@ public class BackupService : IBackupService
         }
     }
 
+    public async Task<string> UploadBackupFileAsync(Stream fileStream, string fileName)
+    {
+        if (fileStream == null || fileStream.Length == 0)
+            throw new ArgumentException("File stream is empty", nameof(fileStream));
+
+        if (string.IsNullOrWhiteSpace(fileName))
+            throw new ArgumentException("File name is required", nameof(fileName));
+
+        try
+        {
+            bool bucketExists = await _minioClient.BucketExistsAsync(
+                new BucketExistsArgs().WithBucket(_minioBucket));
+            
+            if (!bucketExists)
+            {
+                await _minioClient.MakeBucketAsync(
+                    new MakeBucketArgs().WithBucket(_minioBucket));
+            }
+
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            var objectName = $"{timestamp}.sql";
+
+            await _minioClient.PutObjectAsync(new PutObjectArgs()
+                .WithBucket(_minioBucket)
+                .WithObject(objectName)
+                .WithStreamData(fileStream)
+                .WithObjectSize(fileStream.Length)
+                .WithContentType("application/sql"));
+
+            return objectName;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Upload backup file failed: {ex.Message}", ex);
+        }
+    }
+
     private (string Host, string Port, string Database, string Username, string Password) ParseConnectionString(string connectionString)
     {
         var parts = connectionString.Split(';');
@@ -309,6 +331,26 @@ public class BackupService : IBackupService
             Username: dict.GetValueOrDefault("Username", ""),
             Password: dict.GetValueOrDefault("Password", "")
         );
+    }
+
+    public async Task<string> GetPresignedUrlAsync(string objectName)
+    {
+        if (string.IsNullOrWhiteSpace(objectName))
+            throw new ArgumentException("Object name is required", nameof(objectName));
+
+        try
+        {
+            var presignedUrl = await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
+                .WithBucket(_minioBucket)
+                .WithObject(objectName)
+                .WithExpiry(3600));
+
+            return presignedUrl;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to generate presigned URL: {ex.Message}", ex);
+        }
     }
 
     public async Task SaveChangesAsync()

@@ -114,7 +114,7 @@ services:
       /usr/bin/mc anonymous set download minio/audio;
       /usr/bin/mc anonymous set download minio/avatars;
       /usr/bin/mc anonymous set download minio/images;
-      /usr/bin/mc anonymous set download minio/backups;
+      /usr/bin/mc anonymous set private minio/backups;
       echo 'All buckets are now public!';
       exit 0;
       "

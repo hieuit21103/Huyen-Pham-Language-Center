@@ -4,12 +4,13 @@ import { useNavigate } from "react-router";
 import { setLightTheme } from "./_layout";
 import { getProfile } from "~/apis/Profile";
 import { VaiTro } from "~/types/enums";
-import { getAllBackups, createBackup, restoreBackup, deleteBackup } from "~/apis/Backup";
+import { getAllBackups, createBackup, restoreBackup, deleteBackup, uploadBackup } from "~/apis/Backup";
 
 interface BackupFile {
   id: string;
   ngaySaoLuu: string;
   duongDan: string;
+  objectName: string;
 }
 
 export default function SaoLuuDuLieu() {
@@ -21,6 +22,8 @@ export default function SaoLuuDuLieu() {
   const [backupFiles, setBackupFiles] = useState<BackupFile[]>([]);
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState<BackupFile | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
 
   useEffect(() => {
     setLightTheme();
@@ -141,6 +144,30 @@ export default function SaoLuuDuLieu() {
     }
   };
 
+  const handleUploadBackup = async () => {
+    if (!uploadFile) {
+      showMessage("Vui lòng chọn file để tải lên", "error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await uploadBackup(uploadFile);
+      if (response.success) {
+        showMessage("Tải lên bản sao lưu thành công!", "success");
+        setShowUploadModal(false);
+        setUploadFile(null);
+        loadBackupFiles();
+      } else {
+        showMessage(response.message || "Tải lên thất bại!", "error");
+      }
+    } catch (error: any) {
+      showMessage(error.message || "Đã xảy ra lỗi khi tải lên backup", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -214,14 +241,24 @@ export default function SaoLuuDuLieu() {
           <h1 className="text-3xl font-bold text-gray-900">Sao lưu dữ liệu</h1>
           <p className="text-gray-600 mt-1">Quản lý sao lưu và khôi phục dữ liệu hệ thống</p>
         </div>
-        <button
-          onClick={handleCreateBackup}
-          disabled={loading}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
-        >
-          <Database className="w-5 h-5" />
-          <span>Tạo bản sao lưu</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setShowUploadModal(true)}
+            disabled={loading}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            <Upload className="w-5 h-5" />
+            <span>Tải lên</span>
+          </button>
+          <button
+            onClick={handleCreateBackup}
+            disabled={loading}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            <Database className="w-5 h-5" />
+            <span>Tạo bản sao lưu</span>
+          </button>
+        </div>
       </div>
 
       {/* Backup Files List */}
@@ -275,11 +312,11 @@ export default function SaoLuuDuLieu() {
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-2">
                         <Database className="w-5 h-5 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-900">{getFileName(file.duongDan)}</span>
+                        <span className="text-sm font-medium text-gray-900">{getFileName(file.objectName)}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {formatDate(file.ngaySaoLuu)}
+                      {file.ngaySaoLuu}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       <span className="truncate max-w-xs block" title={file.duongDan}>{file.duongDan}</span>
@@ -381,6 +418,105 @@ export default function SaoLuuDuLieu() {
                   </button>
                   <button
                     onClick={() => setShowRestoreModal(false)}
+                    className="flex-1 bg-gray-200 text-gray-900 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors"
+                  >
+                    Hủy
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Backup Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Tải lên bản sao lưu</h2>
+                <button
+                  onClick={() => {
+                    setShowUploadModal(false);
+                    setUploadFile(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <AlertCircle className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <Upload className="w-5 h-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-800">Chọn file sao lưu</p>
+                      <p className="text-sm text-blue-700 mt-1">
+                        Vui lòng chọn file .sql để tải lên hệ thống.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <input
+                    type="file"
+                    id="backup-file"
+                    accept=".sql"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setUploadFile(file);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="backup-file"
+                    className="cursor-pointer flex flex-col items-center"
+                  >
+                    <Database className="w-12 h-12 text-gray-400 mb-2" />
+                    {uploadFile ? (
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{uploadFile.name}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {(uploadFile.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">Nhấn để chọn file</p>
+                        <p className="text-xs text-gray-500 mt-1">hoặc kéo thả file vào đây</p>
+                      </div>
+                    )}
+                  </label>
+                </div>
+
+                <div className="flex space-x-4 pt-4">
+                  <button
+                    onClick={handleUploadBackup}
+                    disabled={loading || !uploadFile}
+                    className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  >
+                    {loading ? (
+                      <>
+                        <Upload className="w-5 h-5 animate-spin" />
+                        <span>Đang tải lên...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5" />
+                        <span>Tải lên</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowUploadModal(false);
+                      setUploadFile(null);
+                    }}
                     className="flex-1 bg-gray-200 text-gray-900 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors"
                   >
                     Hủy
