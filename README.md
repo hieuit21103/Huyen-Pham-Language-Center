@@ -89,19 +89,23 @@ Dự án áp dụng **Clean Architecture** (Onion Architecture) với 4 layer ch
 | | `LichHoc` | Lịch học (thứ, giờ, phòng học) |
 | | `PhongHoc` | Phòng học (tên phòng, sức chứa) |
 | | `PhanCong` | Phân công giảng dạy |
-| **Learning** | `DangKy` | Đăng ký học từ học viên |
-| | `DangKyKhach` | Đăng ký từ khách |
-| | `DeThi` | Đề thi |
-| | `DeThiCauHoi` | Câu hỏi trong đề thi |
-| | `NganHangDe` | Ngân hàng câu hỏi |
-| | `KyThi` | Kỳ thi |
-| | `BaiThi` | Bài thi của học viên |
-| | `BaiThiChiTiet` | Chi tiết bài làm |
-| | `KetQuaHocTap` | Kết quả học tập |
+| **Learning** | `DangKyKhoaHoc` | Đăng ký khóa học từ học viên |
+| | `DangKyTuVan` | Đăng ký tư vấn từ khách |
 | | `ThongBao` | Thông báo |
 | | `PhanHoi` | Phản hồi, đánh giá |
-| **Finance** | `ThanhToan` | Thanh toán học phí |
-| **System** | `NhatKyHeThong` | Nhật ký hoạt động |
+| **OnlineExam** | `CauHoi` | Câu hỏi thi |
+| | `DapAnCauHoi` | Đáp án câu hỏi |
+| | `NhomCauHoi` | Nhóm câu hỏi |
+| | `NhomCauHoiChiTiet` | Chi tiết nhóm câu hỏi |
+| | `DeThi` | Đề thi |
+| | `CauHoiDeThi` | Câu hỏi trong đề thi |
+| | `KyThi` | Kỳ thi |
+| | `CauHinhKyThi` | Cấu hình kỳ thi |
+| | `PhienLamBai` | Phiên làm bài |
+| | `CauTraLoi` | Câu trả lời của học viên |
+| **Finance** | `ThanhToan` | Thanh toán học phí (VNPay) |
+| **System** | `CauHinhHeThong` | Cấu hình hệ thống |
+| | `NhatKyHeThong` | Nhật ký hoạt động |
 | | `SaoLuuDuLieu` | Sao lưu dữ liệu |
 
 ### Enums (Các trạng thái)
@@ -168,26 +172,28 @@ MsHuyenLC/
 │   │   │   │   ├── PhongHocController.cs  # ✅ CRUD phòng học
 │   │   │   │   └── PhanCongController.cs  # ✅ Phân công giáo viên
 │   │   │   ├── Finance/
-│   │   │   │   └── ThanhToanController.cs # 🚧 TODO
+│   │   │   │   └── ThanhToanController.cs # ✅ Thanh toán (VNPay)
 │   │   │   ├── Learning/
-│   │   │   │   ├── DangKyController.cs    # 🚧 TODO
-│   │   │   │   ├── DangKyKhachController.cs # 🚧 TODO
-│   │   │   │   ├── DeThiController.cs     # 🚧 TODO
-│   │   │   │   ├── BaiThiController.cs    # 🚧 TODO
-│   │   │   │   ├── KyThiController.cs     # 🚧 TODO
-│   │   │   │   ├── NganHangDeController.cs # 🚧 TODO
-│   │   │   │   ├── KetQuaHocTapController.cs # 🚧 TODO
-│   │   │   │   ├── ThongBaoController.cs  # 🚧 TODO
-│   │   │   │   └── PhanHoiController.cs   # 🚧 TODO
+│   │   │   │   ├── CauHoiController.cs    # ✅ Quản lý câu hỏi
+│   │   │   │   ├── DangKyKhoaHocController.cs # ✅ Đăng ký khóa học
+│   │   │   │   ├── DangKyTuVanController.cs # ✅ Đăng ký tư vấn
+│   │   │   │   ├── DeThiController.cs     # ✅ Quản lý đề thi
+│   │   │   │   ├── KyThiController.cs     # ✅ Quản lý kỳ thi
+│   │   │   │   ├── NhomCauHoiController.cs # ✅ Nhóm câu hỏi
+│   │   │   │   ├── PhanHoiController.cs   # ✅ Phản hồi, đánh giá
+│   │   │   │   ├── PhienLamBaiController.cs # ✅ Phiên làm bài thi
+│   │   │   │   └── ThongBaoController.cs  # ✅ Thông báo
 │   │   │   ├── System/
-│   │   │   │   ├── NhatKyHeThongController.cs # 🚧 TODO
-│   │   │   │   └── SaoLuuDuLieuController.cs  # 🚧 TODO
+│   │   │   │   ├── CauHinhHeThongController.cs # ✅ Cấu hình hệ thống
+│   │   │   │   ├── SaoLuuDuLieuController.cs  # ✅ Sao lưu dữ liệu
+│   │   │   │   └── SystemLoggerController.cs  # ✅ Nhật ký hệ thống
 │   │   │   └── Users/
 │   │   │       ├── TaiKhoanController.cs  # ✅ CRUD tài khoản (Admin)
 │   │   │       ├── ProfileController.cs   # ✅ Quản lý profile cá nhân
 │   │   │       ├── GiaoVienController.cs  # ✅ CRUD giáo viên
 │   │   │       ├── HocVienController.cs   # ✅ CRUD học viên
-│   │   │       └── GiaoVuController.cs    # 🚧 TODO
+│   │   │       └── GiaoVuController.cs    # ✅ CRUD giáo vụ
+│   │   ├── UploadController.cs            # ✅ Upload file
 │   │   ├── BaseController.cs              # Base controller với GetAll, GetById
 │   │   ├── GlobalUsing.cs
 │   │   ├── Program.cs                     # Entry point & DI configuration
@@ -197,35 +203,25 @@ MsHuyenLC/
 │   │
 │   ├── MsHuyenLC.Application/             # 💼 Business Layer
 │   │   ├── DTOs/
-│   │   │   ├── Auth/
-│   │   │   │   ├── LoginRequest.cs
-│   │   │   │   ├── ChangePasswordRequest.cs
-│   │   │   │   ├── ResetPasswordRequest.cs
-│   │   │   │   └── ConfirmResetPasswordRequest.cs
-│   │   │   ├── Courses/
-│   │   │   │   ├── KhoaHoc/               # Request/Response DTOs
-│   │   │   │   ├── LopHoc/
-│   │   │   │   ├── LichHoc/
-│   │   │   │   ├── PhongHoc/
-│   │   │   │   └── PhanCong/
-│   │   │   ├── Finance/                   # (Đang phát triển)
-│   │   │   ├── Learning/                  # (Đang phát triển)
-│   │   │   └── Users/
-│   │   │       ├── TaiKhoan/
-│   │   │       ├── GiaoVien/
-│   │   │       ├── HocVien/
-│   │   │       └── GiaoVu/
+│   │   │   ├── Auth/                      # Login, Register, Password DTOs
+│   │   │   ├── Courses/                   # KhoaHoc, LopHoc, LichHoc, PhongHoc, PhanCong
+│   │   │   ├── Finance/                   # ThanhToan DTOs
+│   │   │   ├── Learning/
+│   │   │   │   ├── CauHoi/                # Câu hỏi DTOs
+│   │   │   │   ├── DangKyKhoaHoc/         # Đăng ký khóa học DTOs
+│   │   │   │   ├── DangKyTuVan/           # Đăng ký tư vấn DTOs
+│   │   │   │   ├── DeThi/                 # Đề thi DTOs
+│   │   │   │   ├── KetQuaHocTap/          # Kết quả học tập DTOs
+│   │   │   │   ├── KyThi/                 # Kỳ thi DTOs
+│   │   │   │   ├── NhomCauHoi/            # Nhóm câu hỏi DTOs
+│   │   │   │   ├── PhanHoi/               # Phản hồi DTOs
+│   │   │   │   ├── PhienLamBai/           # Phiên làm bài DTOs
+│   │   │   │   └── ThongBao/              # Thông báo DTOs
+│   │   │   ├── System/                    # CauHinhHeThong, SaoLuuDuLieu DTOs
+│   │   │   └── Users/                     # TaiKhoan, GiaoVien, HocVien, GiaoVu
 │   │   ├── Exceptions/                    # Custom exceptions
-│   │   ├── Interfaces/
-│   │   │   ├── Auth/                      # IAuthService, ITokenService, IUserRepository
-│   │   │   ├── Email/                     # IEmailService
-│   │   │   ├── IGenericRepository.cs
-│   │   │   └── IGenericService.cs
-│   │   ├── Services/
-│   │   │   ├── Courses/
-│   │   │   │   ├── ScheduleService.cs     # Xử lý lịch học, phòng trống
-│   │   │   │   └── AssignmentService.cs   # Xử lý phân công
-│   │   │   └── GenericService.cs          # Generic CRUD service
+│   │   ├── Interfaces/                    # Service & Repository interfaces
+│   │   ├── Services/                      # Business logic services
 │   │   └── MsHuyenLC.Application.csproj
 │   │
 │   ├── MsHuyenLC.Domain/                  # 🏛️ Domain Layer (Core)
@@ -239,18 +235,23 @@ MsHuyenLC/
 │   │   │   ├── Finance/
 │   │   │   │   └── ThanhToan.cs
 │   │   │   ├── Learning/
-│   │   │   │   ├── DangKy.cs
-│   │   │   │   ├── DangKyKhach.cs
-│   │   │   │   ├── DeThi.cs
-│   │   │   │   ├── DeThiCauHoi.cs
-│   │   │   │   ├── NganHangDe.cs
-│   │   │   │   ├── KyThi.cs
-│   │   │   │   ├── BaiThi.cs
-│   │   │   │   ├── BaiThiChiTiet.cs
-│   │   │   │   ├── KetQuaHocTap.cs
+│   │   │   │   ├── DangKyKhoaHoc.cs
+│   │   │   │   ├── DangKyTuVan.cs
+│   │   │   │   ├── PhanHoi.cs
 │   │   │   │   ├── ThongBao.cs
-│   │   │   │   └── PhanHoi.cs
+│   │   │   │   └── OnlineExam/            # Module thi trực tuyến
+│   │   │   │       ├── CauHinhKyThi.cs
+│   │   │   │       ├── CauHoi.cs
+│   │   │   │       ├── CauHoiDeThi.cs
+│   │   │   │       ├── CauTraLoi.cs
+│   │   │   │       ├── DapAnCauHoi.cs
+│   │   │   │       ├── DeThi.cs
+│   │   │   │       ├── KyThi.cs
+│   │   │   │       ├── NhomCauHoi.cs
+│   │   │   │       ├── NhomCauHoiChiTiet.cs
+│   │   │   │       └── PhienLamBai.cs
 │   │   │   ├── System/
+│   │   │   │   ├── CauHinhHeThong.cs
 │   │   │   │   ├── NhatKyHeThong.cs
 │   │   │   │   └── SaoLuuDuLieu.cs
 │   │   │   └── Users/
@@ -269,11 +270,12 @@ MsHuyenLC/
 │       │   └── Seed/                      # Data seeding
 │       ├── Repositories/                  # Generic & specific repositories
 │       ├── Services/
-│       │   ├── AuthService.cs             # Login, logout logic
 │       │   ├── JwtService.cs              # JWT token generation
 │       │   ├── TokenService.cs            # Password reset tokens
 │       │   ├── PasswordHasher.cs          # BCrypt hashing
-│       │   └── Email/                     # SMTP email service
+│       │   ├── VNPayService.cs            # VNPay payment integration
+│       │   ├── Email/                     # SMTP email service
+│       │   └── Excel/                     # Excel export service
 │       ├── Templates/
 │       │   ├── Email/                     # Email HTML templates
 │       │   ├── EmailTemplateHelper.cs
@@ -379,7 +381,7 @@ MsHuyenLC/
 
 #### 👥 7. Quản lý Người dùng (User Management)
 
-**Controllers**: `GiaoVienController`, `HocVienController`
+**Controllers**: `GiaoVienController`, `HocVienController`, `GiaoVuController`
 
 | Tính năng | Endpoint | Trạng thái |
 |-----------|----------|------------|
@@ -392,28 +394,66 @@ MsHuyenLC/
 | Chi tiết học viên | `GET /api/HocVien/{id}` | ✅ Hoàn thành |
 | Cập nhật học viên | `PUT /api/HocVien/{id}` | ✅ Hoàn thành |
 | Xóa học viên | `DELETE /api/HocVien/{id}` | ✅ Hoàn thành |
+| CRUD Giáo vụ | `/api/GiaoVu` | ✅ Hoàn thành |
 
----
+#### 📝 8. Đăng ký & Tư vấn
 
-### 🚧 Chức năng đang phát triển (TODO)
+**Controllers**: `DangKyKhoaHocController`, `DangKyTuVanController`
 
-Các controller đã được định nghĩa với entity sẵn sàng, chưa triển khai logic:
+| Tính năng | Endpoint | Trạng thái |
+|-----------|----------|------------|
+| Đăng ký khóa học | `POST /api/DangKyKhoaHoc` | ✅ Hoàn thành |
+| Danh sách đăng ký | `GET /api/DangKyKhoaHoc` | ✅ Hoàn thành |
+| Duyệt đăng ký | `PUT /api/DangKyKhoaHoc/{id}` | ✅ Hoàn thành |
+| Đăng ký tư vấn (khách) | `POST /api/DangKyTuVan` | ✅ Hoàn thành |
+| Danh sách tư vấn | `GET /api/DangKyTuVan` | ✅ Hoàn thành |
+| Xử lý yêu cầu tư vấn | `PUT /api/DangKyTuVan/{id}` | ✅ Hoàn thành |
 
-| Module | Controller | Mô tả |
-|--------|------------|-------|
-| **Users** | `GiaoVuController` | Quản lý giáo vụ |
-| **Finance** | `ThanhToanController` | Thanh toán học phí, hóa đơn |
-| **Learning** | `DangKyController` | Đăng ký học từ học viên |
-| | `DangKyKhachController` | Đăng ký từ khách chưa có tài khoản |
-| | `DeThiController` | Tạo và quản lý đề thi |
-| | `NganHangDeController` | Quản lý ngân hàng câu hỏi |
-| | `KyThiController` | Lên lịch và tổ chức kỳ thi |
-| | `BaiThiController` | Nộp bài, chấm bài thi |
-| | `KetQuaHocTapController` | Quản lý điểm số, kết quả |
-| | `ThongBaoController` | Gửi thông báo đến người dùng |
-| | `PhanHoiController` | Phản hồi, đánh giá khóa học |
-| **System** | `NhatKyHeThongController` | Logging, audit trail |
-| | `SaoLuuDuLieuController` | Backup & restore dữ liệu |
+#### 💳 9. Thanh toán (Payment)
+
+**Controller**: `ThanhToanController`
+
+| Tính năng | Endpoint | Trạng thái |
+|-----------|----------|------------|
+| Tạo giao dịch | `POST /api/ThanhToan` | ✅ Hoàn thành |
+| Danh sách thanh toán | `GET /api/ThanhToan` | ✅ Hoàn thành |
+| Chi tiết thanh toán | `GET /api/ThanhToan/{id}` | ✅ Hoàn thành |
+| Tích hợp VNPay | VNPay Gateway | ✅ Hoàn thành |
+
+#### 📋 10. Hệ thống Thi trực tuyến (Online Exam)
+
+**Controllers**: `CauHoiController`, `NhomCauHoiController`, `DeThiController`, `KyThiController`, `PhienLamBaiController`
+
+| Tính năng | Endpoint | Trạng thái |
+|-----------|----------|------------|
+| Quản lý câu hỏi | `/api/CauHoi` | ✅ Hoàn thành |
+| Nhóm câu hỏi | `/api/NhomCauHoi` | ✅ Hoàn thành |
+| Tạo đề thi | `/api/DeThi` | ✅ Hoàn thành |
+| Quản lý kỳ thi | `/api/KyThi` | ✅ Hoàn thành |
+| Phiên làm bài | `/api/PhienLamBai` | ✅ Hoàn thành |
+| Nộp bài & chấm điểm | `/api/PhienLamBai/submit` | ✅ Hoàn thành |
+
+#### 📢 11. Thông báo & Phản hồi
+
+**Controllers**: `ThongBaoController`, `PhanHoiController`
+
+| Tính năng | Endpoint | Trạng thái |
+|-----------|----------|------------|
+| Gửi thông báo | `POST /api/ThongBao` | ✅ Hoàn thành |
+| Danh sách thông báo | `GET /api/ThongBao` | ✅ Hoàn thành |
+| Tạo phản hồi | `POST /api/PhanHoi` | ✅ Hoàn thành |
+| Danh sách phản hồi | `GET /api/PhanHoi` | ✅ Hoàn thành |
+
+#### ⚙️ 12. Quản trị Hệ thống
+
+**Controllers**: `CauHinhHeThongController`, `SaoLuuDuLieuController`, `SystemLoggerController`, `UploadController`
+
+| Tính năng | Endpoint | Trạng thái |
+|-----------|----------|------------|
+| Cấu hình hệ thống | `/api/CauHinhHeThong` | ✅ Hoàn thành |
+| Sao lưu dữ liệu | `/api/SaoLuuDuLieu` | ✅ Hoàn thành |
+| Nhật ký hệ thống | `/api/SystemLogger` | ✅ Hoàn thành |
+| Upload file | `/api/Upload` | ✅ Hoàn thành |
 
 ## 💻 Yêu cầu hệ thống
 
@@ -709,45 +749,6 @@ POST /api/Auth/login
 
 ## 🔮 Phát triển trong tương lai
 
-### Tính năng sắp triển khai
-
-1. **Hệ thống Thi & Đánh giá**
-   - Ngân hàng câu hỏi
-   - Tạo đề thi tự động
-   - Thi online
-   - Chấm tự động
-   - Quản lý kết quả học tập
-
-2. **Quản lý Thanh toán**
-   - Thanh toán học phí online
-   - Quản lý hóa đơn
-   - Báo cáo doanh thu
-   - Tích hợp payment gateway (VNPay, MoMo)
-
-3. **Đăng ký Khóa học**
-   - Đăng ký từ website (cho khách)
-   - Đăng ký từ học viên
-   - Approval workflow
-   - Email xác nhận tự động
-
-4. **Hệ thống Thông báo**
-   - Push notification
-   - Email notification
-   - SMS notification (optional)
-   - Lịch sử thông báo
-
-5. **Phản hồi & Đánh giá**
-   - Đánh giá khóa học
-   - Đánh giá giáo viên
-   - Feedback từ học viên
-   - Rating system
-
-6. **System Management**
-   - Nhật ký hoạt động (Audit Log)
-   - Sao lưu & khôi phục dữ liệu
-   - Dashboard thống kê
-   - Báo cáo hệ thống
-
 ### Cải tiến kỹ thuật
 
 - [ ] Unit Tests & Integration Tests
@@ -759,6 +760,10 @@ POST /api/Auth/login
 - [ ] Background Jobs (Hangfire)
 - [ ] Real-time features (SignalR)
 - [ ] Monitoring & Alerting (Prometheus, Grafana)
+- [ ] Dashboard thống kê
+- [ ] Tích hợp thêm cổng thanh toán (MoMo, ZaloPay)
+- [ ] Push notification
+- [ ] SMS notification
 
 ## 🤝 Đóng góp
 
