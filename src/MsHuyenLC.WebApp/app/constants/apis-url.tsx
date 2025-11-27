@@ -1,9 +1,9 @@
 
 const getApiUrl = () => {
   if (typeof window !== 'undefined') {
-    return window.ENV.CLIENT_API_URL || 'http://localhost:5000';
+    return window.ENV.CLIENT_API_URL;
   }
-  return process.env.SERVER_API_URL || 'http://localhost:5000';
+  return process.env.SERVER_API_URL;
 };
 
 export const BASE_API_URL = getApiUrl() + '/api';
