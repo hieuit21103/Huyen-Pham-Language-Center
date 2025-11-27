@@ -295,7 +295,7 @@ public class SaoLuuDuLieuController : BaseController
     }
 
     [HttpPost("upload")]
-    public async Task<IActionResult> UploadBackupFile([FromForm] IFormFile file)
+    public async Task<IActionResult> UploadBackupFile(IFormFile file)
     {
         try
         {

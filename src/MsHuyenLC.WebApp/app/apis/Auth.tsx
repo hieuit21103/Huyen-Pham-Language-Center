@@ -19,7 +19,7 @@ function setJwtToken(token: string, maxAgeSeconds: number = 60 * 60) {
 }
 
 function clearJwtToken() {
-    document.cookie = "jwt_token=; max-age=0;";
+    document.cookie = "jwt_token=; path=/; max-age=0;";
 }
 
 export async function login(request : LoginRequest): Promise<ApiResponse> {
@@ -49,7 +49,7 @@ export async function logout() {
         },
     });
 
-    document.cookie = "";
+    clearJwtToken();
     return { success: true, message: "Đăng xuất thành công" };
 }
 

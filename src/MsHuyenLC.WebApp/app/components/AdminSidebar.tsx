@@ -30,7 +30,7 @@ import { Link, useLocation } from "react-router";
 import { getProfile } from "~/apis/Profile";
 import { VaiTro } from "~/types/index";
 import { Asset } from "~/assets/Asset";
-import { clearJwtToken } from "~/apis/Auth";
+import { clearJwtToken, logout } from "~/apis/Auth";
 
 interface AdminSidebarProps {
   onCollapsedChange?: (collapsed: boolean) => void;
@@ -132,8 +132,9 @@ export default function AdminSidebar({ onCollapsedChange }: AdminSidebarProps) {
     ? [...menuGroups, adminOnlyGroup] 
     : menuGroups;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (typeof window !== "undefined") {
+      await logout();
       clearJwtToken();
       window.location.href = "/";
     }
