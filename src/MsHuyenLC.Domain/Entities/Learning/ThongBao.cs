@@ -1,17 +1,23 @@
-using MsHuyenLC.Domain.Entities.Courses;
-using MsHuyenLC.Domain.Entities.Users;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MsHuyenLC.Domain.Entities.Learning;
 
 public class ThongBao
 {
     public Guid Id { get; set; }
-    public Guid NguoiGui { get; set; }
-    public DoiTuongNhan DoiTuongNhan { get; set; } = DoiTuongNhan.lophoc;
+    
+    [MaxLength(200)]
+    [Column(TypeName = "varchar(200)")]
     public string TieuDe { get; set; } = null!;
+    
+    [MaxLength(2000)]
+    [Column(TypeName = "varchar(2000)")]
     public string NoiDung { get; set; } = null!;
-    public DateTime NgayGui { get; set; } = DateTime.UtcNow;
-    public Guid? LopHocId { get; set; }
-    public TaiKhoan NguoiGuiTaiKhoan { get; set; } = null!;
-    public LopHoc? LopHoc { get; set; }
+    
+    public Guid NguoiGuiId { get; set; }
+    public TaiKhoan NguoiGui { get; set; } = null!;
+    public Guid? NguoiNhanId { get; set; }
+    public TaiKhoan NguoiNhan { get; set; } = null!;
+    public DateTime NgayTao { get; set; } = DateTime.UtcNow;
 }

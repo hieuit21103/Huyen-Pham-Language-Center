@@ -4,9 +4,6 @@
 version: '3.8'
 
 services:
-  # ============================================
-  # MsHuyenLC API Only
-  # ============================================
   api:
     build:
       context: .
@@ -23,6 +20,12 @@ services:
       # External Redis Cache
       Redis__ConnectionString: ${REDIS_CONNECTION_STRING}
       Redis__InstanceName: "MsHuyenLC:"
+
+      # MinIO Settings
+      Minio__Domain: ${MINIO_DOMAIN}
+      Minio__Endpoint: ${MINIO_ENDPOINT}
+      Minio__AccessKey: ${MINIO_ROOT_USER}
+      Minio__SecretKey: ${MINIO_ROOT_PASSWORD}
       
       # JWT Settings
       Jwt__SecretKey: ${JWT_SECRET_KEY}
@@ -45,6 +48,11 @@ services:
       Smtp__Password: ${SMTP_PASSWORD}
       Smtp__From: ${SMTP_FROM_EMAIL}
       Smtp__FromName: ${SMTP_FROM_NAME}
+
+      # Payment Gateway Settings
+      Vnpay__TmnCode: ${VNPAY_TMN_CODE}
+      Vnpay__HashSecret: ${VNPAY_HASH_SECRET}
+      Vnpay__BaseUrl: ${VNPAY_BASE_URL}
     ports:
       - "5000:8080"
     extra_hosts:
@@ -55,3 +63,60 @@ services:
       timeout: 3s
       retries: 3
       start_period: 10s
+  webapp:
+    build:
+      context: ./src/MsHuyenLC.WebApp
+      dockerfile: Dockerfile
+    container_name: mshuyenlc-webapp
+    restart: unless-stopped
+    environment:
+      SERVER_API_URL: ${SERVER_API_URL:-http://api:8080}
+      CLIENT_API_URL: ${CLIENT_API_URL:-http://localhost:5000}
+    ports:
+      - "3000:3000"
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  minio-setup:
+    image: minio/mc:latest
+    container_name: minio-setup
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Waiting for MinIO...';
+      until /usr/bin/mc alias set minio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD}; do
+        echo 'Retrying...';
+        sleep 3;
+      done;
+      echo 'Setting buckets to public...';
+      /usr/bin/mc anonymous set download minio/audio;
+      /usr/bin/mc anonymous set download minio/avatars;
+      /usr/bin/mc anonymous set download minio/images;
+      /usr/bin/mc anonymous set private minio/backups;
+      echo 'All buckets are now public!';
+      exit 0;
+      "
+volumes:
+  minio-data:

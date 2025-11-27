@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
-using MsHuyenLC.Application.Interfaces.Auth;
+using MsHuyenLC.Application.Interfaces.Services.Auth;
 using StackExchange.Redis;
 
 namespace MsHuyenLC.Infrastructure.Services;

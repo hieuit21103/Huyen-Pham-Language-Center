@@ -1,4 +1,4 @@
-using MsHuyenLC.Application.Interfaces.Auth;
+using MsHuyenLC.Application.Interfaces.Services.Auth;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
@@ -9,10 +9,7 @@ public class PasswordHasher : IPasswordHasher
 {
     public string HashPassword(string password)
     {
-        // Generate a random salt
         byte[] salt = RandomNumberGenerator.GetBytes(128 / 8);
-
-        // Hash the password
         string hashed = Convert.ToBase64String(KeyDerivation.Pbkdf2(
             password: password,
             salt: salt,
@@ -20,7 +17,6 @@ public class PasswordHasher : IPasswordHasher
             iterationCount: 100000,
             numBytesRequested: 256 / 8));
 
-        // Combine salt and hash
         return $"{Convert.ToBase64String(salt)}.{hashed}";
     }
 

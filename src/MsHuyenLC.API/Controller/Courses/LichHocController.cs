@@ -2,146 +2,182 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.DTOs.Courses.LichHoc;
 using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Services.Courses;
+using MsHuyenLC.Application.Interfaces.Repositories;
+using MsHuyenLC.Application.Interfaces.Services.Course;
+using MsHuyenLC.Application.Interfaces.Services.System;
 
 namespace MsHuyenLC.API.Controller.Courses;
 
 [Route("api/[controller]")]
 [ApiController]
 
-public class LichHocController : BaseController<LichHoc>
+public class LichHocController : BaseController
 {
-    protected readonly IGenericService<PhongHoc> _phongHocService;
-    protected readonly IGenericService<LopHoc> _lopHocService;
-    protected readonly ScheduleService _ScheduleService;
+    private readonly IScheduleService _service;
+    
     public LichHocController(
-        ScheduleService ScheduleService,
-        IGenericService<PhongHoc> phongHocService,
-        IGenericService<LopHoc> lopHocService) : base(ScheduleService)
+        ISystemLoggerService logService,
+        IScheduleService service) : base(logService)
     {
-        _phongHocService = phongHocService;
-        _lopHocService = lopHocService;
-        _ScheduleService = ScheduleService;
+        _service = service;
     }
-    protected override Func<IQueryable<LichHoc>, IOrderedQueryable<LichHoc>>? BuildOrderBy(string sortBy, string? sortOrder)
+
+    [HttpGet]
+    [Authorize(Roles = "admin,giaovu")]
+    public async Task<IActionResult> GetAll()
     {
-        return sortBy?.ToLower() switch
+        var response = await _service.GetAllWithDetailsAsync();
+        var totalItems = await _service.CountAsync();
+
+        return Ok(new
         {
-            "ngayhoc" => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(l => l.Thu))
-                : (q => q.OrderBy(l => l.Thu)),
-            _ => sortOrder?.ToLower() == "desc"
-                ? (q => q.OrderByDescending(l => l.Id))
-                : (q => q.OrderBy(l => l.Id)),
-        };
+            success = true,
+            message = "Lấy danh sách lịch học thành công",
+            count = totalItems,
+            data = response
+        });
+    }
+
+    [HttpGet("{id}")]
+    [Authorize(Roles = "admin,giaovu")]
+    public async Task<IActionResult> GetById(string id)
+    {
+        var response = await _service.GetByIdWithDetailsAsync(id);
+        if (response == null)
+            return NotFound(new
+            {
+                success = false,
+                message = "Không tìm thấy lịch học"
+            });
+        
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy thông tin lịch học thành công",
+            data = response
+        });
     }
 
     [HttpGet("class/{classId}")]
-    [Authorize(Roles="admin,giaovu")]
-    public async Task<IActionResult> GetClassSchedule(
-            string classId, 
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10
-        )
+    [Authorize(Roles = "admin,giaovu")]
+    public async Task<IActionResult> GetClassSchedule(string classId)
     {
-        var schedule = await _service.GetAllAsync(
-            PageNumber: pageNumber,
-            PageSize: pageSize,
-                Filter: s => s.LopHocId.ToString() == classId,
-            OrderBy: q => q.OrderBy(s => s.Thu)
-        );
+        var schedule = await _service.GetByClassIdAsync(classId);
 
-        return Ok(schedule);
+        return Ok(new{
+            success = true,
+            message = "Lấy lịch học của lớp thành công",
+            data = schedule
+        });
     }
 
     [HttpGet("teacher/{teacherId}")]
-    [Authorize(Roles="admin,giaovu,giaovien")]
-    public async Task<IActionResult> GetTeacherSchedule(
-            string teacherId, 
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10
-    )
+    [Authorize(Roles = "admin,giaovu,giaovien")]
+    public async Task<IActionResult> GetTeacherSchedule(string teacherId)
     {
-        var schedule = await _service.GetAllAsync(
-            PageNumber: pageNumber,
-            PageSize: pageSize,
-                Filter: s => s.LopHocId != null && s.LopHocId.ToString() == teacherId,
-            OrderBy: q => q.OrderBy(s => s.Thu)
-        );
+        var schedule = await _service.GetTeacherSchedulesAsync(teacherId);
 
-        return Ok(schedule);
+        if (!schedule.Any())
+        {
+            return Ok(new
+            {
+                success = true,
+                message = "Giáo viên không có phân công giảng dạy",
+                data = schedule
+            });
+        }
+
+        return Ok(new{
+            success = true,
+            message = "Lấy lịch học của giáo viên thành công",
+            data = schedule
+        });
     }
 
     [HttpGet("student/{studentId}")]
     [Authorize(Roles = "admin,giaovu,giaovien,hocvien")]
-    public async Task<IActionResult> GetStudentSchedule(
-            string studentId, 
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10
-    )
+    public async Task<IActionResult> GetStudentSchedule(string studentId)
     {
-        var schedule = await _service.GetAllAsync(
-            PageNumber: pageNumber,
-            PageSize: pageSize,
-                Filter: s => s.LopHocId != null && s.LopHocId.ToString() == studentId,
-            OrderBy: q => q.OrderBy(s => s.Thu)
-        );
-
-        return Ok(schedule);
+        var schedule = await _service.GetStudentSchedulesAsync(studentId);
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy lịch học của học viên thành công",
+            data = schedule
+        });
     }
 
     [HttpPost]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> Create([FromBody] LichHocRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
-            var lichHoc = new LichHoc 
-        {
-                LopHocId = request.LopHocId,
-                PhongHocId = request.PhongHocId,
-            Thu = request.Thu,
-            TuNgay = request.TuNgay,
-            DenNgay = request.DenNgay,
-            GioBatDau = request.GioBatDau,
-            GioKetThuc = request.GioKetThuc,
-            CoHieuLuc = true
-        };
-
-        var result = await _service.AddAsync(lichHoc);
+        var result = await _service.CreateAsync(request);
         if (result == null)
         {
-            return BadRequest(new { message = "Không thể tạo lịch học." });
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Tạo lịch học thất bại" 
+            });
         }
 
-        return Ok(result);
+        await LogCreateAsync(result);
+
+        return Ok(new
+        {
+            success = true,
+            message = "Tạo lịch học thành công",
+            data = result
+        });
     }
 
     [HttpPut("{id}")]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> Update(string id, [FromBody] LichHocUpdateRequest request)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) 
+            return BadRequest(new 
+            { 
+                success = false, 
+                message = "Dữ liệu không hợp lệ",
+                errors = ModelState 
+            });
 
-            var existingLichHoc = await _service.GetByIdAsync(id); 
-        if (existingLichHoc == null) return NotFound();
+        var existingLichHoc = await _service.GetByIdAsync(id);
+        if (existingLichHoc == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy lịch học" 
+            });
 
-            // Validate new PhongHocId
-            var phongHoc = await _phongHocService.GetByIdAsync(request.PhongHocId.ToString());
-            if (phongHoc == null) return BadRequest("Phòng học không tồn tại.");
+        var oldData = new LichHoc
+        {
+            Id = existingLichHoc.Id,
+            LopHocId = existingLichHoc.LopHocId,
+            PhongHocId = existingLichHoc.PhongHocId,
+            TuNgay = existingLichHoc.TuNgay,
+            DenNgay = existingLichHoc.DenNgay,
+            CoHieuLuc = existingLichHoc.CoHieuLuc
+        };
 
-            // LopHocId is not provided in update DTO; keep existing
-
-            existingLichHoc.PhongHocId = request.PhongHocId;
-            existingLichHoc.Thu = request.Thu;
-            existingLichHoc.TuNgay = request.TuNgay;
-            existingLichHoc.DenNgay = request.DenNgay;
-            existingLichHoc.GioBatDau = request.GioBatDau;
-            existingLichHoc.GioKetThuc = request.GioKetThuc;
-            existingLichHoc.CoHieuLuc = request.CoHieuLuc;
-
-        await _service.UpdateAsync(existingLichHoc);
-        return Ok();
+        await _service.UpdateAsync(id, request);
+        await LogUpdateAsync(oldData, existingLichHoc);
+        
+        return Ok(new
+        {
+            success = true,
+            message = "Cập nhật lịch học thành công",
+            data = existingLichHoc
+        });
     }
 
     [HttpDelete("{id}")]
@@ -149,17 +185,35 @@ public class LichHocController : BaseController<LichHoc>
     public async Task<IActionResult> Delete(string id)
     {
         var existingLichHoc = await _service.GetByIdAsync(id);
-        if (existingLichHoc == null) return NotFound();
+        if (existingLichHoc == null) 
+            return NotFound(new 
+            { 
+                success = false, 
+                message = "Không tìm thấy lịch học" 
+            });
 
-        await _service.DeleteAsync(existingLichHoc);
-        return Ok();
+        await _service.DeleteAsync(id);
+        await LogDeleteAsync(existingLichHoc);
+        
+        return Ok(new
+        {
+            success = true,
+            message = "Xóa lịch học thành công"
+        });
     }
 
     [HttpGet("available-rooms")]
     [Authorize(Roles = "admin,giaovu")]
     public async Task<IActionResult> GetAvailableRooms()
     {
-        var available = await _ScheduleService.GetAvailableRoomAsync();
-        return Ok(available);
+        var available = await _service.GetAvailableRoomAsync();
+        return Ok(new
+        {
+            success = true,
+            message = "Lấy phòng học trống thành công",
+            data = available
+        });
     }
 }
+
+

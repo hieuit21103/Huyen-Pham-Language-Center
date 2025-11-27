@@ -1,5 +1,5 @@
 using System.Net.Mail;
-using MsHuyenLC.Application.Interfaces.Email;
+using MsHuyenLC.Application.Interfaces.Services.Email;
 using MsHuyenLC.Infrastructure.Templates;
 
 namespace MsHuyenLC.Infrastructure.Services.Email;
@@ -47,11 +47,10 @@ public class EmailService : IEmailService
         string to,
         string fullName,
         string username,
-        string temporaryPassword,
-        string loginUrl)
+        string temporaryPassword)
     {
-        var subject = "🎉 Tài khoản của bạn đã được tạo - Ms. Huyền LC";
-        var body = EmailTemplateHelper.GetAccountCreationTemplate(fullName, username, temporaryPassword, loginUrl);
+        var subject = "Tài khoản của bạn đã được tạo - HPLC";
+        var body = EmailTemplateHelper.GetAccountCreationTemplate(fullName, username, temporaryPassword);
 
         await SendEmailAsync(to, subject, body);
     }
@@ -65,7 +64,7 @@ public class EmailService : IEmailService
         string resetLink,
         int expiryMinutes = 30)
     {
-        var subject = "🔒 Yêu cầu đặt lại mật khẩu - Ms. Huyền LC";
+        var subject = "Yêu cầu đặt lại mật khẩu - HPLC";
         var body = EmailTemplateHelper.GetPasswordResetTemplate(fullName, resetLink, expiryMinutes);
 
         await SendEmailAsync(to, subject, body);
@@ -78,8 +77,8 @@ public class EmailService : IEmailService
         string to,
         string fullName)
     {
-        var subject = "✅ Mật khẩu đã được thay đổi - Ms. Huyền LC";
-        var body = EmailTemplateHelper.GetPasswordChangedTemplate(fullName, DateTime.Now);
+        var subject = "Mật khẩu đã được thay đổi - HPLC";
+        var body = EmailTemplateHelper.GetPasswordChangedTemplate(fullName, DateOnly.FromDateTime(DateTime.UtcNow));
 
         await SendEmailAsync(to, subject, body);
     }
@@ -91,9 +90,9 @@ public class EmailService : IEmailService
         string to,
         string fullName,
         string courseName,
-        DateTime startDate)
+        DateOnly startDate)
     {
-        var subject = "🎓 Chào mừng bạn đến với khóa học - Ms. Huyền LC";
+        var subject = "Chào mừng bạn đến với khóa học - HPLC";
         var body = EmailTemplateHelper.GetWelcomeStudentTemplate(fullName, courseName, startDate);
 
         await SendEmailAsync(to, subject, body);

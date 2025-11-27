@@ -36,14 +36,13 @@ public static class EmailTemplateHelper
     /// <summary>
     /// Lấy template email cấp tài khoản
     /// </summary>
-    public static string GetAccountCreationTemplate(string fullName, string username, string password, string loginUrl)
+    public static string GetAccountCreationTemplate(string fullName, string username, string password)
     {
         var replacements = new Dictionary<string, string>
         {
             { "FullName", fullName },
             { "Username", username },
             { "Password", password },
-            { "LoginUrl", loginUrl }
         };
 
         return GetEmailTemplate("AccountCreation.html", replacements);
@@ -67,12 +66,12 @@ public static class EmailTemplateHelper
     /// <summary>
     /// Lấy template email xác nhận đổi mật khẩu
     /// </summary>
-    public static string GetPasswordChangedTemplate(string fullName, DateTime changedDate)
+    public static string GetPasswordChangedTemplate(string fullName, DateOnly changedDate)
     {
         var replacements = new Dictionary<string, string>
         {
             { "FullName", fullName },
-            { "ChangedDate", changedDate.ToString("dd/MM/yyyy HH:mm:ss") }
+            { "ChangedDate", changedDate.ToString("dd/MM/yyyy") }
         };
 
         return GetEmailTemplate("PasswordChanged.html", replacements);
@@ -81,7 +80,7 @@ public static class EmailTemplateHelper
     /// <summary>
     /// Lấy template email chào mừng học viên
     /// </summary>
-    public static string GetWelcomeStudentTemplate(string fullName, string courseName, DateTime startDate)
+    public static string GetWelcomeStudentTemplate(string fullName, string courseName, DateOnly startDate)
     {
         var replacements = new Dictionary<string, string>
         {

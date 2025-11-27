@@ -3,96 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chào Mừng Học Viên - Ms. Huyền LC</title>
+    <title>Chào Mừng Học Viên - HPLC</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
+            line-height: 1.8;
+            color: #000000;
             max-width: 600px;
             margin: 0 auto;
-            padding: 20px;
-            background-color: #f4f4f4;
+            padding: 40px 20px;
+            background-color: #f5f5f5;
         }
         .container {
-            background-color: #f9f9f9;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            padding: 40px;
         }
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px 10px 0 0;
-            text-align: center;
-            margin: -30px -30px 20px -30px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
         }
         .header h1 {
             margin: 0;
             font-size: 24px;
+            font-weight: 400;
+            color: #000000;
+            letter-spacing: 0.5px;
         }
         .content {
-            background-color: white;
-            padding: 25px;
-            border-radius: 8px;
+            color: #333333;
+            font-size: 15px;
+        }
+        .content p {
+            margin: 0 0 20px 0;
         }
         .course-info {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background-color: #f9f9f9;
+            border-left: 2px solid #000000;
             padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            text-align: center;
+            margin: 30px 0;
         }
         .course-info h2 {
-            margin: 0 0 10px 0;
+            margin: 0 0 15px 0;
+            font-size: 20px;
+            font-weight: 400;
+            color: #000000;
         }
         .course-info p {
             margin: 0;
-        }
-        .welcome-icon {
-            text-align: center;
-            font-size: 60px;
-            margin: 20px 0;
+            color: #555555;
+            font-size: 14px;
         }
         .info-box {
-            background-color: #f0f4ff;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            margin: 20px 0;
+            background-color: #fafafa;
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        .info-box strong {
+            display: block;
+            margin-bottom: 15px;
+            color: #000000;
+            font-weight: 400;
+        }
+        .info-box ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #333333;
+        }
+        .info-box li {
+            margin-bottom: 10px;
+            line-height: 1.6;
         }
         .footer {
-            text-align: center;
-            margin-top: 30px;
+            margin-top: 40px;
             padding-top: 20px;
-            border-top: 1px solid #ddd;
-            color: #666;
-            font-size: 14px;
+            border-top: 1px solid #e0e0e0;
+            color: #888888;
+            font-size: 13px;
+            text-align: center;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        strong {
+            color: #000000;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎓 Chào mừng học viên mới!</h1>
+            <h1>Chào mừng học viên mới</h1>
         </div>
         
         <div class="content">
-            <div class="welcome-icon">🎉</div>
-            
             <p>Xin chào <strong>{{FullName}}</strong>,</p>
             
-            <p>Chúc mừng bạn đã đăng ký thành công khóa học tại Ms. Huyền LC!</p>
+            <p>Chúc mừng bạn đã đăng ký thành công khóa học tại Ms. Huyền LC.</p>
             
             <div class="course-info">
                 <h2>{{CourseName}}</h2>
-                <p>📅 Ngày bắt đầu: <strong>{{StartDate}}</strong></p>
+                <p>Ngày bắt đầu: <strong>{{StartDate}}</strong></p>
             </div>
             
             <div class="info-box">
-                <strong>📚 Những điều bạn cần chuẩn bị:</strong>
-                <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                <strong>Những điều bạn cần chuẩn bị</strong>
+                <ul>
                     <li>Kiểm tra email thường xuyên để nhận thông tin về lớp học</li>
                     <li>Chuẩn bị sách vở và dụng cụ học tập</li>
                     <li>Đăng nhập vào hệ thống để xem tài liệu học tập</li>
@@ -100,19 +119,19 @@
                 </ul>
             </div>
             
-            <p>Chúng tôi rất vui mừng được đồng hành cùng bạn trên hành trình học tập này. Hãy chuẩn bị tinh thần để bắt đầu một chương trình học bổ ích!</p>
+            <p>Chúng tôi rất vui mừng được đồng hành cùng bạn trên hành trình học tập này. Hãy chuẩn bị tinh thần để bắt đầu một chương trình học bổ ích.</p>
             
             <p>Nếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với chúng tôi.</p>
             
-            <p>Chúc bạn học tập tốt và đạt được nhiều thành công!</p>
+            <p>Chúc bạn học tập tốt và đạt được nhiều thành công.</p>
             
             <p>Trân trọng,<br>
-            <strong>Đội ngũ Ms. Huyền LC</strong></p>
+            <strong>Đội ngũ HPLC</strong></p>
         </div>
         
         <div class="footer">
             <p>Email này được gửi tự động. Vui lòng không trả lời email này.</p>
-            <p>&copy; 2025 Ms. Huyền LC. All rights reserved.</p>
+            <p>&copy; 2025 HPLC. All rights reserved.</p>
         </div>
     </div>
 </body>

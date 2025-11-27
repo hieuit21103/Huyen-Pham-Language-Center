@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using MsHuyenLC.Application.Interfaces;
+using MsHuyenLC.Application.Interfaces.Repositories;
 using MsHuyenLC.Infrastructure.Persistence;
 
 namespace MsHuyenLC.Infrastructure.Repositories;
@@ -21,32 +22,36 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return await _dbSet.FindAsync(Guid.Parse(id));
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync(
-        int PageNumber,
-        int PageSize,
-        Expression<Func<T, bool>>? Filter = null,
-        Func<IQueryable<T>, IOrderedQueryable<T>>? OrderBy = null,
-        params Expression<Func<T, object>>[] Includes
-    )
+    public async Task<T?> GetByIdAsync(string id, params Expression<Func<T, object>>[] includes)
     {
         IQueryable<T> query = _dbSet;
 
-        if (Filter != null)
-        {
-            query = query.Where(Filter);
-        }
-
-        foreach (var include in Includes)
+        foreach (var include in includes)
         {
             query = query.Include(include);
         }
 
-        if (OrderBy != null)
+        return await query.FirstOrDefaultAsync(e => EF.Property<Guid>(e, "Id") == Guid.Parse(id));
+    }
+
+    public async Task<IEnumerable<T>> GetAllAsync(
+        Expression<Func<T, bool>>? filter = null,
+        params Expression<Func<T, object>>[] includes
+    )
+    {
+        IQueryable<T> query = _dbSet;
+
+        if (filter != null)
         {
-            query = OrderBy(query);
+            query = query.Where(filter);
         }
 
-        return await query.Skip((PageNumber - 1) * PageSize).Take(PageSize).ToListAsync();
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+
+        return await query.ToListAsync();
     }
 
     public async Task<T> AddAsync(T entity)
@@ -79,10 +84,5 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
             return await _dbSet.CountAsync(predicate);
         }
         return await _dbSet.CountAsync();
-    }
-
-    public async Task<int> SaveChangesAsync()
-    {
-        return await _context.SaveChangesAsync();
     }
 }

@@ -3,15 +3,34 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
 using MsHuyenLC.Application.Interfaces;
-using MsHuyenLC.Application.Interfaces.Auth;
+using MsHuyenLC.Application.Interfaces.Repositories;
+using MsHuyenLC.Application.Interfaces.Repositories.Users;
+using MsHuyenLC.Application.Interfaces.Services.Auth;
+using MsHuyenLC.Application.Interfaces.Services.System;
+using MsHuyenLC.Application.Interfaces.Services.Email;
+using MsHuyenLC.Application.Interfaces.Services.Excel;
+using MsHuyenLC.Application.Interfaces.Services.Finance;
+using MsHuyenLC.Application.Interfaces.Services.User;
+using MsHuyenLC.Application.Interfaces.Services.Course;
+using MsHuyenLC.Application.Interfaces.Services.Learning;
 using MsHuyenLC.Application.Services;
+using MsHuyenLC.Application.Services.System;
+using MsHuyenLC.Application.Services.Users;
+using MsHuyenLC.Application.Services.User;
+using MsHuyenLC.Application.Services.Courses;
+using MsHuyenLC.Application.Services.Learning;
+using MsHuyenLC.Application.Services.Finance;
 using MsHuyenLC.Infrastructure.Repositories;
+using MsHuyenLC.Infrastructure.Repositories.Users;
 using MsHuyenLC.Infrastructure.Services;
 using MsHuyenLC.Infrastructure.Services.Email;
+using MsHuyenLC.Infrastructure.Services.Excel;
+using MsHuyenLC.Infrastructure.Persistence;
 using MsHuyenLC.Infrastructure.Persistence.Seed;
-using MsHuyenLC.Application.Services.Courses;
+using MsHuyenLC.API.Middleware;
+using MsHuyenLC.Application.Validators.Users;
+using FluentValidation;
 using Microsoft.OpenApi.Models;
-using MsHuyenLC.Application.Interfaces.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -118,20 +137,69 @@ builder.Services.AddCors(options =>
     });
 });
 
+// ========== Repository Pattern ==========
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// ========== Auth Services ==========
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IGenericService<PhanCong>, AssignmentService>();
-builder.Services.AddScoped<IGenericService<LichHoc>, ScheduleService>();
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-builder.Services.AddScoped(typeof(IGenericService<>), typeof(GenericService<>));
 
-builder.Services.AddControllers();
+// ========== System Services ==========
+builder.Services.AddScoped<ISystemLoggerService, SystemLoggerService>();
+builder.Services.AddScoped<ISystemConfigService, SystemConfigService>();
+builder.Services.AddScoped<IBackupService, BackupService>();
+
+// ========== Email Services ==========
+builder.Services.AddScoped<IEmailService, EmailService>();
+
+// ========== Excel Services ==========
+builder.Services.AddScoped<IExcelService, ExcelService>();
+
+// ========== Finance Services ==========
+builder.Services.AddScoped<IVnpayService, VNPayService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+
+// ========== User Services ==========
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<ITeacherService, TeacherService>();
+builder.Services.AddScoped<IAcademicStaffService, AcademicStaffService>();
+
+// ========== Course Services ==========
+builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<IClassService, ClassService>();
+builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<IScheduleService, ScheduleService>();
+builder.Services.AddScoped<IAssignmentService, AssignmentService>();
+
+// ========== Learning Services ==========
+builder.Services.AddScoped<IQuestionService, QuestionService>();
+builder.Services.AddScoped<IGroupQuestionService, GroupQuestionService>();
+builder.Services.AddScoped<IExamSessionService, ExamSessionService>();
+builder.Services.AddScoped<IExamService, ExamService>();
+builder.Services.AddScoped<ITestSessionService, TestSessionService>();
+builder.Services.AddScoped<IRegistrationService, RegistrationService>();
+builder.Services.AddScoped<IGuestRegistrationService, GuestRegistrationService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
+
+// FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<TaiKhoanRequestValidator>();
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
 
 var app = builder.Build();
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 // Enable Swagger in all environments
 app.UseSwagger();

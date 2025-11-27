@@ -2,7 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using MsHuyenLC.Application.Interfaces.Auth;
+using MsHuyenLC.Application.Interfaces.Services.Auth;
 
 namespace MsHuyenLC.Infrastructure.Services;
 

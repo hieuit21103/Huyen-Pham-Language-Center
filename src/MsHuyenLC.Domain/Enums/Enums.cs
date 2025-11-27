@@ -11,7 +11,7 @@ public enum TrangThaiTaiKhoan
 public enum TrangThaiLopHoc
 {
     choxepgiaovien,
-    danghoc,
+    danghoc, 
     ketthuc,
     huy
 }
@@ -33,12 +33,11 @@ public enum TrangThaiKhoaHoc
 
 public enum TrangThaiDangKy
 {
-    choduyet,    
-    daduyet,       
-    daxeplop,      
-    danghoc,      
-    hoantat,        
-    huy             
+    choduyet,
+    daduyet,
+    dathanhtoan,
+    daxeplop,
+    huy
 }
 
 public enum TrangThaiKyThi
@@ -67,17 +66,11 @@ public enum GioiTinh
 public enum VaiTro
 {
     admin,
+    giaovu,
     giaovien,
-    hocvien,
-    giaovu
+    hocvien
 }
 #endregion
-
-public enum DoiTuongNhan
-{
-    lophoc,
-    tatca
-}
 
 public enum KetQuaDangKy
 {
@@ -87,23 +80,36 @@ public enum KetQuaDangKy
     daxuly
 }
 
-public enum HinhThucKyThi
+public enum CapDo
 {
-    tructuyen,
-    tructiep
+    A1,
+    A2,
+    B1,
+    B2,
+    C1,
+    C2
 }
 
-public enum MucDo
+public enum DoKho
 {
     de,
     trungbinh,
     kho
 }
 
-public enum LoaiCauHoi
+public enum KyNang
 {
-    TracNghiem,
-    TuLuan,
+    Nghe,
+    Doc,
+    NguPhap,
+    TuVung,
+    Viet
+}
+
+public enum CheDoCauHoi
+{
+    Don,
+    Nhom
 }
 
 public enum PhuongThucThanhToan

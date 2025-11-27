@@ -1,0 +1,175 @@
+import { CauHoiApiUrl } from "~/constants/apis-url";
+import { getJwtToken } from "./Auth";
+import type { 
+    CauHoiRequest, 
+    CauHoiUpdateRequest,
+    CauHoiFilterParams,
+    ApiResponse 
+} from "~/types/index";
+
+/**
+ * Tạo câu hỏi mới
+ */
+export async function createCauHoi(request: CauHoiRequest): Promise<ApiResponse> {
+    try {
+        const array = [request];
+        const token = getJwtToken();
+        const response = await fetch(CauHoiApiUrl(), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+            body: JSON.stringify(array),
+        });
+
+        return await response.json();
+    } catch (error) {
+        return { success: false, message: `Lỗi: ${error}` };
+    }
+}
+
+/**
+ * Cập nhật câu hỏi
+ */
+export async function updateCauHoi(id: string, request: CauHoiUpdateRequest): Promise<ApiResponse> {
+    try {
+        const token = getJwtToken();
+        const response = await fetch(CauHoiApiUrl(id), {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+            body: JSON.stringify(request),
+        });
+
+        return await response.json();
+    } catch (error) {
+        return { success: false, message: `Lỗi: ${error}` };
+    }
+}
+
+/**
+ * Xóa câu hỏi
+ */
+export async function deleteCauHoi(id: string): Promise<ApiResponse> {
+    try {
+        const token = getJwtToken();
+        const response = await fetch(CauHoiApiUrl(id), {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+        });
+
+        return await response.json();
+    } catch (error) {
+        return { success: false, message: `Lỗi: ${error}` };
+    }
+}
+
+/**
+ * Lấy câu hỏi theo ID
+ */
+export async function getCauHoi(id: string): Promise<ApiResponse> {
+    try {
+        const token = getJwtToken();
+        const response = await fetch(CauHoiApiUrl(id), {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+        });
+
+        return await response.json();
+    } catch (error) {
+        return { success: false, message: `Lỗi: ${error}` };
+    }
+}
+
+/**
+ * Lấy danh sách câu hỏi
+ */
+export async function getCauHois(): Promise<ApiResponse> {
+    try {
+        const token = getJwtToken();
+        const response = await fetch(CauHoiApiUrl(), {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+        });
+
+        return await response.json();
+    } catch (error) {
+        return { success: false, message: `Lỗi: ${error}` };
+    }
+}
+
+/**
+ * Import câu hỏi từ file Excel
+ */
+export async function importCauHoisFromExcel(file: File): Promise<ApiResponse> {
+    try {
+        const token = getJwtToken();
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch(CauHoiApiUrl('import'), {
+            method: "POST",
+            headers: {
+                ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+            body: formData,
+        });
+
+        return await response.json();
+    } catch (error) {
+        return { success: false, message: `Lỗi: ${error}` };
+    }
+}
+
+/**
+ * Xuất template Excel để import câu hỏi
+ */
+export async function downloadImportTemplate(): Promise<ApiResponse> {
+    try {
+        const token = getJwtToken();
+        const response = await fetch(CauHoiApiUrl('download-template'), {
+            method: "GET",
+            headers: {
+                ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+        });
+
+        const blob = await response.blob();
+        return { success: true, data: blob };
+    } catch (error) {
+        return { success: false, message: `Lỗi: ${error}` };
+    }
+}
+
+/**
+ * Xóa nhiều câu hỏi cùng lúc
+ */
+export async function deleteBulkCauHois(ids: string[]): Promise<ApiResponse> {
+    try {
+        const token = getJwtToken();
+        const response = await fetch(CauHoiApiUrl('bulk-delete'), {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+            body: JSON.stringify(ids),
+        });
+
+        return await response.json();
+    } catch (error) {
+        return { success: false, message: `Lỗi: ${error}` };
+    }
+}
