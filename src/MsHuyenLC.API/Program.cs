@@ -36,6 +36,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFE",
+        policy =>
+        {
+            policy.WithOrigins("https://hplc.my")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -212,11 +223,10 @@ app.UseSwaggerUI(c =>
     c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
 });
 
-// Only use HTTPS redirection in production with HTTPS configured
 // app.UseHttpsRedirection();
 
 // Enable CORS
-app.UseCors("AllowAll");
+app.UseCors("AllowFE");
 
 app.UseAuthentication();
 app.UseAuthorization();
