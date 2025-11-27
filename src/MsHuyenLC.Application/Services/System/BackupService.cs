@@ -27,14 +27,20 @@ public class BackupService : IBackupService
         _backupDirectory = Path.Combine(Path.GetTempPath(), "backups");
         Directory.CreateDirectory(_backupDirectory);
 
-        var minioEndpoint = Environment.GetEnvironmentVariable("Minio__Endpoint") ?? "host.docker.internal:9000";
+        var minioEndpoint = Environment.GetEnvironmentVariable("Minio__Endpoint") ?? "minio:9000";
         var minioAccessKey = Environment.GetEnvironmentVariable("Minio__AccessKey") ?? "admin123";
         var minioSecretKey = Environment.GetEnvironmentVariable("Minio__SecretKey") ?? "admin123";
-        _minioDomain = Environment.GetEnvironmentVariable("Minio__Domain") ?? $"http://{minioEndpoint}";
+        var minioDomain = Environment.GetEnvironmentVariable("Minio__Domain") ?? "http://172.17.208.1:9000";
+        
+        // Remove http:// or https:// from endpoint if present
+        minioEndpoint = minioEndpoint.Replace("http://", "").Replace("https://", "");
+        
+        _minioDomain = minioDomain;
 
         _minioClient = new MinioClient()
             .WithEndpoint(minioEndpoint)
             .WithCredentials(minioAccessKey, minioSecretKey)
+            .WithSSL(false)
             .Build();
     }
 
@@ -344,6 +350,12 @@ public class BackupService : IBackupService
                 .WithBucket(_minioBucket)
                 .WithObject(objectName)
                 .WithExpiry(3600));
+
+            presignedUrl = presignedUrl
+                .Replace("http://minio:9000", _minioDomain)
+                .Replace("http://host.docker.internal:9000", _minioDomain)
+                .Replace("https://minio:9000", _minioDomain)
+                .Replace("https://host.docker.internal:9000", _minioDomain);
 
             return presignedUrl;
         }
