@@ -41,7 +41,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFE",
         policy =>
         {
-            policy.WithOrigins("https://hplc.my")
+            policy.WithOrigins("https://hplc.my", "http://localhost:3000")
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -212,20 +212,20 @@ builder.Services.AddControllers()
 var app = builder.Build();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
-// Enable Swagger in all environments
-app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "MsHuyenLC API V1");
-    c.RoutePrefix = "swagger";
-    c.DocumentTitle = "MsHuyenLC API Documentation";
-    c.DefaultModelsExpandDepth(-1);
-    c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
-});
+if(app.Environment.IsDevelopment()){
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "MsHuyenLC API V1");
+        c.RoutePrefix = "swagger";
+        c.DocumentTitle = "MsHuyenLC API Documentation";
+        c.DefaultModelsExpandDepth(-1);
+        c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
+    });
+}
 
 // app.UseHttpsRedirection();
 
-// Enable CORS
 app.UseCors("AllowFE");
 
 app.UseAuthentication();

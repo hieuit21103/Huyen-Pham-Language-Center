@@ -85,7 +85,12 @@ export default function MyExams() {
   };
 
   const upcomingExams = exams.filter(exam => exam.trangThai === 0 || exam.trangThai === 1);
-  const completedSessions = sessions.filter(session => session.diem !== null);
+  const completedSessions = sessions
+    .filter(session => session.diem !== null)
+    .sort((a, b) => {
+      if (!a.ngayLam || !b.ngayLam) return 0;
+      return new Date(b.ngayLam).getTime() - new Date(a.ngayLam).getTime();
+    });
 
   const hasCompletedExam = (examId: string) => {
     return sessions.some(session => session.kyThiId === examId);

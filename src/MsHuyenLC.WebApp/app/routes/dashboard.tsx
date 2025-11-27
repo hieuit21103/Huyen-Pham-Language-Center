@@ -92,7 +92,11 @@ export default function Dashboard() {
 
       const phienLamBai = await getPhienLamBaiByHocVien(hocVienRes.data.id!);
       if (phienLamBai.success && Array.isArray(phienLamBai.data)) {
-        setPhienLamBais(phienLamBai.data);
+        const sortedData = phienLamBai.data.sort((a, b) => {
+          if (!a.ngayLam || !b.ngayLam) return 0;
+          return new Date(b.ngayLam).getTime() - new Date(a.ngayLam).getTime();
+        });
+        setPhienLamBais(sortedData);
       }
     }
 
