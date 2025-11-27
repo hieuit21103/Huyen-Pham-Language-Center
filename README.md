@@ -76,6 +76,49 @@ Dự án áp dụng **Clean Architecture** (Onion Architecture) với 4 layer ch
 - **Infrastructure Layer**: Implement các interface từ Application, xử lý database, external services
 - **API Layer**: Presentation layer, phụ thuộc vào tất cả các layer khác
 
+### Domain Entities
+
+| Module | Entity | Mô tả |
+|--------|--------|-------|
+| **Users** | `TaiKhoan` | Tài khoản người dùng (đăng nhập, vai trò, trạng thái) |
+| | `GiaoVien` | Thông tin giáo viên (họ tên, chuyên môn, trình độ) |
+| | `HocVien` | Thông tin học viên (họ tên, ngày sinh, địa chỉ) |
+| | `GiaoVu` | Thông tin giáo vụ |
+| **Courses** | `KhoaHoc` | Khóa học (tên, mô tả, học phí, thời lượng) |
+| | `LopHoc` | Lớp học (tên lớp, sĩ số, khóa học) |
+| | `LichHoc` | Lịch học (thứ, giờ, phòng học) |
+| | `PhongHoc` | Phòng học (tên phòng, sức chứa) |
+| | `PhanCong` | Phân công giảng dạy |
+| **Learning** | `DangKy` | Đăng ký học từ học viên |
+| | `DangKyKhach` | Đăng ký từ khách |
+| | `DeThi` | Đề thi |
+| | `DeThiCauHoi` | Câu hỏi trong đề thi |
+| | `NganHangDe` | Ngân hàng câu hỏi |
+| | `KyThi` | Kỳ thi |
+| | `BaiThi` | Bài thi của học viên |
+| | `BaiThiChiTiet` | Chi tiết bài làm |
+| | `KetQuaHocTap` | Kết quả học tập |
+| | `ThongBao` | Thông báo |
+| | `PhanHoi` | Phản hồi, đánh giá |
+| **Finance** | `ThanhToan` | Thanh toán học phí |
+| **System** | `NhatKyHeThong` | Nhật ký hoạt động |
+| | `SaoLuuDuLieu` | Sao lưu dữ liệu |
+
+### Enums (Các trạng thái)
+
+| Enum | Giá trị |
+|------|---------|
+| `VaiTro` | `admin`, `giaovu`, `giaovien`, `hocvien` |
+| `TrangThaiTaiKhoan` | `hoatdong`, `tamdung`, `bikhoa` |
+| `TrangThaiKhoaHoc` | `dangmo`, `dangdienra`, `ketthuc`, `huy` |
+| `TrangThaiLopHoc` | `choxepgiaovien`, `danghoc`, `ketthuc`, `huy` |
+| `TrangThaiHocVien` | `danghoc`, `tamngung`, `dahoanthanh` |
+| `TrangThaiDangKy` | `choduyet`, `daduyet`, `daxeplop`, `danghoc`, `hoantat`, `huy` |
+| `TrangThaiThanhToan` | `chuathanhtoan`, `dathanhtoan`, `thatbai` |
+| `GioiTinh` | `nam`, `nu` |
+| `LoaiCauHoi` | `TracNghiem`, `TuLuan` |
+| `MucDo` | `de`, `trungbinh`, `kho` |
+
 ## 🛠️ Công nghệ sử dụng
 
 ### Backend Framework & Language
@@ -114,134 +157,263 @@ Dự án áp dụng **Clean Architecture** (Onion Architecture) với 4 layer ch
 ```
 MsHuyenLC/
 ├── src/
-│   ├── MsHuyenLC.API/                 # Presentation Layer
+│   ├── MsHuyenLC.API/                     # 🎯 Presentation Layer
 │   │   ├── Controller/
-│   │   │   ├── Auth/                  # Authentication endpoints
-│   │   │   ├── Courses/               # Course management
-│   │   │   ├── Finance/               # Payment management
-│   │   │   ├── Learning/              # Learning activities
-│   │   │   ├── System/                # System management
-│   │   │   └── Users/                 # User management
-│   │   └── Program.cs                 # Application entry point
+│   │   │   ├── Auth/
+│   │   │   │   └── AuthController.cs      # Xác thực (login, logout, reset password)
+│   │   │   ├── Courses/
+│   │   │   │   ├── KhoaHocController.cs   # ✅ CRUD khóa học
+│   │   │   │   ├── LopHocController.cs    # ✅ CRUD lớp học
+│   │   │   │   ├── LichHocController.cs   # ✅ CRUD lịch học
+│   │   │   │   ├── PhongHocController.cs  # ✅ CRUD phòng học
+│   │   │   │   └── PhanCongController.cs  # ✅ Phân công giáo viên
+│   │   │   ├── Finance/
+│   │   │   │   └── ThanhToanController.cs # 🚧 TODO
+│   │   │   ├── Learning/
+│   │   │   │   ├── DangKyController.cs    # 🚧 TODO
+│   │   │   │   ├── DangKyKhachController.cs # 🚧 TODO
+│   │   │   │   ├── DeThiController.cs     # 🚧 TODO
+│   │   │   │   ├── BaiThiController.cs    # 🚧 TODO
+│   │   │   │   ├── KyThiController.cs     # 🚧 TODO
+│   │   │   │   ├── NganHangDeController.cs # 🚧 TODO
+│   │   │   │   ├── KetQuaHocTapController.cs # 🚧 TODO
+│   │   │   │   ├── ThongBaoController.cs  # 🚧 TODO
+│   │   │   │   └── PhanHoiController.cs   # 🚧 TODO
+│   │   │   ├── System/
+│   │   │   │   ├── NhatKyHeThongController.cs # 🚧 TODO
+│   │   │   │   └── SaoLuuDuLieuController.cs  # 🚧 TODO
+│   │   │   └── Users/
+│   │   │       ├── TaiKhoanController.cs  # ✅ CRUD tài khoản (Admin)
+│   │   │       ├── ProfileController.cs   # ✅ Quản lý profile cá nhân
+│   │   │       ├── GiaoVienController.cs  # ✅ CRUD giáo viên
+│   │   │       ├── HocVienController.cs   # ✅ CRUD học viên
+│   │   │       └── GiaoVuController.cs    # 🚧 TODO
+│   │   ├── BaseController.cs              # Base controller với GetAll, GetById
+│   │   ├── GlobalUsing.cs
+│   │   ├── Program.cs                     # Entry point & DI configuration
+│   │   ├── MsHuyenLC.API.csproj
+│   │   ├── appsettings.json
+│   │   └── appsettings.Development.json
 │   │
-│   ├── MsHuyenLC.Application/         # Business Layer
-│   │   ├── DTOs/                      # Data Transfer Objects
-│   │   │   ├── Auth/                  # Login, Register, Password
-│   │   │   ├── Courses/               # Course, Class, Schedule
-│   │   │   └── Users/                 # User profiles
-│   │   ├── Interfaces/                # Service interfaces
-│   │   ├── Services/                  # Business logic services
-│   │   └── Exceptions/                # Custom exceptions
+│   ├── MsHuyenLC.Application/             # 💼 Business Layer
+│   │   ├── DTOs/
+│   │   │   ├── Auth/
+│   │   │   │   ├── LoginRequest.cs
+│   │   │   │   ├── ChangePasswordRequest.cs
+│   │   │   │   ├── ResetPasswordRequest.cs
+│   │   │   │   └── ConfirmResetPasswordRequest.cs
+│   │   │   ├── Courses/
+│   │   │   │   ├── KhoaHoc/               # Request/Response DTOs
+│   │   │   │   ├── LopHoc/
+│   │   │   │   ├── LichHoc/
+│   │   │   │   ├── PhongHoc/
+│   │   │   │   └── PhanCong/
+│   │   │   ├── Finance/                   # (Đang phát triển)
+│   │   │   ├── Learning/                  # (Đang phát triển)
+│   │   │   └── Users/
+│   │   │       ├── TaiKhoan/
+│   │   │       ├── GiaoVien/
+│   │   │       ├── HocVien/
+│   │   │       └── GiaoVu/
+│   │   ├── Exceptions/                    # Custom exceptions
+│   │   ├── Interfaces/
+│   │   │   ├── Auth/                      # IAuthService, ITokenService, IUserRepository
+│   │   │   ├── Email/                     # IEmailService
+│   │   │   ├── IGenericRepository.cs
+│   │   │   └── IGenericService.cs
+│   │   ├── Services/
+│   │   │   ├── Courses/
+│   │   │   │   ├── ScheduleService.cs     # Xử lý lịch học, phòng trống
+│   │   │   │   └── AssignmentService.cs   # Xử lý phân công
+│   │   │   └── GenericService.cs          # Generic CRUD service
+│   │   └── MsHuyenLC.Application.csproj
 │   │
-│   ├── MsHuyenLC.Domain/              # Domain Layer
-│   │   ├── Entities/                  # Domain entities
-│   │   │   ├── Courses/               # KhoaHoc, LopHoc, LichHoc
-│   │   │   ├── Finance/               # ThanhToan
-│   │   │   ├── Learning/              # DangKy, BaiThi, KetQua
-│   │   │   ├── System/                # NhatKy, SaoLuu
-│   │   │   └── Users/                 # TaiKhoan, GiaoVien, HocVien
-│   │   └── Enums/                     # Enumerations
+│   ├── MsHuyenLC.Domain/                  # 🏛️ Domain Layer (Core)
+│   │   ├── Entities/
+│   │   │   ├── Courses/
+│   │   │   │   ├── KhoaHoc.cs
+│   │   │   │   ├── LopHoc.cs
+│   │   │   │   ├── LichHoc.cs
+│   │   │   │   ├── PhongHoc.cs
+│   │   │   │   └── PhanCong.cs
+│   │   │   ├── Finance/
+│   │   │   │   └── ThanhToan.cs
+│   │   │   ├── Learning/
+│   │   │   │   ├── DangKy.cs
+│   │   │   │   ├── DangKyKhach.cs
+│   │   │   │   ├── DeThi.cs
+│   │   │   │   ├── DeThiCauHoi.cs
+│   │   │   │   ├── NganHangDe.cs
+│   │   │   │   ├── KyThi.cs
+│   │   │   │   ├── BaiThi.cs
+│   │   │   │   ├── BaiThiChiTiet.cs
+│   │   │   │   ├── KetQuaHocTap.cs
+│   │   │   │   ├── ThongBao.cs
+│   │   │   │   └── PhanHoi.cs
+│   │   │   ├── System/
+│   │   │   │   ├── NhatKyHeThong.cs
+│   │   │   │   └── SaoLuuDuLieu.cs
+│   │   │   └── Users/
+│   │   │       ├── TaiKhoan.cs
+│   │   │       ├── GiaoVien.cs
+│   │   │       ├── HocVien.cs
+│   │   │       └── GiaoVu.cs
+│   │   ├── Enums/
+│   │   │   └── Enums.cs                   # VaiTro, TrangThai, etc.
+│   │   ├── GlobalUsing.cs
+│   │   └── MsHuyenLC.Domain.csproj
 │   │
-│   └── MsHuyenLC.Infrastructure/      # Infrastructure Layer
-│       ├── Persistence/               # Database context
-│       │   └── Seed/                  # Initial data seeding
-│       ├── Repositories/              # Data access
-│       ├── Services/                  # External services
-│       │   ├── Auth/                  # JWT, Password hashing
-│       │   └── Email/                 # Email service
-│       ├── Migrations/                # EF Core migrations
-│       └── Templates/                 # Email templates
+│   └── MsHuyenLC.Infrastructure/          # 🔧 Infrastructure Layer
+│       ├── Persistence/
+│       │   ├── ApplicationDbContext.cs    # EF Core DbContext
+│       │   └── Seed/                      # Data seeding
+│       ├── Repositories/                  # Generic & specific repositories
+│       ├── Services/
+│       │   ├── AuthService.cs             # Login, logout logic
+│       │   ├── JwtService.cs              # JWT token generation
+│       │   ├── TokenService.cs            # Password reset tokens
+│       │   ├── PasswordHasher.cs          # BCrypt hashing
+│       │   └── Email/                     # SMTP email service
+│       ├── Templates/
+│       │   ├── Email/                     # Email HTML templates
+│       │   ├── EmailTemplateHelper.cs
+│       │   └── README.md
+│       ├── Migrations/                    # EF Core migrations
+│       ├── GlobalUsing.cs
+│       └── MsHuyenLC.Infrastructure.csproj
 │
-├── Dockerfile                         # Docker image definition
-├── docker-compose.yml                 # Docker orchestration
-├── .env.example                       # Environment variables template
-├── MsHuyenLC.sln                      # Solution file
-└── README.md                          # Documentation (file này)
+├── Dockerfile                             # Multi-stage Docker build
+├── docker-compose.yml                     # Docker orchestration
+├── .dockerignore
+├── .env.example                           # Environment template
+├── .gitignore
+├── .gitattributes
+├── MsHuyenLC.sln                          # Solution file
+└── README.md                              # Tài liệu này
 ```
 
 ## 🎯 Chức năng chính
 
-### 🔐 1. Xác thực & Phân quyền (Authentication & Authorization)
+### ✅ Chức năng đã hoàn thành
 
-**Controller**: `AuthController`, `ProfileController`, `TaiKhoanController`
+#### 🔐 1. Xác thực & Phân quyền (Authentication & Authorization)
 
-- ✅ **Đăng nhập** - JWT token-based authentication
-- ✅ **Đăng xuất** - Invalidate token/session
-- ✅ **Đổi mật khẩu** - Change password cho user đã đăng nhập
-- ✅ **Quên mật khẩu** - Reset password qua email
-- ✅ **Xác nhận reset password** - Confirm token và đặt mật khẩu mới
-- ✅ **Profile management** - Xem và cập nhật thông tin cá nhân
-- ✅ **Phân quyền role-based** - Admin, GiaoVu, GiaoVien, HocVien
+**Controllers**: `AuthController`, `ProfileController`, `TaiKhoanController`
 
-### 📚 2. Quản lý Khóa học (Course Management)
+| Tính năng | Endpoint | Trạng thái |
+|-----------|----------|------------|
+| Đăng nhập | `POST /api/Auth/login` | ✅ Hoàn thành |
+| Đăng xuất | `POST /api/Auth/logout` | ✅ Hoàn thành |
+| Đổi mật khẩu | `POST /api/Auth/change-password` | ✅ Hoàn thành |
+| Quên mật khẩu | `POST /api/Auth/reset-password` | ✅ Hoàn thành |
+| Xác nhận reset | `POST /api/Auth/reset-password/confirm` | ✅ Hoàn thành |
+| Xem profile | `GET /api/profile` | ✅ Hoàn thành |
+| Cập nhật profile | `PUT /api/profile` | ✅ Hoàn thành |
+| CRUD Tài khoản (Admin) | `/api/TaiKhoan` | ✅ Hoàn thành |
+| Tìm kiếm tài khoản | `GET /api/TaiKhoan/search` | ✅ Hoàn thành |
+
+#### 📚 2. Quản lý Khóa học (Course Management)
 
 **Controller**: `KhoaHocController`
 
-- ✅ **CRUD Khóa học** - Tạo, xem, sửa, xóa khóa học
-- ✅ **Thông tin khóa học** - Tên, mô tả, học phí, thời lượng, ngày khai giảng
-- ✅ **Tìm kiếm & lọc** - Sắp xếp theo tên, học phí, ngày khai giảng
-- ✅ **Phân quyền** - Chỉ admin, giáo vụ được quản lý
+| Tính năng | Endpoint | Trạng thái |
+|-----------|----------|------------|
+| Danh sách khóa học | `GET /api/KhoaHoc` | ✅ Hoàn thành |
+| Chi tiết khóa học | `GET /api/KhoaHoc/{id}` | ✅ Hoàn thành |
+| Tạo khóa học | `POST /api/KhoaHoc` | ✅ Hoàn thành |
+| Cập nhật khóa học | `PUT /api/KhoaHoc/{id}` | ✅ Hoàn thành |
+| Xóa khóa học | `DELETE /api/KhoaHoc/{id}` | ✅ Hoàn thành |
+| Sắp xếp & phân trang | Query params | ✅ Hoàn thành |
 
-### 🏫 3. Quản lý Lớp học (Class Management)
+#### 🏫 3. Quản lý Lớp học (Class Management)
 
 **Controller**: `LopHocController`
 
-- ✅ **CRUD Lớp học** - Tạo, xem, sửa, xóa lớp học
-- ✅ **Thông tin lớp học** - Tên lớp, khóa học, sĩ số, trạng thái
-- ✅ **Danh sách học viên** - Xem học viên trong lớp
-- ✅ **Quản lý lớp theo khóa học** - Liên kết với khóa học
+| Tính năng | Endpoint | Trạng thái |
+|-----------|----------|------------|
+| Danh sách lớp học | `GET /api/LopHoc` | ✅ Hoàn thành |
+| Chi tiết lớp học | `GET /api/LopHoc/{id}` | ✅ Hoàn thành |
+| Tạo lớp học | `POST /api/LopHoc` | ✅ Hoàn thành |
+| Cập nhật lớp học | `PUT /api/LopHoc/{id}` | ✅ Hoàn thành |
+| Xóa lớp học | `DELETE /api/LopHoc/{id}` | ✅ Hoàn thành |
+| Danh sách học viên trong lớp | `GET /api/LopHoc/{id}/students` | ✅ Hoàn thành |
 
-### 📅 4. Quản lý Lịch học (Schedule Management)
+#### 📅 4. Quản lý Lịch học (Schedule Management)
 
 **Controller**: `LichHocController`
 
-- ✅ **CRUD Lịch học** - Tạo, xem, sửa, xóa lịch học
-- ✅ **Lịch theo lớp** - Xem lịch học của một lớp
-- ✅ **Lịch theo giáo viên** - Xem lịch dạy của giáo viên
-- ✅ **Lịch theo học viên** - Xem lịch học của học viên
-- ✅ **Thông tin chi tiết** - Ngày, giờ, phòng học, nội dung
+| Tính năng | Endpoint | Trạng thái |
+|-----------|----------|------------|
+| Danh sách lịch học | `GET /api/LichHoc` | ✅ Hoàn thành |
+| Chi tiết lịch học | `GET /api/LichHoc/{id}` | ✅ Hoàn thành |
+| Lịch theo lớp | `GET /api/LichHoc/class/{classId}` | ✅ Hoàn thành |
+| Lịch theo giáo viên | `GET /api/LichHoc/teacher/{teacherId}` | ✅ Hoàn thành |
+| Lịch theo học viên | `GET /api/LichHoc/student/{studentId}` | ✅ Hoàn thành |
+| Phòng trống | `GET /api/LichHoc/available-rooms` | ✅ Hoàn thành |
+| Tạo lịch học | `POST /api/LichHoc` | ✅ Hoàn thành |
+| Cập nhật lịch học | `PUT /api/LichHoc/{id}` | ✅ Hoàn thành |
+| Xóa lịch học | `DELETE /api/LichHoc/{id}` | ✅ Hoàn thành |
 
-### 🏢 5. Quản lý Phòng học (Room Management)
+#### 🏢 5. Quản lý Phòng học (Room Management)
 
 **Controller**: `PhongHocController`
 
-- ✅ **CRUD Phòng học** - Tạo, xem, sửa, xóa phòng học
-- ✅ **Thông tin phòng** - Tên phòng, sức chứa, thiết bị
-- ✅ **Kiểm tra phòng trống** - API kiểm tra phòng khả dụng
+| Tính năng | Endpoint | Trạng thái |
+|-----------|----------|------------|
+| Danh sách phòng học | `GET /api/PhongHoc` | ✅ Hoàn thành |
+| Chi tiết phòng học | `GET /api/PhongHoc/{id}` | ✅ Hoàn thành |
+| Tạo phòng học | `POST /api/PhongHoc` | ✅ Hoàn thành |
+| Cập nhật phòng học | `PUT /api/PhongHoc/{id}` | ✅ Hoàn thành |
+| Xóa phòng học | `DELETE /api/PhongHoc/{id}` | ✅ Hoàn thành |
 
-### 👨‍🏫 6. Quản lý Phân công (Assignment Management)
+#### 👨‍🏫 6. Quản lý Phân công Giảng dạy
 
 **Controller**: `PhanCongController`
 
-- ✅ **CRUD Phân công** - Phân công giáo viên dạy lớp
-- ✅ **Xem phân công theo giáo viên** - Các lớp mà giáo viên đang dạy
-- ✅ **Quản lý giảng dạy** - Thời gian bắt đầu, kết thúc
+| Tính năng | Endpoint | Trạng thái |
+|-----------|----------|------------|
+| Danh sách phân công | `GET /api/PhanCong` | ✅ Hoàn thành |
+| Phân công giáo viên | `POST /api/PhanCong` | ✅ Hoàn thành |
+| Lớp theo giáo viên | `GET /api/PhanCong/giaovien/{id}` | ✅ Hoàn thành |
+| Hủy phân công | `DELETE /api/PhanCong/{id}` | ✅ Hoàn thành |
 
-### 👥 7. Quản lý Người dùng (User Management)
+#### 👥 7. Quản lý Người dùng (User Management)
 
-**Controllers**: `GiaoVienController`, `HocVienController`, `GiaoVuController`
+**Controllers**: `GiaoVienController`, `HocVienController`
 
-- ✅ **Quản lý Giáo viên** - CRUD thông tin giáo viên
-- ✅ **Quản lý Học viên** - CRUD thông tin học viên
-- ✅ **Tìm kiếm người dùng** - Tìm theo tên, email, số điện thoại
-- 🚧 **Quản lý Giáo vụ** - Đang phát triển
+| Tính năng | Endpoint | Trạng thái |
+|-----------|----------|------------|
+| Danh sách giáo viên | `GET /api/GiaoVien` | ✅ Hoàn thành |
+| Chi tiết giáo viên | `GET /api/GiaoVien/{id}` | ✅ Hoàn thành |
+| Tạo giáo viên | `POST /api/GiaoVien` | ✅ Hoàn thành |
+| Cập nhật giáo viên | `PUT /api/GiaoVien/{id}` | ✅ Hoàn thành |
+| Vô hiệu hóa giáo viên | `DELETE /api/GiaoVien/{id}` | ✅ Hoàn thành |
+| Danh sách học viên | `GET /api/HocVien` | ✅ Hoàn thành |
+| Chi tiết học viên | `GET /api/HocVien/{id}` | ✅ Hoàn thành |
+| Cập nhật học viên | `PUT /api/HocVien/{id}` | ✅ Hoàn thành |
+| Xóa học viên | `DELETE /api/HocVien/{id}` | ✅ Hoàn thành |
 
-### 📊 8. Chức năng đang phát triển
+---
 
-Các controller đã được định nghĩa nhưng chưa triển khai đầy đủ:
+### 🚧 Chức năng đang phát triển (TODO)
 
-- 🚧 **Quản lý Đăng ký** (`DangKyController`) - Đăng ký học từ học viên
-- 🚧 **Đăng ký từ khách** (`DangKyKhachController`) - Đăng ký từ người chưa có tài khoản
-- 🚧 **Quản lý Thanh toán** (`ThanhToanController`) - Thanh toán học phí, hóa đơn
-- 🚧 **Quản lý Đề thi** (`DeThiController`) - Tạo và quản lý đề thi
-- 🚧 **Ngân hàng đề** (`NganHangDeController`) - Kho câu hỏi
-- 🚧 **Quản lý Kỳ thi** (`KyThiController`) - Lên lịch và tổ chức kỳ thi
-- 🚧 **Bài thi** (`BaiThiController`) - Nộp bài, chấm bài
-- 🚧 **Kết quả học tập** (`KetQuaHocTapController`) - Quản lý điểm số, kết quả
-- 🚧 **Thông báo** (`ThongBaoController`) - Gửi thông báo đến người dùng
-- 🚧 **Phản hồi** (`PhanHoiController`) - Phản hồi, đánh giá khóa học
-- 🚧 **Nhật ký hệ thống** (`NhatKyHeThongController`) - Logging, audit trail
-- 🚧 **Sao lưu dữ liệu** (`SaoLuuDuLieuController`) - Backup & restore
+Các controller đã được định nghĩa với entity sẵn sàng, chưa triển khai logic:
+
+| Module | Controller | Mô tả |
+|--------|------------|-------|
+| **Users** | `GiaoVuController` | Quản lý giáo vụ |
+| **Finance** | `ThanhToanController` | Thanh toán học phí, hóa đơn |
+| **Learning** | `DangKyController` | Đăng ký học từ học viên |
+| | `DangKyKhachController` | Đăng ký từ khách chưa có tài khoản |
+| | `DeThiController` | Tạo và quản lý đề thi |
+| | `NganHangDeController` | Quản lý ngân hàng câu hỏi |
+| | `KyThiController` | Lên lịch và tổ chức kỳ thi |
+| | `BaiThiController` | Nộp bài, chấm bài thi |
+| | `KetQuaHocTapController` | Quản lý điểm số, kết quả |
+| | `ThongBaoController` | Gửi thông báo đến người dùng |
+| | `PhanHoiController` | Phản hồi, đánh giá khóa học |
+| **System** | `NhatKyHeThongController` | Logging, audit trail |
+| | `SaoLuuDuLieuController` | Backup & restore dữ liệu |
 
 ## 💻 Yêu cầu hệ thống
 
@@ -501,16 +673,22 @@ POST /api/Auth/login
 - `GET /api/LichHoc/class/{classId}` - Lịch học theo lớp
 - `GET /api/LichHoc/teacher/{teacherId}` - Lịch dạy theo giáo viên
 - `GET /api/LichHoc/student/{studentId}` - Lịch học theo học viên
+- `GET /api/LichHoc/available-rooms` - Phòng trống theo lịch
 - `POST /api/LichHoc` - Tạo lịch học
 - `PUT /api/LichHoc/{id}` - Cập nhật lịch học
 - `DELETE /api/LichHoc/{id}` - Xóa lịch học
 
 #### Room Management
 - `GET /api/PhongHoc` - Danh sách phòng học
-- `GET /api/PhongHoc/available-rooms` - Phòng trống
 - `POST /api/PhongHoc` - Tạo phòng học
 - `PUT /api/PhongHoc/{id}` - Cập nhật phòng học
 - `DELETE /api/PhongHoc/{id}` - Xóa phòng học
+
+#### Assignment Management
+- `GET /api/PhanCong` - Danh sách phân công
+- `POST /api/PhanCong` - Phân công giáo viên vào lớp
+- `GET /api/PhanCong/giaovien/{id}` - Các lớp của giáo viên
+- `DELETE /api/PhanCong/{id}` - Hủy phân công
 
 #### User Management
 - `GET /api/Profile` - Thông tin cá nhân
