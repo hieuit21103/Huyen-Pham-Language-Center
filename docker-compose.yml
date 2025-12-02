@@ -1,6 +1,3 @@
-# Docker Compose - Sử dụng Database bên ngoài (External Database)
-# API kết nối tới PostgreSQL và Redis đang chạy trên host machine hoặc cloud
-
 version: '3.8'
 
 services:
@@ -14,8 +11,8 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://0.0.0.0:8080
       
-      # External PostgreSQL Database
-      ConnectionStrings__DefaultConnection: ${DB_CONNECTION_STRING}
+      # PostgreSQL Database
+      ConnectionStrings__DefaultConnection: ${DB_CONNECTION_STRING:-Host=postgres;Port=5432;Database=hplc_db;Username=postgres;Password=postgres}
       
       # External Redis Cache
       Redis__ConnectionString: ${REDIS_CONNECTION_STRING}
@@ -74,6 +71,24 @@ services:
       CLIENT_API_URL: ${CLIENT_API_URL:-http://api:5000}
     ports:
       - "3000:3000"
+  postgres:
+    image: postgres:15
+    container_name: mshuyenlc-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-hplc_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-hplc_db} -h localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
   minio:
     image: minio/minio:latest
     container_name: minio
@@ -110,13 +125,12 @@ services:
         echo 'Retrying...';
         sleep 3;
       done;
-      echo 'Setting buckets to public...';
       /usr/bin/mc anonymous set download minio/audio;
       /usr/bin/mc anonymous set download minio/avatars;
       /usr/bin/mc anonymous set download minio/images;
       /usr/bin/mc anonymous set private minio/backups;
-      echo 'All buckets are now public!';
       exit 0;
       "
 volumes:
   minio-data:
+  postgres-data:
