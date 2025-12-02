@@ -12,9 +12,10 @@ export default function DatLaiMatKhauPage() {
     const [loading, setLoading] = useState(false);
     const [tokenValid, setTokenValid] = useState(false);
     const [checkingToken, setCheckingToken] = useState(true);
-
-    const token = searchParams.get("token") ?? "";
-    const email = searchParams.get("email") ?? "";
+    
+    const decoded = searchParams.get("token") || "";
+    const token = decoded.replace(/ /g, "+");
+    const email = searchParams.get("email") || "";
 
     useEffect(() => {
         const verifyToken = async () => {
