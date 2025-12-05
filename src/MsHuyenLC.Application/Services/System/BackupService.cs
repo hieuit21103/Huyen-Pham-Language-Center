@@ -12,6 +12,7 @@ public class BackupService : IBackupService
     private readonly IUnitOfWork _unitOfWork;
     private readonly string _connectionString;
     private readonly IMinioClient _minioClient;
+    private readonly IMinioClient _minioClientForPresignedUrl;
     private readonly string _minioBucket;
     private readonly string _minioDomain;
     private readonly string _backupDirectory;
@@ -28,12 +29,13 @@ public class BackupService : IBackupService
         Directory.CreateDirectory(_backupDirectory);
 
         var minioEndpoint = Environment.GetEnvironmentVariable("Minio__Endpoint") ?? "minio:9000";
+        var minioDomain = Environment.GetEnvironmentVariable("Minio__Domain") ?? "http://172.17.208.1:9000";
         var minioAccessKey = Environment.GetEnvironmentVariable("Minio__AccessKey") ?? "admin123";
         var minioSecretKey = Environment.GetEnvironmentVariable("Minio__SecretKey") ?? "admin123";
-        var minioDomain = Environment.GetEnvironmentVariable("Minio__Domain") ?? "http://172.17.208.1:9000";
         
-        // Remove http:// or https:// from endpoint if present
         minioEndpoint = minioEndpoint.Replace("http://", "").Replace("https://", "");
+        var publicEndpoint = minioDomain.Replace("http://", "").Replace("https://", "");
+        var useSSL = minioDomain.StartsWith("https://");
         
         _minioDomain = minioDomain;
 
@@ -41,6 +43,12 @@ public class BackupService : IBackupService
             .WithEndpoint(minioEndpoint)
             .WithCredentials(minioAccessKey, minioSecretKey)
             .WithSSL(false)
+            .Build();
+
+        _minioClientForPresignedUrl = new MinioClient()
+            .WithEndpoint(publicEndpoint)
+            .WithCredentials(minioAccessKey, minioSecretKey)
+            .WithSSL(useSSL)
             .Build();
     }
 
@@ -194,7 +202,7 @@ public class BackupService : IBackupService
             var processInfo = new ProcessStartInfo
             {
                 FileName = "pg_dump",
-                Arguments = $"-h {connectionParams.Host} -p {connectionParams.Port} -U {connectionParams.Username} -d {connectionParams.Database} -F p --clean --if-exists -f \"{localFilePath}\"",
+                Arguments = $"-h {connectionParams.Host} -p {connectionParams.Port} -U {connectionParams.Username} -d {connectionParams.Database} -F p --clean --if-exists --exclude-table=\"SaoLuuDuLieu\" -f \"{localFilePath}\"",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -346,16 +354,10 @@ public class BackupService : IBackupService
 
         try
         {
-            var presignedUrl = await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
+            var presignedUrl = await _minioClientForPresignedUrl.PresignedGetObjectAsync(new PresignedGetObjectArgs()
                 .WithBucket(_minioBucket)
                 .WithObject(objectName)
                 .WithExpiry(3600));
-
-            presignedUrl = presignedUrl
-                .Replace("http://minio:9000", _minioDomain)
-                .Replace("http://host.docker.internal:9000", _minioDomain)
-                .Replace("https://minio:9000", _minioDomain)
-                .Replace("https://host.docker.internal:9000", _minioDomain);
 
             return presignedUrl;
         }
