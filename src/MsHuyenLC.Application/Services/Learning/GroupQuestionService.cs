@@ -38,6 +38,7 @@ public class GroupQuestionService : IGroupQuestionService
             SoLuongCauHoi = request.SoLuongCauHoi,
             CapDo = request.CapDo,
             DoKho = request.DoKho,
+            KyNang = request.KyNang
         };
 
         await _unitOfWork.NhomCauHois.AddAsync(entity);
@@ -53,7 +54,7 @@ public class GroupQuestionService : IGroupQuestionService
         {
             throw new Exception("Không tìm thấy nhóm câu hỏi");
         }
-
+    
         if (!string.IsNullOrWhiteSpace(request.NoiDung))
             entity.NoiDung = request.NoiDung;
 
@@ -74,6 +75,9 @@ public class GroupQuestionService : IGroupQuestionService
 
         if (request.DoKho.HasValue)
             entity.DoKho = request.DoKho.Value;
+
+        if (request.KyNang.HasValue)
+            entity.KyNang = request.KyNang.Value;
 
         await _unitOfWork.NhomCauHois.UpdateAsync(entity);
         await _unitOfWork.SaveChangesAsync();

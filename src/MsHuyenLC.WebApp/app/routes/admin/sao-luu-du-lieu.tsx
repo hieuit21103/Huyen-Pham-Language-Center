@@ -325,27 +325,27 @@ export default function SaoLuuDuLieu() {
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => handleDownloadBackup(file)}
-                          className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="text-blue-600 hover:text-blue-900"
                           title="Tải xuống"
                         >
-                          <Download className="w-4 h-4" />
+                          <Download className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => {
                             setSelectedFile(file);
                             setShowRestoreModal(true);
                           }}
-                          className="text-green-600 hover:text-green-900 p-2 hover:bg-green-50 rounded-lg transition-colors"
+                          className="text-green-600 hover:text-green-900"
                           title="Khôi phục"
                         >
-                          <RefreshCw className="w-4 h-4" />
+                          <RefreshCw className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDeleteBackup(file)}
-                          className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                          className="text-red-600 hover:text-red-900"
                           title="Xóa"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-5 h-5" />
                         </button>
                       </div>
                     </td>

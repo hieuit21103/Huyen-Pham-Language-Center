@@ -25,6 +25,7 @@ export default function AdminClasses() {
   const [loadingTeachers, setLoadingTeachers] = useState(false);
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
   
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
@@ -71,6 +72,8 @@ export default function AdminClasses() {
 
   const handleCreate = () => {
     setEditingClass(null);
+    setMessage("");
+    setMessageType("success");
     setFormData({
       tenLop: "",
       khoaHocId: "",
@@ -81,6 +84,8 @@ export default function AdminClasses() {
 
   const handleEdit = (cls: LopHoc) => {
     setEditingClass(cls);
+    setMessage("");
+    setMessageType("success");
     setFormData({
       tenLop: cls.tenLop || "",
       khoaHocId: cls.khoaHocId || "",
@@ -95,6 +100,7 @@ export default function AdminClasses() {
     if (editingClass) {
       const response = await updateLopHoc(editingClass.id!, formData);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadClasses();
         setShowModal(false);
@@ -102,6 +108,7 @@ export default function AdminClasses() {
     } else {
       const response = await createLopHoc(formData);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadClasses();
         setShowModal(false);
@@ -113,6 +120,7 @@ export default function AdminClasses() {
     if (confirm("Bạn có chắc chắn muốn xóa lớp học này?")) {
       const response = await deleteLopHoc(id);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadClasses();
       }
@@ -174,26 +182,6 @@ export default function AdminClasses() {
     }
   };
 
-  const getTrangThaiText = (trangThai?: TrangThaiLopHoc) => {
-    switch (trangThai) {
-      case 0: return "Chưa mở";
-      case 1: return "Đang học";
-      case 2: return "Tạm nghỉ";
-      case 3: return "Kết thúc";
-      default: return "Không xác định";
-    }
-  };
-
-  const getTrangThaiColor = (trangThai?: TrangThaiLopHoc) => {
-    switch (trangThai) {
-      case 0: return "bg-gray-100 text-gray-800";
-      case 1: return "bg-green-100 text-green-800";
-      case 2: return "bg-yellow-100 text-yellow-800";
-      case 3: return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
   const filteredClasses = classes.filter(cls =>
     cls.tenLop?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -211,9 +199,13 @@ export default function AdminClasses() {
 
   return (
     <div className="space-y-6">
-      {message && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
-          {message}
+      {/* Success Message - Above Table */}
+      {message && messageType === "success" && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg flex items-center justify-between">
+          <span>{message}</span>
+          <button onClick={() => setMessage("")} className="text-green-700 hover:text-green-900">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
@@ -260,13 +252,10 @@ export default function AdminClasses() {
                   <div className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center">
                     <Users className="w-6 h-6 text-white" />
                   </div>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getTrangThaiColor(cls.trangThai)}`}>
-                    {getTrangThaiText(cls.trangThai)}
-                  </span>
                 </div>
                 
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{cls.tenLop}</h3>
-                <p className="text-sm text-gray-600 mb-4">{cls.khoaHoc?.tenKhoaHoc}</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2 min-h-[3.5rem]">{cls.tenLop}</h3>
+                <p className="text-sm text-gray-600 mb-4 line-clamp-1">{cls.khoaHoc?.tenKhoaHoc}</p>
                 
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm">
@@ -350,6 +339,19 @@ export default function AdminClasses() {
                   <X className="w-6 h-6" />
                 </button>
               </div>
+
+              {/* Error Message - Inside Modal */}
+              {message && messageType === "error" && (
+                <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg flex items-start">
+                  <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <span className="flex-1">{message}</span>
+                  <button onClick={() => setMessage("")} className="text-red-700 hover:text-red-900 ml-2">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>

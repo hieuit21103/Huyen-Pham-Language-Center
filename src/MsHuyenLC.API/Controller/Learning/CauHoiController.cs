@@ -39,6 +39,15 @@ public class CauHoiController : BaseController
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(string id)
     {
+        if (!Guid.TryParse(id, out _))
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "ID không hợp lệ"
+            });
+        }
+
         var result = await _service.GetByIdAsync(id);
         if (result == null)
         {
@@ -105,6 +114,15 @@ public class CauHoiController : BaseController
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, [FromBody] CauHoiUpdateRequest request)
     {
+        if (!Guid.TryParse(id, out _))
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "ID không hợp lệ"
+            });
+        }
+
         if (!ModelState.IsValid)
         {
             return BadRequest(new
@@ -150,6 +168,15 @@ public class CauHoiController : BaseController
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {
+        if (!Guid.TryParse(id, out _))
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "ID không hợp lệ"
+            });
+        }
+
         var existingCauHoi = await _service.GetByIdAsync(id);
         if (existingCauHoi == null)
         {
@@ -182,8 +209,16 @@ public class CauHoiController : BaseController
         }
 
         var deletedCauHois = new List<CauHoi>();
+        var invalidIds = new List<string>();
+
         foreach (var id in ids)
         {
+            if (!Guid.TryParse(id, out _))
+            {
+                invalidIds.Add(id);
+                continue;
+            }
+
             var existingCauHoi = await _service.GetByIdAsync(id);
             if (existingCauHoi != null)
             {
@@ -193,11 +228,22 @@ public class CauHoiController : BaseController
             }
         }
 
+        if (invalidIds.Any() && !deletedCauHois.Any())
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "Tất cả ID không hợp lệ",
+                invalidIds
+            });
+        }
+
         return Ok(new
         {
             success = true,
-            message = $"Xóa thành công {deletedCauHois.Count} câu hỏi",
-            data = deletedCauHois
+            message = $"Xóa thành công {deletedCauHois.Count}/{ids.Count} câu hỏi",
+            data = deletedCauHois,
+            invalidIds = invalidIds.Any() ? invalidIds : null
         });
     }
 

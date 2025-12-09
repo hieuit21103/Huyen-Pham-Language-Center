@@ -12,6 +12,7 @@ export default function AdminCourses() {
   const [showModal, setShowModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState<KhoaHoc | null>(null);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
   
   // Form state
   const [formData, setFormData] = useState({
@@ -38,6 +39,8 @@ export default function AdminCourses() {
 
   const handleCreate = () => {
     setEditingCourse(null);
+    setMessage("");
+    setMessageType("success");
     setFormData({
       tenKhoaHoc: "",
       moTa: "",
@@ -50,6 +53,8 @@ export default function AdminCourses() {
 
   const handleEdit = (course: KhoaHoc) => {
     setEditingCourse(course);
+    setMessage("");
+    setMessageType("success");
     setFormData({
       tenKhoaHoc: course.tenKhoaHoc || "",
       moTa: course.moTa || "",
@@ -66,6 +71,7 @@ export default function AdminCourses() {
     if (editingCourse) {
       const response = await updateKhoaHoc(editingCourse.id!, formData);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadCourses();
         setShowModal(false);
@@ -73,6 +79,7 @@ export default function AdminCourses() {
     } else {
       const response = await createKhoaHoc(formData);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadCourses();
         setShowModal(false);
@@ -84,6 +91,7 @@ export default function AdminCourses() {
     if (confirm("Bạn có chắc chắn muốn xóa khóa học này?")) {
       const response = await deleteKhoaHoc(id);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadCourses();
       }
@@ -98,10 +106,13 @@ export default function AdminCourses() {
 
   return (
     <div className="space-y-6">
-      {/* Message */}
-      {message && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
-          {message}
+      {/* Success Message - Above Table */}
+      {message && messageType === "success" && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg flex items-center justify-between">
+          <span>{message}</span>
+          <button onClick={() => setMessage("")} className="text-green-700 hover:text-green-900">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
@@ -212,6 +223,19 @@ export default function AdminCourses() {
                   <X className="w-6 h-6" />
                 </button>
               </div>
+
+              {/* Error Message - Inside Modal */}
+              {message && messageType === "error" && (
+                <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg flex items-start">
+                  <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <span className="flex-1">{message}</span>
+                  <button onClick={() => setMessage("")} className="text-red-700 hover:text-red-900 ml-2">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>

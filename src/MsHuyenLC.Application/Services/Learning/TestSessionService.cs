@@ -1,5 +1,6 @@
 using FluentValidation;
 using MsHuyenLC.Application.DTOs.Learning.PhienLamBai;
+using MsHuyenLC.Application.DTOs.Learning.CauTraLoi;
 using MsHuyenLC.Application.Interfaces;
 using MsHuyenLC.Application.Interfaces.Services.Learning;
 using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
@@ -252,18 +253,61 @@ public class TestSessionService : ITestSessionService
 
         var deThi = await _unitOfWork.DeThis.GetByIdAsync(phienLamBai.DeThiId.ToString());
 
+        var cauTraLois = await _unitOfWork.CauTraLois.GetAllAsync(
+            filter: ct => ct.PhienId == phienLamBai.Id
+        );
+
+        var cauHoiIds = cauTraLois.Select(ct => ct.CauHoiId).Distinct().ToList();
+        
+        var cauHois = await _unitOfWork.CauHois.GetAllAsync(
+            filter: ch => cauHoiIds.Contains(ch.Id)
+        );
+
+        var dapAns = await _unitOfWork.DapAnCauHois.GetAllAsync(
+            filter: da => cauHoiIds.Contains(da.CauHoiId)
+        );
+
+        var cauHoiDict = cauHois.ToDictionary(ch => ch.Id);
+        var dapAnDungDict = dapAns
+            .Where(da => da.Dung == true)
+            .ToDictionary(da => da.CauHoiId);
+        var dapAnsByCauHoiDict = dapAns
+            .GroupBy(da => da.CauHoiId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var cauTraLoisResponses = cauTraLois.Select(ct => 
+        {
+            cauHoiDict.TryGetValue(ct.CauHoiId, out var cauHoi);
+            dapAnDungDict.TryGetValue(ct.CauHoiId, out var dapAnDung);
+            dapAnsByCauHoiDict.TryGetValue(ct.CauHoiId, out var cacDapAn);
+
+            return new CauTraLoiResponse
+            {
+                Id = ct.Id,
+                NoiDungCauHoi = cauHoi?.NoiDungCauHoi,
+                NoiDung = ct.CauTraLoiText,
+                Dung = ct.Dung,
+                DapAnDung = dapAnDung?.Nhan,
+                GiaiThich = dapAnDung?.GiaiThich,
+                CacDapAn = cacDapAn?.Select(da => new DapAnResponse
+                {
+                    Nhan = da.Nhan,
+                    NoiDung = da.NoiDung,
+                    Dung = da.Dung,
+                    GiaiThich = da.GiaiThich
+                }).ToList()
+            };
+        }).ToList();
+
         var response = new PhienLamBaiResponse
         {
             Id = phienLamBai.Id,
-            DeThiId = phienLamBai.DeThiId,
-            DeThi = deThi,
-            HocVienId = phienLamBai.HocVienId,
-            HocVien = hocVien,
             Diem = phienLamBai.Diem,
             SoCauDung = phienLamBai.SoCauDung,
             TongCauHoi = phienLamBai.TongCauHoi,
             ThoiGianLam = phienLamBai.ThoiGianLam,
-            NgayLam = phienLamBai.NgayLam
+            NgayLam = phienLamBai.NgayLam,
+            CauTraLoi = cauTraLoisResponses
         };
 
         return response;

@@ -42,12 +42,7 @@ public class GlobalExceptionHandlerMiddleware
             case ValidationException fluentValidationException:
                 _logger.LogWarning(fluentValidationException, "FluentValidation error occurred");
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                response.Message = "Dữ liệu không hợp lệ";
-                response.Errors = fluentValidationException.Errors.Select(e => new ErrorDetail
-                {
-                    Field = e.PropertyName,
-                    Message = e.ErrorMessage
-                }).ToList();
+                response.Message = fluentValidationException.Errors.FirstOrDefault()?.ErrorMessage ?? "Dữ liệu không hợp lệ";
                 break;
 
             case KeyNotFoundException:

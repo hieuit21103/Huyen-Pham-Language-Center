@@ -27,6 +27,7 @@ export default function AdminQuestionBank() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<CauHoi | null>(null);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
   const [statistics, setStatistics] = useState<any>(null);
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
   const [importFile, setImportFile] = useState<File | null>(null);
@@ -98,6 +99,8 @@ export default function AdminQuestionBank() {
 
   const handleCreate = () => {
     setEditingQuestion(null);
+    setMessage("");
+    setMessageType("success");
     setFormData({
       noiDungCauHoi: "",
       kyNang: 0,
@@ -122,6 +125,8 @@ export default function AdminQuestionBank() {
 
   const handleEdit = (question: CauHoi) => {
     setEditingQuestion(question);
+    setMessage("");
+    setMessageType("success");
     setFormData({
       noiDungCauHoi: question.noiDungCauHoi || "",
       kyNang: question.kyNang ?? 0,
@@ -155,7 +160,8 @@ export default function AdminQuestionBank() {
       if (uploadResult.success && uploadResult.url) {
         imageUrl = uploadResult.url;
       } else {
-        setMessage(uploadResult.message);
+        setMessage(uploadResult.message || "Lỗi tải ảnh lên!");
+        setMessageType("error");
         return;
       }
     }
@@ -168,7 +174,8 @@ export default function AdminQuestionBank() {
       if (uploadResult.success && uploadResult.url) {
         audioUrl = uploadResult.url;
       } else {
-        setMessage(uploadResult.message);
+        setMessage(uploadResult.message || "Lỗi tải audio lên!");
+        setMessageType("error");
         return;
       }
     }
@@ -183,6 +190,7 @@ export default function AdminQuestionBank() {
     if (editingQuestion) {
       const response = await updateCauHoi(editingQuestion.id!, submitData);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadQuestions();
         setShowModal(false);
@@ -191,6 +199,7 @@ export default function AdminQuestionBank() {
     } else {
       const response = await createCauHoi(submitData);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadQuestions();
         setShowModal(false);
@@ -450,9 +459,12 @@ export default function AdminQuestionBank() {
 
   return (
     <div className="space-y-6">
-      {message && (
-        <div className={`${message.includes("thất bại") || message.includes("Lỗi") ? "bg-red-100 border-red-400 text-red-700" : "bg-green-100 border-green-400 text-green-700"} border px-4 py-3 rounded-lg`}>
-          {message}
+      {message && messageType === "success" && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg flex items-center justify-between">
+          <span>{message}</span>
+          <button onClick={() => setMessage("")} className="text-green-700 hover:text-green-900">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
@@ -668,17 +680,17 @@ export default function AdminQuestionBank() {
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => handleEdit(question)}
-                          className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="text-blue-600 hover:text-blue-900"
                           title="Chỉnh sửa"
                         >
-                          <Edit className="w-4 h-4" />
+                          <Edit className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDelete(question.id!)}
-                          className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                          className="text-red-600 hover:text-red-900"
                           title="Xóa"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-5 h-5" />
                         </button>
                       </div>
                     </td>
@@ -715,6 +727,32 @@ export default function AdminQuestionBank() {
                   <X className="w-6 h-6" />
                 </button>
               </div>
+
+              {/* Error Message - Inside Modal */}
+              {message && messageType === "error" && (
+                <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg flex items-start">
+                  <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <span className="flex-1">{message}</span>
+                  <button onClick={() => setMessage("")} className="text-red-700 hover:text-red-900 ml-2">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {/* Error Message - Inside Modal */}
+              {message && messageType === "error" && (
+                <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg flex items-start">
+                  <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <span className="flex-1">{message}</span>
+                  <button onClick={() => setMessage("")} className="text-red-700 hover:text-red-900 ml-2">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>

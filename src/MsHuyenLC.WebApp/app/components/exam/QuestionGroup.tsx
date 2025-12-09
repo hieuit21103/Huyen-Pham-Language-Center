@@ -34,16 +34,6 @@ export function QuestionGroup({
           <span className="px-3 py-1 text-sm bg-indigo-100 text-indigo-700 rounded-full">
             Nhóm câu hỏi
           </span>
-          {group.capDo && (
-            <span className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-full">
-              {group.capDo}
-            </span>
-          )}
-          {group.doKho && (
-            <span className="px-3 py-1 text-sm bg-orange-100 text-orange-700 rounded-full">
-              {group.doKho}
-            </span>
-          )}
           <span className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-full">
             {questions.length} câu hỏi
           </span>
@@ -76,9 +66,6 @@ export function QuestionGroup({
         {/* Reading Passage */}
         {group.noiDung && (
           <div className="mb-4 p-6 bg-white rounded-lg border-l-4 border-indigo-500 shadow-sm">
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              📖 Đọc đoạn văn sau:
-            </label>
             <div
               className="prose max-w-none text-gray-800 leading-relaxed"
               dangerouslySetInnerHTML={{ __html: group.noiDung }}

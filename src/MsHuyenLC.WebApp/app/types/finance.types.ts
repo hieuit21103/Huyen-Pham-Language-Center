@@ -23,3 +23,16 @@ export interface DoanhThuTheoKhoaHoc {
   daThanhToan: number;
   chuaThanhToan: number;
 }
+
+export interface ThanhToanResponse {
+    id: string;
+    maThanhToan: string;
+    tenHocVien: string;
+    tenKhoaHoc: string;
+    phuongThuc: number;
+    trangThai: number;
+    soTien: number;
+    ngayThanhToan?: string;
+    ngayLap: string;
+    dangKyId: string;
+}

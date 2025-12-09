@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using MsHuyenLC.Application.Interfaces.Services.System;
 using MsHuyenLC.Application.Interfaces.Services.Finance;
 using MsHuyenLC.Application.DTOs.Finance.VNPay;
+using MsHuyenLC.Application.DTOs.Finance.ThanhToan;
 using System.Security.Claims; 
 
 namespace MsHuyenLC.API.Controller.Finance;
@@ -32,13 +33,10 @@ public class ThanhToanController : BaseController
     {
         var payments = await _service.GetAllAsync();
 
-        var totalItems = await _service.CountAsync();
-
         return Ok(new
         {
             success = true,
             message = "Lấy danh sách thanh toán thành công",
-            count = totalItems,
             data = payments
         });
     }
@@ -101,6 +99,109 @@ public class ThanhToanController : BaseController
             message = "Lấy thông tin thanh toán thành công",
             data = payments
         });
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "admin,giaovu")]
+    public async Task<IActionResult> Create([FromBody] ThanhToanRequest request)
+    {
+        try
+        {
+            var payment = await _service.CreateAsync(request);
+            return Ok(new
+            {
+                success = true,
+                message = "Tạo thanh toán thành công",
+                data = payment
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = $"Lỗi khi tạo thanh toán: {ex.Message}"
+            });
+        }
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "admin,giaovu")]
+    public async Task<IActionResult> Update(string id, [FromBody] ThanhToanUpdateRequest request)
+    {
+        if (!Guid.TryParse(id, out _))
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "ID thanh toán không hợp lệ"
+            });
+        }
+
+        try
+        {
+            var payment = await _service.UpdateAsync(id, request);
+            if (payment == null)
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Không tìm thấy thanh toán"
+                });
+
+            return Ok(new
+            {
+                success = true,
+                message = "Cập nhật thanh toán thành công",
+                data = payment
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = $"Lỗi khi cập nhật thanh toán: {ex.Message}"
+            });
+        }
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> Delete(string id)
+    {
+        if (!Guid.TryParse(id, out _))
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = "ID thanh toán không hợp lệ"
+            });
+        }
+
+        try
+        {
+            var result = await _service.DeleteAsync(id);
+            if (!result)
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Không tìm thấy thanh toán"
+                });
+
+            return Ok(new
+            {
+                success = true,
+                message = "Xóa thanh toán thành công"
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = $"Lỗi khi xóa thanh toán: {ex.Message}"
+            });
+        }
     }
 
     [HttpGet("create/{id}")]

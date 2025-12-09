@@ -32,5 +32,8 @@ public class NhomCauHoiRequestValidator : AbstractValidator<NhomCauHoiRequest>
 
         RuleFor(x => x.CapDo)
             .IsInEnum().WithMessage("Cấp độ không hợp lệ");
+        
+        RuleFor(x => x.KyNang)
+            .IsInEnum().WithMessage("Kỹ năng không hợp lệ");
     }
 }

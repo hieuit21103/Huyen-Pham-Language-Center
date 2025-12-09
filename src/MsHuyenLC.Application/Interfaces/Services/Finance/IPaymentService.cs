@@ -7,7 +7,7 @@ namespace MsHuyenLC.Application.Interfaces.Services.Finance;
 public interface IPaymentService
 {
     Task<ThanhToan?> GetByIdAsync(string id);
-    Task<IEnumerable<ThanhToan>> GetAllAsync();
+    Task<IEnumerable<object>> GetAllAsync();
     Task<ThanhToan> CreateAsync(ThanhToanRequest request);
     Task<ThanhToan?> UpdateAsync(string id, ThanhToanUpdateRequest request);
     Task<bool> DeleteAsync(string id);

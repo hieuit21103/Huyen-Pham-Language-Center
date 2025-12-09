@@ -84,6 +84,16 @@ export default function MyExams() {
     return "text-red-600";
   };
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "—";
+    return new Date(dateString).toLocaleDateString("vi-VN");
+  };
+
+  const formatTime = (timeString?: string) => {
+    if (!timeString) return "—";
+    return timeString.substring(0, 5);
+  };
+
   const upcomingExams = exams.filter(exam => exam.trangThai === 0 || exam.trangThai === 1);
   const completedSessions = sessions
     .filter(session => session.diem !== null)
@@ -173,13 +183,13 @@ export default function MyExams() {
                             <div className="flex items-center text-sm text-gray-600">
                               <Calendar className="w-4 h-4 mr-2" />
                               <span>
-                                {exam.ngayThi}
+                                {formatDate(exam.ngayThi)}
                               </span>
                             </div>
                             <div className="flex items-center text-sm text-gray-600">
                               <Clock className="w-4 h-4 mr-2" />
                               <span>
-                                {exam.gioBatDau} - {exam.gioKetThuc}
+                                {formatTime(exam.gioBatDau)} - {formatTime(exam.gioKetThuc)}
                               </span>
                             </div>
                             <div className="flex items-center text-sm text-gray-600">
@@ -273,7 +283,7 @@ export default function MyExams() {
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {session.ngayLam!}
+                                {formatDate(session.ngayLam)}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
                                 {session.tongCauHoi}

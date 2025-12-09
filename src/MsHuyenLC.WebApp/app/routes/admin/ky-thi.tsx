@@ -14,6 +14,7 @@ export default function AdminExamPeriods() {
   const [showModal, setShowModal] = useState(false);
   const [editingPeriod, setEditingPeriod] = useState<KyThi | null>(null);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
   
   const [formData, setFormData] = useState({
     tenKyThi: "",
@@ -49,6 +50,7 @@ export default function AdminExamPeriods() {
 
   const handleCreate = () => {
     setEditingPeriod(null);
+    setMessage("");
     setFormData({
       tenKyThi: "",
       lopHocId: "",
@@ -63,6 +65,7 @@ export default function AdminExamPeriods() {
 
   const handleEdit = (period: KyThi) => {
     setEditingPeriod(period);
+    setMessage("");
     setFormData({
       tenKyThi: period.tenKyThi || "",
       lopHocId: period.lopHocId || "",
@@ -81,6 +84,7 @@ export default function AdminExamPeriods() {
     if (editingPeriod) {
       const response = await updateKyThi(editingPeriod.id!, formData);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadExamPeriods();
         setShowModal(false);
@@ -88,6 +92,7 @@ export default function AdminExamPeriods() {
     } else {
       const response = await createKyThi(formData);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadExamPeriods();
         setShowModal(false);
@@ -99,6 +104,7 @@ export default function AdminExamPeriods() {
     if (confirm("Bạn có chắc chắn muốn xóa kỳ thi này?")) {
       const response = await deleteKyThi(id);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadExamPeriods();
       }
@@ -108,6 +114,7 @@ export default function AdminExamPeriods() {
   const handleStatusChange = async (id: string, status: TrangThaiKyThi) => {
     const response = await updateKyThiStatus(id, status);
     setMessage(response.message || "");
+    setMessageType(response.success ? "success" : "error");
     if (response.success) {
       loadExamPeriods();
     }
@@ -168,7 +175,7 @@ export default function AdminExamPeriods() {
 
   return (
     <div className="space-y-6">
-      {message && (
+      {message && messageType === "success" && (
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
           {message}
         </div>
@@ -222,8 +229,8 @@ export default function AdminExamPeriods() {
                   </span>
                 </div>
                 
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{period.tenKyThi}</h3>
-                <p className="text-sm text-gray-600 mb-4">{period.lopHoc?.tenLop}</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2 min-h-[3.5rem]">{period.tenKyThi}</h3>
+                <p className="text-sm text-gray-600 mb-4 line-clamp-1">{period.lopHoc?.tenLop}</p>
                 
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm">
@@ -499,6 +506,13 @@ export default function AdminExamPeriods() {
                         </div>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {message && messageType === "error" && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg flex items-start space-x-2">
+                    <X className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <span>{message}</span>
                   </div>
                 )}
 

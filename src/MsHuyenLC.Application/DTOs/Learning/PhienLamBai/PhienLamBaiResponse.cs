@@ -1,3 +1,5 @@
+using MsHuyenLC.Application.DTOs.Learning.CauTraLoi;
+using MsHuyenLC.Domain.Entities.Learning.OnlineExam;
 using MsHuyenLC.Domain.Entities.Users;
 
 namespace MsHuyenLC.Application.DTOs.Learning.PhienLamBai;
@@ -14,4 +16,5 @@ public class PhienLamBaiResponse
     public HocVien? HocVien { get; set; }
     public Guid? DeThiId { get; set; }
     public Domain.Entities.Learning.OnlineExam.DeThi? DeThi { get; set; } 
+    public IEnumerable<CauTraLoiResponse>? CauTraLoi { get; set; }
 }

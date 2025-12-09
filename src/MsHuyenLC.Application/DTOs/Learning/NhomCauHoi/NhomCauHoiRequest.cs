@@ -13,5 +13,6 @@ public class NhomCauHoiRequest
     public int SoLuongCauHoi { get; set; }
     public DoKho DoKho { get; set; } = DoKho.trungbinh;
     public CapDo CapDo { get; set; } = CapDo.A1;
+    public KyNang KyNang { get; set; } = KyNang.Doc;
 }
 

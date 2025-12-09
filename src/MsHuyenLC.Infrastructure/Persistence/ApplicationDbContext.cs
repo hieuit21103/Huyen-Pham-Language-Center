@@ -62,12 +62,22 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<NhomCauHoiChiTiet>().ToTable("NhomCauHoiChiTiet");
         modelBuilder.Entity<DeThi>().ToTable("DeThi");
         modelBuilder.Entity<DeThi>()
+            .HasOne(dt => dt.KyThi)
+            .WithMany()
+            .HasForeignKey(dt => dt.KyThiId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<DeThi>()
             .Navigation(dt => dt.KyThi)
             .AutoInclude();
         modelBuilder.Entity<DeThi>()
             .Navigation(dt => dt.CacCauHoi)
             .AutoInclude();
         modelBuilder.Entity<KyThi>().ToTable("KyThi");
+        modelBuilder.Entity<KyThi>()
+            .HasOne(kt => kt.LopHoc)
+            .WithMany()
+            .HasForeignKey(kt => kt.LopHocId)
+            .OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<PhienLamBai>().ToTable("PhienLamBai");
         modelBuilder.Entity<PhienLamBai>()
             .Navigation(p => p.DeThi)
@@ -87,10 +97,17 @@ public class ApplicationDbContext : DbContext
             .AutoInclude();
         modelBuilder.Entity<DangKyKhoaHoc>().ToTable("DangKyKhoaHoc");
         modelBuilder.Entity<DangKyKhoaHoc>()
-            .Navigation(dk => dk.HocVien)
-            .AutoInclude();
+            .HasOne(dk => dk.HocVien)
+            .WithMany()
+            .HasForeignKey(dk => dk.HocVienId)
+            .OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<DangKyKhoaHoc>()
-            .Navigation(dk => dk.LopHoc)
+            .HasOne(dk => dk.LopHoc)
+            .WithMany(lh => lh.CacDangKy)
+            .HasForeignKey(dk => dk.LopHocId)
+            .OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<DangKyKhoaHoc>()
+            .Navigation(dk => dk.HocVien)
             .AutoInclude();
         modelBuilder.Entity<DangKyKhoaHoc>()
             .Navigation(dk => dk.KhoaHoc)
@@ -103,9 +120,6 @@ public class ApplicationDbContext : DbContext
             .AutoInclude();
         modelBuilder.Entity<KhoaHoc>().ToTable("KhoaHoc");
         modelBuilder.Entity<LopHoc>().ToTable("LopHoc");
-        modelBuilder.Entity<LopHoc>()
-            .Navigation(lh => lh.CacDangKy)
-            .AutoInclude();
         modelBuilder.Entity<LopHoc>()
             .Navigation(lh => lh.KhoaHoc)
             .AutoInclude();
@@ -122,18 +136,24 @@ public class ApplicationDbContext : DbContext
             .AutoInclude();
         modelBuilder.Entity<PhanCong>().ToTable("PhanCong");
         modelBuilder.Entity<PhanCong>()
+            .HasOne(pc => pc.LopHoc)
+            .WithMany()
+            .HasForeignKey(pc => pc.LopHocId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<PhanCong>()
             .Navigation(pc => pc.LopHoc)
             .AutoInclude();
         modelBuilder.Entity<PhanCong>()
             .Navigation(pc => pc.GiaoVien)
             .AutoInclude();
         modelBuilder.Entity<ThanhToan>().ToTable("ThanhToan");
-
         modelBuilder.Entity<TaiKhoan>().ToTable("TaiKhoan");
         modelBuilder.Entity<HocVien>().ToTable("HocVien");
         modelBuilder.Entity<HocVien>()
-            .Navigation(hv => hv.TaiKhoan)
-            .AutoInclude();
+            .HasOne(hv => hv.TaiKhoan)
+            .WithMany()
+            .HasForeignKey(hv => hv.TaiKhoanId)
+            .OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<GiaoVien>().ToTable("GiaoVien");
         modelBuilder.Entity<GiaoVu>().ToTable("GiaoVu");
 

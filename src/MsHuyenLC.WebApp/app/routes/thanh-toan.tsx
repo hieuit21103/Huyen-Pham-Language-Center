@@ -274,7 +274,7 @@ export default function PaymentPage() {
               <div className="bg-green-50 rounded-xl border border-green-200 p-6">
                 <h3 className="font-bold text-gray-900 mb-4">Thanh toán tiền mặt</h3>
                 <div className="space-y-2 text-sm">
-                  <p><strong>Địa chỉ:</strong> 123 Đường ABC, Quận 1, TP.HCM</p>
+                  <p><strong>Địa chỉ:</strong> 310 Lê Lợi, Lê Chân, Hải Phòng</p>
                   <p><strong>Thời gian:</strong> 8:00 - 17:00 (Thứ 2 - Thứ 6)</p>
                 </div>
               </div>

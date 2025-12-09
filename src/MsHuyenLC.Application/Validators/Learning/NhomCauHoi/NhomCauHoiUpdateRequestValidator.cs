@@ -50,5 +50,11 @@ public class NhomCauHoiUpdateRequestValidator : AbstractValidator<NhomCauHoiUpda
             RuleFor(x => x.CapDo)
                 .IsInEnum().WithMessage("Cấp độ không hợp lệ");
         });
+
+        When(x => x.KyNang.HasValue, () =>
+        {
+            RuleFor(x => x.KyNang)
+                .IsInEnum().WithMessage("Kỹ năng không hợp lệ");
+        });
     }
 }

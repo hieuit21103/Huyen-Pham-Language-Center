@@ -100,8 +100,14 @@ export default function AdminSidebar({ onCollapsedChange }: AdminSidebarProps) {
     {
       title: "Quản lý đăng ký",
       items: [
-        { icon: FileText, label: "Đăng ký", path: "/admin/dang-ky" },
-        { icon: ClipboardList, label: "Đăng ký khách", path: "/admin/dang-ky-khach" },
+        { icon: FileText, label: "Đăng ký khóa học", path: "/admin/dang-ky" },
+        { icon: ClipboardList, label: "Đăng ký tư vấn", path: "/admin/dang-ky-khach" },
+      ]
+    },
+    {
+      title: "Quản lý tài chính",
+      items: [
+        { icon: DollarSign, label: "Thanh toán", path: "/admin/thanh-toan" },
       ]
     },
     {

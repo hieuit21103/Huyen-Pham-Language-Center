@@ -13,5 +13,6 @@ public class NhomCauHoiUpdateRequest
     public int? SoLuongCauHoi { get; set; }
     public DoKho? DoKho { get; set; }
     public CapDo? CapDo { get; set; }
+    public KyNang? KyNang { get; set; }
 }
 

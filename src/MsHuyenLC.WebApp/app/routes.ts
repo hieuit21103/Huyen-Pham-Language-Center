@@ -38,6 +38,7 @@ export default [
     route("nhom-cau-hoi", "routes/admin/nhom-cau-hoi.tsx"),
     route("tai-khoan", "routes/admin/tai-khoan.tsx"),
     route("thong-bao", "routes/admin/thong-bao.tsx"),
+    route("thanh-toan", "routes/admin/thanh-toan.tsx"),
     route("bao-cao-ket-qua", "routes/admin/bao-cao-ket-qua.tsx"),
     route("bao-cao-doanh-thu", "routes/admin/bao-cao-doanh-thu.tsx"),
     route("nhat-ky-he-thong", "routes/admin/nhat-ky-he-thong.tsx"),

@@ -83,6 +83,18 @@ public class UserService : IUserService
         var user = await _unitOfWork.TaiKhoans.GetByIdAsync(userId);
         if (user == null) return false;
 
+        var thongBaoNguoiGui = await _unitOfWork.ThongBaos.GetAllAsync(tb => tb.NguoiGuiId == user.Id);
+        foreach (var tb in thongBaoNguoiGui)
+        {
+            await _unitOfWork.ThongBaos.DeleteAsync(tb);
+        }
+
+        var thongBaoNguoiNhan = await _unitOfWork.ThongBaos.GetAllAsync(tb => tb.NguoiNhanId == user.Id);
+        foreach (var tb in thongBaoNguoiNhan)
+        {
+            await _unitOfWork.ThongBaos.DeleteAsync(tb);
+        }
+
         await _unitOfWork.TaiKhoans.DeleteAsync(user);
         await _unitOfWork.SaveChangesAsync();
         return true;

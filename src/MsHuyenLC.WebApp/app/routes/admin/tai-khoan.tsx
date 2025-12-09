@@ -16,6 +16,7 @@ export default function AdminAccounts() {
   const [showModal, setShowModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<TaiKhoan | null>(null);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
   const [showPassword, setShowPassword] = useState(false);
   
   const [formData, setFormData] = useState<TaiKhoanRequest & { trangThai?: TrangThaiTaiKhoan }>({
@@ -95,6 +96,7 @@ export default function AdminAccounts() {
       };
       const response = await updateTaiKhoan(editingAccount.id!, updateData);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadAccounts();
         setTimeout(() => setShowModal(false), 1500);
@@ -102,6 +104,7 @@ export default function AdminAccounts() {
     } else {
       const response = await createTaiKhoan(formData);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadAccounts();
         setTimeout(() => setShowModal(false), 1500);
@@ -113,6 +116,7 @@ export default function AdminAccounts() {
     if (confirm("Bạn có chắc chắn muốn xóa tài khoản này?")) {
       const response = await deleteTaiKhoan(id);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadAccounts();
       }
@@ -197,12 +201,9 @@ export default function AdminAccounts() {
   }
 
   return (
-    <div className="space-y-6">{message && (
-        <div className={`px-4 py-3 rounded-lg ${
-          message.includes("thành công") 
-            ? "bg-green-100 border border-green-400 text-green-700"
-            : "bg-red-100 border border-red-400 text-red-700"
-        }`}>
+    <div className="space-y-6">
+      {message && messageType === "success" && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
           {message}
         </div>
       )}
@@ -304,17 +305,17 @@ export default function AdminAccounts() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex justify-end space-x-2">
+                      <div className="flex space-x-2">
                         <button 
                           onClick={() => handleEdit(account)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="text-blue-600 hover:text-blue-900"
                           title="Chỉnh sửa"
                         >
                           <Edit className="w-5 h-5" />
                         </button>
                         <button 
                           onClick={() => handleDelete(account.id!)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="text-red-600 hover:text-red-900"
                           title="Xóa"
                         >
                           <Trash2 className="w-5 h-5" />
@@ -446,6 +447,13 @@ export default function AdminAccounts() {
                     <option value={TrangThaiTaiKhoan.BiKhoa}>Bị khóa</option>
                   </select>
                 </div>
+
+                {message && messageType === "error" && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg flex items-start space-x-2">
+                    <X className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <span>{message}</span>
+                  </div>
+                )}
 
                 <div className="flex space-x-4 pt-4">
                   <button

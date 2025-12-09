@@ -19,6 +19,9 @@ import type { NhomCauHoi, CauHoi } from "~/types/exam.types";
 export default function AdminNhomCauHoi() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchQuestionTerm, setSearchQuestionTerm] = useState("");
+  const [searchModalKyNang, setSearchModalKyNang] = useState<string>("");
+  const [searchModalCapDo, setSearchModalCapDo] = useState<string>("");
+  const [searchModalDoKho, setSearchModalDoKho] = useState<string>("");
   const [nhomCauHois, setNhomCauHois] = useState<NhomCauHoi[]>([]);
   const [allCauHois, setAllCauHois] = useState<CauHoi[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +31,7 @@ export default function AdminNhomCauHoi() {
   const [selectedNhom, setSelectedNhom] = useState<NhomCauHoi | null>(null);
   const [nhomQuestions, setNhomQuestions] = useState<CauHoi[]>([]);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
   
   const [filterCapDo, setFilterCapDo] = useState<string>("");
   const [filterDoKho, setFilterDoKho] = useState<string>("");
@@ -52,6 +56,7 @@ export default function AdminNhomCauHoi() {
     soLuongCauHoi: 0,
     capDo: 0 as CapDo,
     doKho: 0 as DoKho,
+    kyNang: 0,
   });
 
   useEffect(() => {
@@ -99,6 +104,7 @@ export default function AdminNhomCauHoi() {
 
   const handleCreate = () => {
     setEditingNhom(null);
+    setMessage("");
     setFormData({
       tieuDe: "",
       noiDung: "",
@@ -107,6 +113,7 @@ export default function AdminNhomCauHoi() {
       soLuongCauHoi: 0,
       capDo: 0,
       doKho: 0,
+      kyNang: 0,
     });
     setImageFile(null);
     setAudioFile(null);
@@ -117,6 +124,7 @@ export default function AdminNhomCauHoi() {
 
   const handleEdit = (nhom: NhomCauHoi) => {
     setEditingNhom(nhom);
+    setMessage("");
     setFormData({
       tieuDe: nhom.tieuDe || "",
       noiDung: nhom.noiDung || "",
@@ -125,6 +133,7 @@ export default function AdminNhomCauHoi() {
       soLuongCauHoi: nhom.soLuongCauHoi || 0,
       capDo: nhom.capDo ?? 0,
       doKho: nhom.doKho ?? 0,
+      kyNang: (nhom as any).kyNang ?? 0,
     });
     setImageFile(null);
     setAudioFile(null);
@@ -171,6 +180,7 @@ export default function AdminNhomCauHoi() {
     if (editingNhom) {
       const response = await updateNhomCauHoi(editingNhom.id!, submitData);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadNhomCauHois();
         setShowModal(false);
@@ -179,6 +189,7 @@ export default function AdminNhomCauHoi() {
     } else {
       const response = await createNhomCauHoi(submitData);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadNhomCauHois();
         setShowModal(false);
@@ -191,6 +202,7 @@ export default function AdminNhomCauHoi() {
     if (confirm("Bạn có chắc chắn muốn xóa nhóm câu hỏi này?")) {
       const response = await deleteNhomCauHoi(id);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadNhomCauHois();
         setTimeout(() => setMessage(""), 3000);
@@ -213,6 +225,7 @@ export default function AdminNhomCauHoi() {
     
     const response = await addCauHoiToNhom(selectedNhom.id!, cauHoiId, nhomQuestions.length + 1);
     setMessage(response.message || "");
+    setMessageType(response.success ? "success" : "error");
     if (response.success) {
       handleViewQuestions(selectedNhom);
       setTimeout(() => setMessage(""), 3000);
@@ -267,8 +280,8 @@ export default function AdminNhomCauHoi() {
 
   return (
     <div className="space-y-6">
-      {message && (
-        <div className={`${message.includes("thất bại") || message.includes("Lỗi") ? "bg-red-100 border-red-400 text-red-700" : "bg-green-100 border-green-400 text-green-700"} border px-4 py-3 rounded-lg`}>
+      {message && messageType === "success" && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
           {message}
         </div>
       )}
@@ -284,7 +297,7 @@ export default function AdminNhomCauHoi() {
             <span>Về Câu hỏi</span>
           </a>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Nhóm câu hỏi (Reading Comprehension)</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Nhóm câu hỏi</h1>
             <p className="text-gray-600 mt-1">Quản lý nhóm câu hỏi đọc hiểu</p>
           </div>
         </div>
@@ -480,9 +493,8 @@ export default function AdminNhomCauHoi() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Nội dung đoạn văn *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nội dung đoạn văn</label>
                   <textarea
-                    required
                     rows={6}
                     value={formData.noiDung}
                     onChange={(e) => setFormData({...formData, noiDung: e.target.value})}
@@ -491,7 +503,20 @@ export default function AdminNhomCauHoi() {
                   />
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Kỹ năng *</label>
+                    <select
+                      required
+                      value={formData.kyNang}
+                      onChange={(e) => setFormData({...formData, kyNang: parseInt(e.target.value)})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900"
+                    >
+                      <option value={0}>Nghe</option>
+                      <option value={1}>Đọc</option>
+                    </select>
+                  </div>
+                  
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Cấp độ *</label>
                     <select
@@ -576,6 +601,13 @@ export default function AdminNhomCauHoi() {
                     </audio>
                   )}
                 </div>
+
+                {message && messageType === "error" && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg flex items-start space-x-2">
+                    <X className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <span>{message}</span>
+                  </div>
+                )}
                 
                 <div className="flex space-x-3 pt-4">
                   <button
@@ -697,7 +729,9 @@ export default function AdminNhomCauHoi() {
                     <Plus className="w-5 h-5 mr-2 text-blue-600" />
                     Thêm câu hỏi vào nhóm
                   </h3>
-                  <div className="relative">
+                  
+                  {/* Search */}
+                  <div className="relative mb-3">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                       type="text"
@@ -707,32 +741,88 @@ export default function AdminNhomCauHoi() {
                       className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
                     />
                   </div>
+                  
+                  {/* Filters */}
+                  <div className="grid grid-cols-3 gap-2 mb-2">
+                    <select
+                      value={searchModalKyNang}
+                      onChange={(e) => setSearchModalKyNang(e.target.value)}
+                      className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+                    >
+                      <option value="">Tất cả kỹ năng</option>
+                      <option value="0">Nghe</option>
+                      <option value="1">Nói</option>
+                      <option value="2">Đọc</option>
+                      <option value="3">Viết</option>
+                    </select>
+                    
+                    <select
+                      value={searchModalCapDo}
+                      onChange={(e) => setSearchModalCapDo(e.target.value)}
+                      className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+                    >
+                      <option value="">Tất cả cấp độ</option>
+                      <option value="0">A1</option>
+                      <option value="1">A2</option>
+                      <option value="2">B1</option>
+                      <option value="3">B2</option>
+                      <option value="4">C1</option>
+                      <option value="5">C2</option>
+                    </select>
+                    
+                    <select
+                      value={searchModalDoKho}
+                      onChange={(e) => setSearchModalDoKho(e.target.value)}
+                      className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+                    >
+                      <option value="">Tất cả độ khó</option>
+                      <option value="0">Dễ</option>
+                      <option value="1">Trung bình</option>
+                      <option value="2">Khó</option>
+                    </select>
+                  </div>
+                  
                   <p className="text-sm text-gray-600 mt-2">
-                    {allCauHois.filter(cq => !nhomQuestions.some(nq => nq.id === cq.id) && 
-                      (searchQuestionTerm === "" || 
-                       cq.noiDungCauHoi?.toLowerCase().includes(searchQuestionTerm.toLowerCase()))).length} câu hỏi có sẵn
+                    {allCauHois.filter(cq => {
+                      const notInGroup = !nhomQuestions.some(nq => nq.id === cq.id);
+                      const matchSearch = searchQuestionTerm === "" || cq.noiDungCauHoi?.toLowerCase().includes(searchQuestionTerm.toLowerCase());
+                      const matchKyNang = searchModalKyNang === "" || cq.kyNang?.toString() === searchModalKyNang;
+                      const matchCapDo = searchModalCapDo === "" || cq.capDo?.toString() === searchModalCapDo;
+                      const matchDoKho = searchModalDoKho === "" || cq.doKho?.toString() === searchModalDoKho;
+                      return notInGroup && matchSearch && matchKyNang && matchCapDo && matchDoKho;
+                    }).length} câu hỏi có sẵn
                   </p>
                 </div>
                 
                 <div className="flex-1 overflow-y-auto p-6">
-                  {allCauHois.filter(cq => !nhomQuestions.some(nq => nq.id === cq.id) && 
-                    (searchQuestionTerm === "" || 
-                     cq.noiDungCauHoi?.toLowerCase().includes(searchQuestionTerm.toLowerCase()))).length === 0 ? (
+                  {allCauHois.filter(cq => {
+                    const notInGroup = !nhomQuestions.some(nq => nq.id === cq.id);
+                    const matchSearch = searchQuestionTerm === "" || cq.noiDungCauHoi?.toLowerCase().includes(searchQuestionTerm.toLowerCase());
+                    const matchKyNang = searchModalKyNang === "" || cq.kyNang?.toString() === searchModalKyNang;
+                    const matchCapDo = searchModalCapDo === "" || cq.capDo?.toString() === searchModalCapDo;
+                    const matchDoKho = searchModalDoKho === "" || cq.doKho?.toString() === searchModalDoKho;
+                    return notInGroup && matchSearch && matchKyNang && matchCapDo && matchDoKho;
+                  }).length === 0 ? (
                     <div className="text-center py-12">
                       <FileQuestion className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                       <p className="text-gray-500">
-                        {searchQuestionTerm ? "Không tìm thấy câu hỏi phù hợp" : "Không còn câu hỏi nào để thêm"}
+                        {searchQuestionTerm || searchModalKyNang || searchModalCapDo || searchModalDoKho ? "Không tìm thấy câu hỏi phù hợp" : "Không còn câu hỏi nào để thêm"}
                       </p>
                       <p className="text-sm text-gray-400 mt-2">
-                        {searchQuestionTerm ? "Thử tìm kiếm với từ khóa khác" : "Tất cả câu hỏi đã được thêm vào nhóm"}
+                        {searchQuestionTerm || searchModalKyNang || searchModalCapDo || searchModalDoKho ? "Thử tìm kiếm với từ khóa khác" : "Tất cả câu hỏi đã được thêm vào nhóm"}
                       </p>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {allCauHois
-                        .filter(cq => !nhomQuestions.some(nq => nq.id === cq.id) && 
-                          (searchQuestionTerm === "" || 
-                           cq.noiDungCauHoi?.toLowerCase().includes(searchQuestionTerm.toLowerCase())))
+                        .filter(cq => {
+                          const notInGroup = !nhomQuestions.some(nq => nq.id === cq.id);
+                          const matchSearch = searchQuestionTerm === "" || cq.noiDungCauHoi?.toLowerCase().includes(searchQuestionTerm.toLowerCase());
+                          const matchKyNang = searchModalKyNang === "" || cq.kyNang?.toString() === searchModalKyNang;
+                          const matchCapDo = searchModalCapDo === "" || cq.capDo?.toString() === searchModalCapDo;
+                          const matchDoKho = searchModalDoKho === "" || cq.doKho?.toString() === searchModalDoKho;
+                          return notInGroup && matchSearch && matchKyNang && matchCapDo && matchDoKho;
+                        })
                         .map((cq) => (
                           <div key={cq.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all">
                             <div className="flex items-start justify-between">

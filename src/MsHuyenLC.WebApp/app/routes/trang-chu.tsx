@@ -82,6 +82,30 @@ export default function LanguageCenterLanding() {
     }
   ]
 
+  const starStudents = [
+    {
+      id: 1,
+      name: 'Nguyễn Minh Khoa',
+      achievement: 'IELTS 7.5',
+      image: Asset.student1,
+      slogan: "Sau 4 tháng học, tôi đã từ 6.0 lên 7.5 IELTS. Thầy hướng dẫn cực kỳ tận tâm và sửa lỗi rất chi tiết!"
+    },
+    {
+      id: 2,
+      name: "Trần Hoàng Anh",
+      achievement: "IELTS 7.5",
+      image: Asset.student2,
+      slogan: "Mình thích nhất là cách giáo viên giúp mình cải thiện Speaking. Chỉ sau vài tuần, phản xạ đã tốt hơn hẳn!"
+    },
+    {
+      id: 3,
+      name: "Lê Thị Thuỳ Linh",
+      achievement: "IELTS 8.5",
+      image: Asset.student3,
+      slogan: "Lịch học linh hoạt và bài giảng dễ hiểu giúp mình giữ động lực suốt quá trình. Mình thật sự hài lòng!"
+    }
+  ];
+
   const handleInputChange = (e: { target: { name: string; value: string; }; }) => {
     setFormData({
       ...formData,
@@ -165,15 +189,15 @@ export default function LanguageCenterLanding() {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-6 mt-12">
                 <div className="text-center">
-                  <div className="text-4xl font-bold mb-2 text-gray-900">5000+</div>
+                  <div className="text-4xl font-bold mb-2 text-gray-900">200+</div>
                   <div className="text-gray-600">Học Viên</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-bold mb-2 text-gray-900">50+</div>
+                  <div className="text-4xl font-bold mb-2 text-gray-900">20+</div>
                   <div className="text-gray-600">Giáo Viên</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl font-bold mb-2 text-gray-900">98%</div>
+                  <div className="text-4xl font-bold mb-2 text-gray-900">100%</div>
                   <div className="text-gray-600">Hài Lòng</div>
                 </div>
               </div>
@@ -273,14 +297,14 @@ export default function LanguageCenterLanding() {
               Thành Công Của Học Viên
             </h2>
             <p className="text-center text-gray-600 mb-12 text-lg">
-              Hơn 5,000+ học viên đã đạt mục tiêu với Huyen Pham Language Center
+              Hơn 500+ học viên đã đạt mục tiêu với Huyen Pham Language Center
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[1, 2, 3].map((item) => (
-                <div key={item} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all">
+              {starStudents.map((item) => (
+                <div key={item.id} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all">
                   <div className="aspect-square bg-gray-200 flex items-center justify-center">
                     <div className="text-center p-6">
-                      <img src={item === 1 ? Asset.student1 : item === 2 ? Asset.student2 : Asset.student3} alt={`Học viên ${item}`} className="object-cover mx-auto" />
+                      <img src={item.image} alt={`Học viên ${item.name}`} className="object-cover mx-auto" />
                     </div>
                   </div>
                   <div className="p-6">
@@ -290,10 +314,10 @@ export default function LanguageCenterLanding() {
                       ))}
                     </div>
                     <p className="text-gray-700 italic mb-3">
-                      "Tôi đã đạt 7.5 IELTS sau 5 tháng học. Giáo viên rất nhiệt tình và phương pháp giảng dạy hiệu quả!"
+                      "{item.slogan}"
                     </p>
-                    <p className="font-bold text-gray-900">Học viên #{item}</p>
-                    <p className="text-sm text-gray-500">IELTS 7.5</p>
+                    <p className="font-bold text-gray-900">{item.name}</p>
+                    <p className="text-sm text-gray-500">{item.achievement}</p>
                   </div>
                 </div>
               ))}

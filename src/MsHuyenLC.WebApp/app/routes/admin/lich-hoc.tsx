@@ -1,4 +1,4 @@
-import { Search, Plus, Edit, Trash2, Calendar, Clock, MapPin, X } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Calendar, Clock, MapPin, X, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getLichHocs, createLichHoc, updateLichHoc, deleteLichHoc } from "~/apis/LichHoc";
 import { getLopHocs } from "~/apis/LopHoc";
@@ -19,6 +19,8 @@ export default function AdminSchedule() {
   const [showModal, setShowModal] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<LichHoc | null>(null);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
+  const [conflictWarning, setConflictWarning] = useState("");
   
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
@@ -96,6 +98,9 @@ export default function AdminSchedule() {
 
 
   const handleCreate = () => {
+    setMessage("");
+    setMessageType("success");
+    setConflictWarning("");
     setEditingSchedule(null);
     setFormData({
       lopHocId: "",
@@ -109,10 +114,12 @@ export default function AdminSchedule() {
       ],
     });
     setShowModal(true);
-    setMessage("");
   };
 
   const handleEdit = (schedule: LichHoc) => {
+    setMessage("");
+    setMessageType("success");
+    setConflictWarning("");
     setEditingSchedule(schedule);
     setFormData({
       phongHocId: schedule.phongHocId || "",
@@ -129,7 +136,6 @@ export default function AdminSchedule() {
       ],
     });
     setShowModal(true);
-    setMessage("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -144,6 +150,7 @@ export default function AdminSchedule() {
       };
       const response = await updateLichHoc(editingSchedule.id!, updateData);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadSchedules();
         setTimeout(() => setShowModal(false), 1500);
@@ -151,6 +158,7 @@ export default function AdminSchedule() {
     } else {
       const response = await createLichHoc(formData);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadSchedules();
         setTimeout(() => setShowModal(false), 1500);
@@ -162,6 +170,7 @@ export default function AdminSchedule() {
     if (confirm("Bạn có chắc chắn muốn xóa lịch học này?")) {
       const response = await deleteLichHoc(id);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadSchedules();
       }
@@ -200,6 +209,77 @@ export default function AdminSchedule() {
       thoiGianBieus: newThoiGianBieus
     });
   };
+
+  const checkScheduleConflict = () => {
+    if (!formData.phongHocId || !formData.thoiGianBieus || formData.thoiGianBieus.length === 0) {
+      setConflictWarning("");
+      return;
+    }
+
+    const conflicts: string[] = [];
+
+    formData.thoiGianBieus.forEach((newSlot) => {
+      const conflictingSchedules = schedules.filter((schedule) => {
+        if (editingSchedule && schedule.id === editingSchedule.id) {
+          return false;
+        }
+
+        if (schedule.phongHocId !== formData.phongHocId) {
+          return false;
+        }
+
+        return schedule.thoiGianBieu?.some((existingSlot) => {
+          if (existingSlot.thu !== newSlot.thu) {
+            return false;
+          }
+
+          const newStart = newSlot.gioBatDau || "00:00";
+          const newEnd = newSlot.gioKetThuc || "23:59";
+          const existingStart = existingSlot.gioBatDau?.substring(0, 5) || "00:00";
+          const existingEnd = existingSlot.gioKetThuc?.substring(0, 5) || "23:59";
+
+          const toMinutes = (time: string) => {
+            const [hours, minutes] = time.split(':').map(Number);
+            return hours * 60 + minutes;
+          };
+
+          const newStartMin = toMinutes(newStart);
+          const newEndMin = toMinutes(newEnd);
+          const existingStartMin = toMinutes(existingStart);
+          const existingEndMin = toMinutes(existingEnd);
+
+          return (
+            (newStartMin < existingEndMin && newEndMin > existingStartMin) ||
+            (existingStartMin < newEndMin && existingEndMin > newStartMin)
+          );
+        });
+      });
+
+      if (conflictingSchedules.length > 0) {
+        conflictingSchedules.forEach((schedule) => {
+          const roomName = schedule.tenPhong || schedule.phongHoc?.tenPhong || "phòng này";
+          const className = schedule.tenLop || schedule.lopHoc?.tenLop || "một lớp khác";
+          const dayName = getDayName(newSlot.thu!);
+          conflicts.push(
+            `${dayName} (${newSlot.gioBatDau} - ${newSlot.gioKetThuc}): ${roomName} đã được xếp cho lớp "${className}"`
+          );
+        });
+      }
+    });
+
+    if (conflicts.length > 0) {
+      setConflictWarning(`⚠️ Phát hiện trùng lịch:\n${conflicts.join('\n')}`);
+    } else {
+      setConflictWarning("");
+    }
+  };
+
+  // Check for conflicts when room or time changes
+  useEffect(() => {
+    if (showModal) {
+      checkScheduleConflict();
+    }
+  }, [formData.phongHocId, formData.thoiGianBieus, showModal]);
 
   const getDayName = (day: DayOfWeek) => {
     const days = {
@@ -243,13 +323,21 @@ export default function AdminSchedule() {
         </div>
       </div>
 
-      {message && !showModal && (
-        <div className={`mb-4 p-4 rounded-lg ${
-          message.includes('thành công')
-            ? 'bg-green-100 text-green-800 border border-green-200'
-            : 'bg-red-100 text-red-800 border border-red-200'
-        }`}>
-          {message}
+      {message && !showModal && messageType === "success" && (
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+          <span>{message}</span>
+          <button onClick={() => setMessage("")} className="text-green-600 hover:text-green-800">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+      {message && !showModal && messageType === "error" && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">{message}</div>
+          <button onClick={() => setMessage("")} className="text-red-600 hover:text-red-800">
+            <X className="w-4 h-4" />
+          </button> 
         </div>
       )}
 
@@ -409,13 +497,23 @@ export default function AdminSchedule() {
                 </button>
               </div>
 
-              {message && (
-                <div className={`p-3 mb-4 rounded ${
-                  message.includes('thành công')
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {message}
+              {message && messageType === "error" && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start gap-3 mb-4">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">{message}</div>
+                  <button onClick={() => setMessage("")} className="text-red-600 hover:text-red-800">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {conflictWarning && (
+                <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg flex items-start gap-3 mb-4">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 whitespace-pre-line text-sm">{conflictWarning}</div>
+                  <button onClick={() => setConflictWarning("")} className="text-yellow-600 hover:text-yellow-800">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
               )}
 

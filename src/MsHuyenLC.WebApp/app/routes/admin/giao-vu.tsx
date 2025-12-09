@@ -24,6 +24,7 @@ export default function AdminGiaoVu() {
   const [showModal, setShowModal] = useState(false);
   const [editingGiaoVu, setEditingGiaoVu] = useState<GiaoVu | null>(null);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
   const [taiKhoans, setTaiKhoans] = useState<any[]>([]);
   
   // Pagination
@@ -68,7 +69,20 @@ export default function AdminGiaoVu() {
     const response = await getGiaoVus();
     
     if (response.success && Array.isArray(response.data)) {
-      setGiaoVus(response.data);
+      const giaoVusWithTaiKhoan = await Promise.all(
+        response.data.map(async (gv: GiaoVu) => {
+          if (gv.taiKhoanId) {
+            const tkResponse = await getTaiKhoans();
+            if (tkResponse.success && Array.isArray(tkResponse.data)) {
+              const taiKhoan = tkResponse.data.find((tk: any) => tk.id === gv.taiKhoanId);
+              return { ...gv, taiKhoan };
+            }
+          }
+          return gv;
+        })
+      );
+      
+      setGiaoVus(giaoVusWithTaiKhoan);
       setTotalCount((response as any).totalCount || response.data.length);
     }
     setLoading(false);
@@ -77,12 +91,17 @@ export default function AdminGiaoVu() {
   const loadTaiKhoans = async () => {
     const response = await getTaiKhoans();
     if (response.success && Array.isArray(response.data)) {
-      // Filter only accounts without existing GiaoVu
-      setTaiKhoans(response.data);
+      const availableAccounts = response.data.filter(tk => {
+        const isAssigned = giaoVus.some(gv => gv.taiKhoanId === tk.id);
+        return !isAssigned;
+      });
+      setTaiKhoans(availableAccounts);
     }
   };
 
   const handleCreate = () => {
+    setMessage("");
+    setMessageType("success");
     setEditingGiaoVu(null);
     setFormData({
       hoTen: "",
@@ -93,6 +112,8 @@ export default function AdminGiaoVu() {
   };
 
   const handleEdit = async (giaoVu: GiaoVu) => {
+    setMessage("");
+    setMessageType("success");
     setEditingGiaoVu(giaoVu);
     setFormData({
       hoTen: giaoVu.hoTen || "",
@@ -108,6 +129,7 @@ export default function AdminGiaoVu() {
     if (editingGiaoVu) {
       const response = await updateGiaoVu(editingGiaoVu.id, formData);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadGiaoVus();
         setShowModal(false);
@@ -116,6 +138,7 @@ export default function AdminGiaoVu() {
     } else {
       const response = await createGiaoVu(formData);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadGiaoVus();
         setShowModal(false);
@@ -128,6 +151,7 @@ export default function AdminGiaoVu() {
     if (confirm("Bạn có chắc chắn muốn xóa giáo vụ này?")) {
       const response = await deleteGiaoVu(id);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadGiaoVus();
         setTimeout(() => setMessage(""), 3000);
@@ -174,9 +198,22 @@ export default function AdminGiaoVu() {
   }
 
   return (
-    <div className="space-y-6">{message && (
-        <div className={`${message.includes("thành công") ? "bg-green-100 border-green-400 text-green-700" : "bg-red-100 border-red-400 text-red-700"} border px-4 py-3 rounded-lg`}>
-          {message}
+    <div className="space-y-6">
+      {message && messageType === "success" && (
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+          <span>{message}</span>
+          <button onClick={() => setMessage("")} className="text-green-600 hover:text-green-800">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+      {message && messageType === "error" && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">{message}</div>
+          <button onClick={() => setMessage("")} className="text-red-600 hover:text-red-800">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
@@ -260,32 +297,25 @@ export default function AdminGiaoVu() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">
-                        {giaoVu.taiKhoan ? (
-                          <div>
-                            <p className="font-medium">@{giaoVu.taiKhoan.tenDangNhap}</p>
-                            <p className="text-xs text-gray-500">{giaoVu.taiKhoan.email}</p>
-                          </div>
-                        ) : (
-                          "—"
-                        )}
+                      <div className="text-sm text-gray-900">
+                        {giaoVu.taiKhoan ? giaoVu.taiKhoan.tenDangNhap : "—"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => handleEdit(giaoVu)}
-                          className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="text-blue-600 hover:text-blue-900"
                           title="Chỉnh sửa"
                         >
-                          <Edit className="w-4 h-4" />
+                          <Edit className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDelete(giaoVu.id)}
-                          className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                          className="text-red-600 hover:text-red-900"
                           title="Xóa"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-5 h-5" />
                         </button>
                       </div>
                     </td>
@@ -322,6 +352,16 @@ export default function AdminGiaoVu() {
                   <X className="w-6 h-6" />
                 </button>
               </div>
+
+              {message && messageType === "error" && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start gap-3 mb-4">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">{message}</div>
+                  <button onClick={() => setMessage("")} className="text-red-600 hover:text-red-800">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>

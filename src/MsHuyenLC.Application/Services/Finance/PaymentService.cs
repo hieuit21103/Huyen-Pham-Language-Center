@@ -34,9 +34,26 @@ public class PaymentService : IPaymentService
         return await _unitOfWork.ThanhToans.GetByIdAsync(id);
     }
 
-    public async Task<IEnumerable<ThanhToan>> GetAllAsync()
+    public async Task<IEnumerable<object>> GetAllAsync()
     {
-        return await _unitOfWork.ThanhToans.GetAllAsync();
+        var results = await _unitOfWork.ThanhToans.GetAllAsync(
+            includes: t => t.DangKy
+        );
+        var response = results.Select(t => new ThanhToanResponse
+        {
+            Id = t.Id,
+            MaThanhToan = t.MaThanhToan,
+            TenHocVien = t.DangKy.HocVien.HoTen,
+            TenKhoaHoc = t.DangKy.KhoaHoc.TenKhoaHoc,
+            PhuongThuc = t.PhuongThuc,
+            SoTien = t.SoTien,
+            TrangThai = t.TrangThai,
+            NgayLap = t.NgayLap,
+            DangKyId = t.DangKyId,
+            NgayHetHan = t.NgayHetHan,
+            NgayThanhToan = t.NgayThanhToan,
+        }).ToList();
+        return response;
     }
 
     public async Task<ThanhToan> CreateAsync(ThanhToanRequest request)

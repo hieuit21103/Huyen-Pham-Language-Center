@@ -20,6 +20,7 @@ export default function ThongBaoAdmin() {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
   const [searchTerm, setSearchTerm] = useState("");
   const [taiKhoans, setTaiKhoans] = useState<TaiKhoan[]>([]);
 
@@ -140,15 +141,14 @@ export default function ThongBaoAdmin() {
         };
 
         const result = await createThongBao(requestData);
+        setMessage(result.success ? "Gửi thông báo thành công đến tất cả người dùng" : (result.message || "Gửi thông báo thất bại"));
+        setMessageType(result.success ? "success" : "error");
         if (result.success) {
-          setMessage("Gửi thông báo thành công đến tất cả người dùng");
           loadThongBaos();
           setTimeout(() => {
             setShowModal(false);
             resetForm();
           }, 2000);
-        } else {
-          setMessage(result.message || "Gửi thông báo thất bại");
         }
       } else {
         let recipientIds: string[] = [];
@@ -189,6 +189,7 @@ export default function ThongBaoAdmin() {
 
         if (successCount > 0) {
           setMessage(`Gửi thông báo thành công đến ${successCount} người${failCount > 0 ? ` (${failCount} thất bại)` : ''}`);
+          setMessageType(failCount > 0 ? "error" : "success");
           loadThongBaos();
           setTimeout(() => {
             setShowModal(false);
@@ -196,6 +197,7 @@ export default function ThongBaoAdmin() {
           }, 2000);
         } else {
           setMessage("Gửi thông báo thất bại");
+          setMessageType("error");
         }
       }
     } catch (error) {
@@ -217,15 +219,15 @@ export default function ThongBaoAdmin() {
 
     try {
       const result = await deleteThongBao(id);
+      setMessage(result.success ? "Xóa thông báo thành công" : (result.message || "Xóa thông báo thất bại"));
+      setMessageType(result.success ? "success" : "error");
       if (result.success) {
-        setMessage("Xóa thông báo thành công");
         loadThongBaos();
         setTimeout(() => setMessage(""), 3000);
-      } else {
-        setMessage(result.message || "Xóa thông báo thất bại");
       }
     } catch (error) {
       setMessage("Có lỗi xảy ra khi xóa");
+      setMessageType("error");
     }
   };
 
@@ -275,12 +277,9 @@ export default function ThongBaoAdmin() {
 
   return (
     <div className="space-y-6">
-      {/* Message */}
-      {message && (
-        <div className={`px-4 py-3 rounded-lg ${message.includes("thành công")
-            ? "bg-green-100 border border-green-400 text-green-700"
-            : "bg-red-100 border border-red-400 text-red-700"
-          }`}>
+      {/* Success message above table */}
+      {message && messageType === "success" && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
           {message}
         </div>
       )}
@@ -608,12 +607,10 @@ export default function ThongBaoAdmin() {
                   </div>
                 )}
 
-                {message && (
-                  <div className={`px-4 py-3 rounded-lg ${message.includes("thành công")
-                      ? "bg-green-100 border border-green-400 text-green-700"
-                      : "bg-red-100 border border-red-400 text-red-700"
-                    }`}>
-                    {message}
+                {message && messageType === "error" && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg flex items-start space-x-2">
+                    <X className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <span>{message}</span>
                   </div>
                 )}
 

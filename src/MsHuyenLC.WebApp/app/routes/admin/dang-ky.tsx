@@ -1,4 +1,4 @@
-import { Search, CheckCircle, XCircle, Clock, Eye, AlertCircle, Users, X, Trash } from "lucide-react";
+import { Search, CheckCircle, XCircle, Clock, AlertCircle, Users, X, Trash } from "lucide-react";
 import { useState, useEffect } from "react";
 import { deleteDangKy, getDangKys, updateDangKy } from "~/apis/DangKy";
 import { getKhoaHocs } from "~/apis/KhoaHoc";
@@ -23,6 +23,7 @@ export default function AdminRegistrations() {
   const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedRegistration, setSelectedRegistration] = useState<DangKy | null>(null);
   const [selectedClassId, setSelectedClassId] = useState("");
@@ -77,6 +78,7 @@ export default function AdminRegistrations() {
     
     const response = await updateDangKy(id, { trangThai: TrangThaiDangKy.DaDuyet });
     setMessage(response.message || "");
+    setMessageType(response.success ? "success" : "error");
     if (response.success) {
       loadData();
       setTimeout(() => setMessage(""), 3000);
@@ -88,6 +90,7 @@ export default function AdminRegistrations() {
     
     const response = await updateDangKy(id, { trangThai: TrangThaiDangKy.Huy });
     setMessage(response.message || "");
+    setMessageType(response.success ? "success" : "error");
     if (response.success) {
       loadData();
       setTimeout(() => setMessage(""), 3000);
@@ -107,6 +110,7 @@ export default function AdminRegistrations() {
   const handleAssignClass = async () => {
     if (!selectedRegistration || !selectedClassId) {
       setMessage("Vui lòng chọn lớp học");
+      setMessageType("error");
       return;
     }
 
@@ -116,6 +120,7 @@ export default function AdminRegistrations() {
     });
 
     setMessage(response.message || "");
+    setMessageType(response.success ? "success" : "error");
     if (response.success) {
       setShowAssignModal(false);
       setSelectedRegistration(null);
@@ -130,6 +135,7 @@ export default function AdminRegistrations() {
 
     const response = await deleteDangKy(registration.id!);
     setMessage(response.message || "");
+    setMessageType(response.success ? "success" : "error");
     if (response.success) {
       loadData();
       setTimeout(() => setMessage(""), 3000);
@@ -210,9 +216,12 @@ export default function AdminRegistrations() {
 
   return (
     <div className="space-y-6">
-      {message && (
-        <div className={`${message.includes("thất bại") || message.includes("Lỗi") ? "bg-red-100 border-red-400 text-red-700" : "bg-green-100 border-green-400 text-green-700"} border px-4 py-3 rounded-lg`}>
-          {message}
+      {message && messageType === "success" && (
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+          <span>{message}</span>
+          <button onClick={() => setMessage("")} className="text-green-600 hover:text-green-800">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
@@ -419,7 +428,7 @@ export default function AdminRegistrations() {
                             </button>
                           </>
                         )}
-                        {(registration.trangThai === TrangThaiDangKy.DaDuyet || registration.trangThai === TrangThaiDangKy.DaThanhToan) && (
+                        {(registration.trangThai === TrangThaiDangKy.DaThanhToan) && (
                           <button
                             onClick={() => handleOpenAssignModal(registration)}
                             className="text-blue-600 hover:text-blue-900 px-3 py-1 hover:bg-blue-50 rounded-lg transition-colors font-semibold inline-flex items-center"
@@ -435,9 +444,6 @@ export default function AdminRegistrations() {
                             <Trash className="w-4 h-4 mr-1" />
                             Xóa
                           </button>
-                        <button className="text-gray-600 hover:text-gray-900 p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                          <Eye className="w-4 h-4" />
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -475,6 +481,15 @@ export default function AdminRegistrations() {
             </div>
 
             <div className="p-6 space-y-4">
+              {message && messageType === "error" && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">{message}</div>
+                  <button onClick={() => setMessage("")} className="text-red-600 hover:text-red-800">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
               <div>
                 <p className="text-sm text-gray-600 mb-1">Học viên</p>
                 <p className="font-semibold text-gray-900">

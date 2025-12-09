@@ -1,4 +1,4 @@
-import { Search, Plus, Edit, Trash2, X, UserCheck } from "lucide-react";
+import { Search, Plus, Edit, Trash2, X, UserCheck, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getPhanCongs, createPhanCong, deletePhanCong } from "~/apis/PhanCong";
 import { getGiaoViens } from "~/apis/GiaoVien";
@@ -15,6 +15,7 @@ export default function AdminPhanCong() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [message, setMessage] = useState("");
+    const [messageType, setMessageType] = useState<"success" | "error">("success");
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -59,6 +60,8 @@ export default function AdminPhanCong() {
     };
 
     const handleCreate = () => {
+        setMessage("");
+        setMessageType("success");
         setFormData({
             giaoVienId: "",
             lopHocId: "",
@@ -71,6 +74,7 @@ export default function AdminPhanCong() {
 
         const response = await createPhanCong(formData);
         setMessage(response.message || "");
+        setMessageType(response.success ? "success" : "error");
         if (response.success) {
             loadData();
             setShowModal(false);
@@ -81,6 +85,7 @@ export default function AdminPhanCong() {
         if (confirm("Bạn có chắc chắn muốn xóa phân công này?")) {
             const response = await deletePhanCong(id);
             setMessage(response.message || "");
+            setMessageType(response.success ? "success" : "error");
             if (response.success) {
                 loadData();
             }
@@ -107,9 +112,21 @@ export default function AdminPhanCong() {
 
     return (
         <div className="space-y-6">
-            {message && (
-                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
-                    {message}
+            {message && messageType === "success" && (
+                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+                    <span>{message}</span>
+                    <button onClick={() => setMessage("")} className="text-green-600 hover:text-green-800">
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
+            {message && messageType === "error" && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">{message}</div>
+                    <button onClick={() => setMessage("")} className="text-red-600 hover:text-red-800">
+                        <X className="w-4 h-4" />
+                    </button>
                 </div>
             )}
 
@@ -261,6 +278,16 @@ export default function AdminPhanCong() {
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
+
+                            {message && messageType === "error" && (
+                                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start gap-3 mb-4">
+                                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                    <div className="flex-1">{message}</div>
+                                    <button onClick={() => setMessage("")} className="text-red-600 hover:text-red-800">
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            )}
 
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>

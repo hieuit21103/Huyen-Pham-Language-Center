@@ -160,7 +160,7 @@ export async function deleteBulkCauHois(ids: string[]): Promise<ApiResponse> {
     try {
         const token = getJwtToken();
         const response = await fetch(CauHoiApiUrl('bulk-delete'), {
-            method: "DELETE",
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 ...(token && { "Authorization": `Bearer ${token}` }),

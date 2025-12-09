@@ -221,10 +221,8 @@ export default function TakeExam() {
     setSubmitting(true);
     setShowConfirmSubmit(false);
 
-    // Prepare answers
     const cacTraLoi: Record<string, string> = {};
 
-    // Collect all question IDs
     const allQuestionIds: string[] = [];
     examData.groupedQuestions.forEach((item) => {
       if (item.cauHoi.id) allQuestionIds.push(item.cauHoi.id);
@@ -238,7 +236,6 @@ export default function TakeExam() {
     });
 
     try {
-      // Calculate time spent in seconds
       const timeSpentSeconds = Math.floor((Date.now() - examStartTime) / 1000);
       
       const response = await submitBaiThi({
@@ -255,7 +252,7 @@ export default function TakeExam() {
         localStorage.removeItem("exam-time-left");
         localStorage.removeItem("exam-total-time");
 
-        navigate(`/ket-qua-thi?phienId=${response.data?.phienLamBaiId || ""}`);
+        navigate(`/ket-qua-thi?phienId=${response.data?.id || ""}`);
       } else {
         alert(`Lỗi nộp bài: ${response.message}`);
         setSubmitting(false);

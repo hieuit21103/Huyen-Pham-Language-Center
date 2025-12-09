@@ -7,9 +7,7 @@ public class ThanhToanResponse
     public Guid Id { get; set; }
     public string? MaThanhToan { get; set; }
     public Guid DangKyId { get; set; }
-    public Guid HocVienId { get; set; }
     public string? TenHocVien { get; set; }
-    public Guid KhoaHocId { get; set; }
     public string? TenKhoaHoc { get; set; }
     public decimal SoTien { get; set; }
     public PhuongThucThanhToan PhuongThuc { get; set; }

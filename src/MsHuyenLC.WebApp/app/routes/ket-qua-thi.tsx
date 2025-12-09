@@ -31,11 +31,9 @@ export default function KetQuaThi() {
 
     setLoading(true);
     const response = await getPhienLamBaiDetails(phienId);
-    console.log("PhienLamBaiDetails Response:", response);
     if (response.success) {
-      const data  = response.data as PhienLamBaiResponse;
-      setResult(data.phienLamBai);
-      setAnswers(data.cauTraLoi || []);
+      setResult(response.data);
+      setAnswers(response.data.cauTraLoi || []);
     }
     setLoading(false);
   };
@@ -92,7 +90,7 @@ export default function KetQuaThi() {
   const totalQuestions = answers.length;
   const correctAnswers = result.soCauDung || answers.filter((ct: any) => ct.dung).length;
   const wrongAnswers = totalQuestions - correctAnswers;
-  const score = result.tongDiem || 0;
+  const score = result.diem || 0;
   const timeSpent = result.thoiGianLam || "00:00:00";
   const ngayLam = result.ngayLam || "";
 
@@ -193,12 +191,12 @@ export default function KetQuaThi() {
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Chi tiết bài làm</h2>
             
             <div className="space-y-6">
-              {answers.map((chiTiet: any, index: number) => {
-                const isCorrect = chiTiet.dung;
+              {answers.map((answer: any, index: number) => {
+                const isCorrect = answer.dung;
                 
                 return (
                   <div 
-                    key={chiTiet.id || index}
+                    key={answer.id || index}
                     className={`border-2 rounded-lg p-6 ${
                       isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
                     }`}
@@ -223,17 +221,16 @@ export default function KetQuaThi() {
                             {isCorrect ? 'Đúng' : 'Sai'}
                           </span>
                         </div>
-
                         <div className="mb-4">
-                          <p className="text-gray-800 font-medium">{chiTiet.noiDungCauHoi}</p>
+                          <p className="text-gray-800 font-medium">{answer.noiDungCauHoi}</p>
                         </div>
 
                         {/* Hiển thị tất cả các đáp án */}
-                        {chiTiet.cacDapAn && chiTiet.cacDapAn.length > 0 && (
-                          <div className="space-y-2 mb-4">
-                            {chiTiet.cacDapAn.map((dapAn: any, idx: number) => {
+                        {answer.cacDapAn && answer.cacDapAn.length > 0 ? (
+                          <div className="space-y-2">
+                            {answer.cacDapAn.map((dapAn: any, idx: number) => {
                               const isDapAnDung = dapAn.dung;
-                              const isUserAnswer = chiTiet.cauTraLoiText === dapAn.nhan;
+                              const isUserAnswer = answer.noiDung === dapAn.nhan;
                               
                               return (
                                 <div
@@ -281,33 +278,30 @@ export default function KetQuaThi() {
                               );
                             })}
                           </div>
-                        )}
-
-                        {/* Trường hợp không có cacDapAn, hiển thị theo cách cũ */}
-                        {(!chiTiet.cacDapAn || chiTiet.cacDapAn.length === 0) && (
+                        ) : (
                           <div className="space-y-3">
                             <div>
-                              <span className="text-sm font-medium text-gray-600">Đáp án của bạn: </span>
+                              <span className="text-sm font-medium text-gray-600">Câu trả lời của bạn: </span>
                               <span className={`text-sm font-semibold ${
                                 isCorrect ? 'text-green-700' : 'text-red-700'
                               }`}>
-                                {chiTiet.cauTraLoiText || "Chưa trả lời"}
+                                {answer.noiDung || "Chưa trả lời"}
                               </span>
                             </div>
 
-                            {!isCorrect && chiTiet.dapAnDung && (
+                            {!isCorrect && answer.dapAnDung && (
                               <div>
                                 <span className="text-sm font-medium text-gray-600">Đáp án đúng: </span>
                                 <span className="text-sm font-semibold text-green-700">
-                                  {chiTiet.dapAnDung}
+                                  {answer.dapAnDung}
                                 </span>
                               </div>
                             )}
 
-                            {chiTiet.giaiThich && (
+                            {answer.giaiThich && (
                               <div className="mt-3 p-3 bg-white rounded border border-gray-200">
                                 <span className="text-sm font-medium text-gray-600">Giải thích: </span>
-                                <p className="text-sm text-gray-700 mt-1">{chiTiet.giaiThich}</p>
+                                <p className="text-sm text-gray-700 mt-1">{answer.giaiThich}</p>
                               </div>
                             )}
                           </div>

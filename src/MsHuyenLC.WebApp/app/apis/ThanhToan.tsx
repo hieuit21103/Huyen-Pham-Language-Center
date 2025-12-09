@@ -1,10 +1,13 @@
+import type { DangKy } from "~/types";
 import { getJwtToken } from ".";
 import { ThanhToanApiUrl } from "../constants/apis-url";
+import type { ThanhToanResponse } from "~/types/finance.types";
 
 export interface ThanhToan {
   id?: string;
   maThanhToan?: string;
   dangKyId?: string;
+  dangKy?: DangKy;
   hocVienId?: string;
   tenHocVien?: string;
   khoaHocId?: string;
@@ -52,7 +55,7 @@ export interface VNPayCallbackRequest {
   vnp_SecureHashType?: string;
 }
 
-export async function getThanhToans(): Promise<{ success: boolean; data?: ThanhToan[]; message?: string }> {
+export async function getThanhToans(): Promise<{ success: boolean; data?: ThanhToanResponse[]; message?: string }> {
   try {
     const token = getJwtToken();
     const response = await fetch(
@@ -110,27 +113,6 @@ export async function getThanhToan(
     return data;
   } catch (error) {
     return { success: false, message: "Lỗi khi tải thông tin thanh toán" };
-  }
-}
-
-export async function createThanhToan(
-  thanhToan: ThanhToan
-): Promise<{ success: boolean; data?: ThanhToan; message?: string }> {
-  try {
-    const token = getJwtToken();
-    const response = await fetch(ThanhToanApiUrl(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(thanhToan),
-    });
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    return { success: false, message: "Lỗi khi tạo thanh toán" };
   }
 }
 
@@ -198,5 +180,65 @@ export async function callback(
     return data;
   } catch (error) {
     return { success: false, message: "Lỗi khi gọi lại thanh toán" };
+  }
+}
+
+export async function createThanhToan(
+  data: { dangKyId: string; soTien: number }
+): Promise<{ success: boolean; data?: ThanhToan; message?: string }> {
+  try {
+    const token = getJwtToken();
+    const response = await fetch(ThanhToanApiUrl(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    return await response.json();
+  } catch (error) {
+    return { success: false, message: "Lỗi khi tạo thanh toán" };
+  }
+}
+
+export async function updateThanhToan(
+  id: string,
+  data: Partial<ThanhToan>
+): Promise<{ success: boolean; data?: ThanhToan; message?: string }> {
+  try {
+    const token = getJwtToken();
+    const response = await fetch(ThanhToanApiUrl(id), {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    return await response.json();
+  } catch (error) {
+    return { success: false, message: "Lỗi khi cập nhật thanh toán" };
+  }
+}
+
+export async function deleteThanhToan(
+  id: string
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    const token = getJwtToken();
+    const response = await fetch(ThanhToanApiUrl(id), {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return await response.json();
+  } catch (error) {
+    return { success: false, message: "Lỗi khi xóa thanh toán" };
   }
 }

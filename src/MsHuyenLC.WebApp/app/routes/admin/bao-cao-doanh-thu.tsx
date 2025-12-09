@@ -5,11 +5,11 @@ import { getDangKys } from "~/apis/DangKy";
 import { setLightTheme } from "./_layout";
 import type { ThanhToan } from "~/apis/ThanhToan";
 import type { DangKy } from "~/types/course.types";
-import type { DoanhThuStats, DoanhThuTheoNgay, DoanhThuTheoKhoaHoc } from "~/types/finance.types";
+import type { DoanhThuStats, DoanhThuTheoNgay, ThanhToanResponse } from "~/types/finance.types";
 
 export default function BaoCaoDoanhThu() {
   const [loading, setLoading] = useState(true);
-  const [thanhToans, setThanhToans] = useState<ThanhToan[]>([]);
+  const [thanhToans, setThanhToans] = useState<ThanhToanResponse[]>([]);
   const [dangKys, setDangKys] = useState<DangKy[]>([]);
   const [message, setMessage] = useState("");
 
@@ -28,7 +28,7 @@ export default function BaoCaoDoanhThu() {
     setLoading(true);
     
     // Load thanh toán
-    const ttResponse = await getThanhToans(1, 1000);
+    const ttResponse = await getThanhToans();
     if (ttResponse.success && ttResponse.data) {
       setThanhToans(ttResponse.data);
     }
@@ -58,7 +58,7 @@ export default function BaoCaoDoanhThu() {
     new Map(
       dangKys
         .filter(dk => dk.khoaHoc?.tenKhoaHoc)
-        .map(dk => [dk.khoaHocId, { id: dk.khoaHocId, tenKhoaHoc: dk.khoaHoc?.tenKhoaHoc }])
+        .map(dk => [dk.khoaHoc?.tenKhoaHoc, { tenKhoaHoc: dk.khoaHoc?.tenKhoaHoc }])
     ).values()
   );
 
@@ -77,19 +77,16 @@ export default function BaoCaoDoanhThu() {
       if (ngayLap > denNgayDate) return false;
     }
 
-    // Filter theo khóa học (dựa vào dangKyId)
     if (khoaHocFilter && tt.dangKyId) {
       const dangKyInfo = getDangKyInfo(tt.dangKyId);
-      if (dangKyInfo.khoaHocId !== khoaHocFilter) return false;
+      if (dangKyInfo.tenKhoaHoc !== khoaHocFilter) return false;
     }
 
-    // Filter theo trạng thái
     if (trangThaiFilter !== -1 && tt.trangThai !== trangThaiFilter) return false;
 
     return true;
   });
 
-  // Tính toán thống kê
   const stats: DoanhThuStats = {
     tongDoanhThu: filteredThanhToans.reduce((sum, tt) => sum + (tt.soTien || 0), 0),
     tongDaThanhToan: filteredThanhToans
@@ -103,7 +100,6 @@ export default function BaoCaoDoanhThu() {
     soLuongChuaThanhToan: filteredThanhToans.filter(tt => tt.trangThai === 0).length,
   };
 
-  // Doanh thu theo ngày
   const doanhThuTheoNgay: DoanhThuTheoNgay[] = [];
   const ngayMap = new Map<string, DoanhThuTheoNgay>();
 
@@ -132,41 +128,6 @@ export default function BaoCaoDoanhThu() {
   });
 
   doanhThuTheoNgay.push(...Array.from(ngayMap.values()).sort((a, b) => b.ngay.localeCompare(a.ngay)));
-
-  // Doanh thu theo khóa học
-  const doanhThuTheoKhoaHoc: DoanhThuTheoKhoaHoc[] = [];
-  const khoaHocMap = new Map<string, DoanhThuTheoKhoaHoc>();
-
-  filteredThanhToans.forEach((tt) => {
-    if (!tt.dangKyId) return;
-    
-    const dangKyInfo = getDangKyInfo(tt.dangKyId);
-    const khoaHocId = dangKyInfo.khoaHocId;
-    
-    if (!khoaHocId) return;
-    
-    if (!khoaHocMap.has(khoaHocId)) {
-      khoaHocMap.set(khoaHocId, {
-        khoaHocId: khoaHocId,
-        tenKhoaHoc: dangKyInfo.tenKhoaHoc,
-        soLuong: 0,
-        tongTien: 0,
-        daThanhToan: 0,
-        chuaThanhToan: 0,
-      });
-    }
-
-    const item = khoaHocMap.get(khoaHocId)!;
-    item.soLuong++;
-    item.tongTien += tt.soTien || 0;
-    if (tt.trangThai === 1) {
-      item.daThanhToan += tt.soTien || 0;
-    } else {
-      item.chuaThanhToan += tt.soTien || 0;
-    }
-  });
-
-  doanhThuTheoKhoaHoc.push(...Array.from(khoaHocMap.values()).sort((a, b) => b.tongTien - a.tongTien));
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -303,7 +264,7 @@ export default function BaoCaoDoanhThu() {
             >
               <option value="">Tất cả khóa học</option>
               {uniqueKhoaHocs.map((kh) => (
-                <option key={kh.id} value={kh.id}>
+                <option key={kh.tenKhoaHoc} value={kh.tenKhoaHoc}>
                   {kh.tenKhoaHoc}
                 </option>
               ))}
@@ -364,7 +325,7 @@ export default function BaoCaoDoanhThu() {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {/* Doanh thu theo ngày */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
@@ -393,47 +354,6 @@ export default function BaoCaoDoanhThu() {
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-green-500 h-2 rounded-full"
-                        style={{ width: `${item.tongTien > 0 ? (item.daThanhToan / item.tongTien) * 100 : 0}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Doanh thu theo khóa học */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-            <TrendingUp className="w-5 h-5" />
-            <span>Doanh thu theo khóa học</span>
-          </h2>
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-            </div>
-          ) : doanhThuTheoKhoaHoc.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">Không có dữ liệu</p>
-          ) : (
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {doanhThuTheoKhoaHoc.map((item) => (
-                <div key={item.khoaHocId} className="border-b border-gray-100 pb-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium text-gray-900 line-clamp-1">{item.tenKhoaHoc}</span>
-                    <span className="text-sm text-gray-600">{item.soLuong} đăng ký</span>
-                  </div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-blue-600 font-semibold">Tổng: {formatCurrency(item.tongTien)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-green-600">Đã TT: {formatCurrency(item.daThanhToan)}</span>
-                    <span className="text-yellow-600">Chưa TT: {formatCurrency(item.chuaThanhToan)}</span>
-                  </div>
-                  <div className="mt-2">
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-500 h-2 rounded-full"
                         style={{ width: `${item.tongTien > 0 ? (item.daThanhToan / item.tongTien) * 100 : 0}%` }}
                       ></div>
                     </div>

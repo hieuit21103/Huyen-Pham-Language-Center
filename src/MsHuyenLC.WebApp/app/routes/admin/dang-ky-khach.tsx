@@ -1,11 +1,11 @@
-import { Search, CheckCircle, XCircle, Clock, Eye, AlertCircle, Trash2 } from "lucide-react";
+import { Search, CheckCircle, XCircle, Clock, AlertCircle, Trash2, X, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getDangKyKhachs, updateDangKyKhach, deleteDangKyKhach } from "~/apis/DangKy";
+import { getDangKyKhachs, updateDangKyKhach, deleteDangKyKhach, createDangKyKhach } from "~/apis/DangKy";
 import { getKhoaHocs } from "~/apis/KhoaHoc";
 import { TrangThaiDangKy } from "~/types/enums";
 import { setLightTheme } from "./_layout";
 import Pagination from "~/components/Pagination";
-import type { DangKyKhach } from "~/types/course.types";
+import type { DangKyKhach, DangKyKhachCreateRequest } from "~/types/course.types";
 import type { KhoaHoc } from "~/types/course.types";
 
 
@@ -17,6 +17,19 @@ export default function AdminRegistrations() {
     const [selectedCourse, setSelectedCourse] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("");
     const [message, setMessage] = useState("");
+    const [messageType, setMessageType] = useState<"success" | "error">("success");
+
+    // Modal state
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalLoading, setModalLoading] = useState(false);
+    const [modalError, setModalError] = useState("");
+    const [formData, setFormData] = useState<DangKyKhachCreateRequest>({
+        hoTen: "",
+        email: "",
+        soDienThoai: "",
+        noiDung: "",
+        khoaHocId: "",
+    });
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -54,6 +67,7 @@ export default function AdminRegistrations() {
 
         const response = await updateDangKyKhach(id, { trangThai: TrangThaiDangKy.DaDuyet });
         setMessage(response.message || "");
+        setMessageType(response.success ? "success" : "error");
         if (response.success) {
             loadData();
             setTimeout(() => setMessage(""), 3000);
@@ -65,6 +79,7 @@ export default function AdminRegistrations() {
 
         const response = await updateDangKyKhach(id, { trangThai: TrangThaiDangKy.Huy });
         setMessage(response.message || "");
+        setMessageType(response.success ? "success" : "error");
         if (response.success) {
             loadData();
             setTimeout(() => setMessage(""), 3000);
@@ -76,9 +91,45 @@ export default function AdminRegistrations() {
 
         const response = await deleteDangKyKhach(id);
         setMessage(response.message || "");
+        setMessageType(response.success ? "success" : "error");
         if (response.success) {
             loadData();
             setTimeout(() => setMessage(""), 3000);
+        }
+    };
+
+    const handleCreate = () => {
+        setFormData({
+            hoTen: "",
+            email: "",
+            soDienThoai: "",
+            noiDung: "",
+            khoaHocId: "",
+        });
+        setModalError("");
+        setIsModalOpen(true);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setModalLoading(true);
+        setModalError("");
+
+        try {
+            const response = await createDangKyKhach(formData);
+            if (response.success) {
+                setMessage("Tạo đăng ký thành công!");
+                setMessageType("success");
+                setIsModalOpen(false);
+                loadData();
+                setTimeout(() => setMessage(""), 3000);
+            } else {
+                setModalError(response.message || "Lỗi khi tạo đăng ký");
+            }
+        } catch (error) {
+            setModalError("Lỗi khi tạo đăng ký");
+        } finally {
+            setModalLoading(false);
         }
     };
 
@@ -156,16 +207,37 @@ export default function AdminRegistrations() {
 
     return (
         <div className="space-y-6">
-            {message && (
-                <div className={`${message.includes("thất bại") || message.includes("Lỗi") ? "bg-red-100 border-red-400 text-red-700" : "bg-green-100 border-green-400 text-green-700"} border px-4 py-3 rounded-lg`}>
-                    {message}
+            {message && messageType === "success" && (
+                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+                    <span>{message}</span>
+                    <button onClick={() => setMessage("")} className="text-green-600 hover:text-green-800">
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
+            {message && messageType === "error" && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">{message}</div>
+                    <button onClick={() => setMessage("")} className="text-red-600 hover:text-red-800">
+                        <X className="w-4 h-4" />
+                    </button>
                 </div>
             )}
 
             {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900">Quản lý đăng ký</h1>
-                <p className="text-gray-600 mt-1">Danh sách đăng ký khóa học</p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">Quản lý đăng ký</h1>
+                    <p className="text-gray-600 mt-1">Danh sách đăng ký khóa học</p>
+                </div>
+                <button
+                    onClick={handleCreate}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                    <Plus className="w-5 h-5" />
+                    Tạo đăng ký
+                </button>
             </div>
 
             {/* Stats */}
@@ -344,15 +416,12 @@ export default function AdminRegistrations() {
                                                         </button>
                                                     </>
                                                 )}
-                                                <button className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg transition-colors">
-                                                    <Eye className="w-4 h-4" />
-                                                </button>
                                                 <button
                                                     onClick={() => handleDelete(registration.id!)}
-                                                    className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                                    className="text-red-600 hover:text-red-900"
                                                     title="Xóa đăng ký"
                                                 >
-                                                    <Trash2 className="w-4 h-4" />
+                                                    <Trash2 className="w-5 h-5" />
                                                 </button>
                                             </div>
                                         </td>
@@ -375,6 +444,135 @@ export default function AdminRegistrations() {
                     </div>
                 )}
             </div>
+
+            {/* Create Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl max-w-lg w-full p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold text-gray-900">
+                                Tạo đăng ký mới
+                            </h3>
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="text-gray-500 hover:text-gray-700"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {modalError && (
+                            <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-200">
+                                {modalError}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Họ tên <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={formData.hoTen}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, hoTen: e.target.value })
+                                    }
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Nhập họ tên"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Email <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={formData.email}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, email: e.target.value })
+                                    }
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Nhập email"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Số điện thoại <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="tel"
+                                    required
+                                    value={formData.soDienThoai}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, soDienThoai: e.target.value })
+                                    }
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Nhập số điện thoại"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Khóa học <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    required
+                                    value={formData.khoaHocId}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, khoaHocId: e.target.value })
+                                    }
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                    <option value="">-- Chọn khóa học --</option>
+                                    {courses.map((course) => (
+                                        <option key={course.id} value={course.id}>
+                                            {course.tenKhoaHoc}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Nội dung
+                                </label>
+                                <textarea
+                                    value={formData.noiDung}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, noiDung: e.target.value })
+                                    }
+                                    rows={3}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Ghi chú thêm (nếu có)"
+                                />
+                            </div>
+
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="submit"
+                                    disabled={modalLoading}
+                                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                                >
+                                    Tạo đăng ký
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsModalOpen(false)}
+                                    disabled={modalLoading}
+                                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                                >
+                                    Hủy
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

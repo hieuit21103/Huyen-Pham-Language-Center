@@ -11,7 +11,7 @@ import {
   User, Calendar, BookOpen, Trophy, Clock,
   Mail, Phone, MapPin, CheckCircle,
   TrendingUp, Book, Edit, X, Camera,
-  FileText
+  FileText, Eye
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -499,6 +499,7 @@ export default function Dashboard() {
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Ngày nộp</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Điểm</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Loại bài thi</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Thao tác</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -520,6 +521,15 @@ export default function Dashboard() {
                               }`}>
                               {getLoaiBaiThiText(plb.deThi?.kyThiId)}
                             </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <button
+                              onClick={() => navigate(`/ket-qua-thi?phienId=${plb.id}`)}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium"
+                            >
+                              <Eye className="w-4 h-4" />
+                              Xem chi tiết
+                            </button>
                           </td>
                         </tr>
                       ))}

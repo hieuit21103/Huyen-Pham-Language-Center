@@ -1,4 +1,4 @@
-import { Search, MessageSquare, Eye, Trash2, ChevronLeft, ChevronRight, X, Calendar, User } from "lucide-react";
+import { Search, MessageSquare, Eye, Trash2, ChevronLeft, ChevronRight, X, Calendar, User, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getPhanHois, deletePhanHoi, type PhanHoiResponse } from "~/apis/PhanHoi";
 import { formatDateTime } from "~/utils/date-utils";
@@ -9,6 +9,7 @@ export default function AdminFeedback() {
   const [feedbacks, setFeedbacks] = useState<PhanHoiResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
   const [selectedFeedback, setSelectedFeedback] = useState<PhanHoiResponse | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   
@@ -34,6 +35,7 @@ export default function AdminFeedback() {
     if (confirm("Bạn có chắc chắn muốn xóa phản hồi này?")) {
       const response = await deletePhanHoi(id);
       setMessage(response.message || "");
+      setMessageType(response.success ? "success" : "error");
       if (response.success) {
         loadFeedbacks();
       }
@@ -91,9 +93,21 @@ export default function AdminFeedback() {
   return (
     <div className="space-y-6">
       {/* Message */}
-      {message && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
-          {message}
+      {message && messageType === "success" && (
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+          <span>{message}</span>
+          <button onClick={() => setMessage("")} className="text-green-600 hover:text-green-800">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+      {message && messageType === "error" && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">{message}</div>
+          <button onClick={() => setMessage("")} className="text-red-600 hover:text-red-800">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
@@ -207,17 +221,17 @@ export default function AdminFeedback() {
                           <div className="flex items-center justify-center space-x-2">
                             <button
                               onClick={() => handleViewDetail(feedback)}
-                              className="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors text-sm inline-flex items-center space-x-1"
+                              className="text-blue-600 hover:text-blue-900"
+                              title="Xem chi tiết"
                             >
-                              <Eye className="w-4 h-4" />
-                              <span>Xem</span>
+                              <Eye className="w-5 h-5" />
                             </button>
                             <button
                               onClick={() => handleDelete(feedback.id!)}
-                              className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition-colors text-sm inline-flex items-center space-x-1"
+                              className="text-red-600 hover:text-red-900"
+                              title="Xóa"
                             >
-                              <Trash2 className="w-4 h-4" />
-                              <span>Xóa</span>
+                              <Trash2 className="w-5 h-5" />
                             </button>
                           </div>
                         </td>
